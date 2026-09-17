@@ -907,8 +907,8 @@
     .copy-field:hover { color: var(--primary); border-color: var(--primary-border); background: var(--primary-light); }
     .editable {
       height: 100%; min-height: 140px; padding: 12px 48px 12px 10px; border: 1px solid transparent; border-radius: 8px;
-      font-size: 15px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere;
-      word-break: keep-all; outline: none; background: transparent; color: var(--text-main);
+      font-size: 15px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere;
+      word-break: break-word; outline: none; background: transparent; color: var(--text-main);
       transition: background .15s, border .15s;
     }
     .editable:hover { border-color: var(--border-default); background: white; }
@@ -1364,6 +1364,29 @@
           .find(item => item.kind === 'file' && item.type.startsWith('image/'))?.getAsFile();
     }
 
+    function getEditableText(el) {
+      if (!el) return '';
+      const html = el.innerHTML;
+      if (!html) return '';
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      temp.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+      temp.querySelectorAll('div, p').forEach(block => {
+        block.prepend('\n');
+      });
+      return temp.textContent.replace(/^\n+/, '').replace(/\r\n/g, '\n');
+    }
+
+    function setEditableText(el, text) {
+      if (!el) return;
+      const safeText = (text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>');
+      el.innerHTML = safeText;
+    }
+
     async function copyText(value) {
       try {
         await navigator.clipboard.writeText(value);
@@ -1377,8 +1400,8 @@
 
     function addScene(data = {}, after = null, skipSave = false) {
       const scene = template.content.firstElementChild.cloneNode(true);
-      scene.querySelector('.motion').innerText = data.motion || '';
-      scene.querySelector('.narration').innerText = data.narration || '';
+      setEditableText(scene.querySelector('.motion'), data.motion || '');
+      setEditableText(scene.querySelector('.narration'), data.narration || '');
       if (data.image) setImage(scene.querySelector('.image-zone'), data.image, true);
       after ? after.after(scene) : board.append(scene);
       bindScene(scene);
@@ -1408,7 +1431,7 @@
       scene.querySelectorAll('.editable').forEach(el => el.addEventListener('input', scheduleSave));
       scene.querySelectorAll('.copy-field').forEach(button => button.addEventListener('click', () => {
         const field = scene.querySelector(`.${button.dataset.target}`);
-        copyText(field.innerText);
+        copyText(getEditableText(field));
       }));
       scene.querySelector('.delete').addEventListener('click', () => {
         if (confirm('이 장면을 삭제할까요?')) { scene.remove(); renumber(); scheduleSave(); }
@@ -1423,8 +1446,8 @@
     function sceneData(scene) {
       return {
         image: scene.querySelector('.image-zone img')?.src || '',
-        motion: scene.querySelector('.motion').innerText,
-        narration: scene.querySelector('.narration').innerText
+        motion: getEditableText(scene.querySelector('.motion')),
+        narration: getEditableText(scene.querySelector('.narration'))
       };
     }
 
@@ -1446,7 +1469,7 @@
     }
 
     function updateNarrationStats() {
-      const narration = [...board.querySelectorAll('.narration')].map(el => el.innerText).join('');
+      const narration = [...board.querySelectorAll('.narration')].map(el => getEditableText(el)).join('');
       const characters = narration.replace(/\s/g, '').length;
       const totalSeconds = characters ? Math.max(1, Math.ceil(characters / 300 * 60)) : 0;
       const minutes = Math.floor(totalSeconds / 60);
@@ -1742,8 +1765,8 @@
           const docRef = sceneCol.doc(docId);
           batch.set(docRef, {
             order: idx,
-            motion: sceneEl.querySelector('.motion')?.innerText || '',
-            narration: sceneEl.querySelector('.narration')?.innerText || '',
+            motion: getEditableText(sceneEl.querySelector('.motion')),
+            narration: getEditableText(sceneEl.querySelector('.narration')),
             image: sceneEl.querySelector('.image-zone img')?.src || '',
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
@@ -1807,11 +1830,17 @@
           const zone = sceneEl.querySelector('.image-zone');
           const currentImg = zone?.querySelector('img')?.src || '';
 
-          if (motionEl && motionEl !== document.activeElement && motionEl.innerText !== (item.motion || '')) {
-            motionEl.innerText = item.motion || '';
+          if (motionEl && motionEl !== document.activeElement) {
+            const currentMotionText = getEditableText(motionEl);
+            if (currentMotionText !== (item.motion || '')) {
+              setEditableText(motionEl, item.motion || '');
+            }
           }
-          if (narrationEl && narrationEl !== document.activeElement && narrationEl.innerText !== (item.narration || '')) {
-            narrationEl.innerText = item.narration || '';
+          if (narrationEl && narrationEl !== document.activeElement) {
+            const currentNarrationText = getEditableText(narrationEl);
+            if (currentNarrationText !== (item.narration || '')) {
+              setEditableText(narrationEl, item.narration || '');
+            }
           }
           if (zone && currentImg !== (item.image || '')) {
             setImage(zone, item.image || '', true);
