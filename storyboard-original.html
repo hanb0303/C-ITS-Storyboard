@@ -1711,11 +1711,11 @@
 
     let isSavingToFirestore = false;
     let isApplyingRemoteUpdate = false;
+    let lastSavedSceneCount = 7;
 
     async function saveToFirestore() {
       if (!db || isApplyingRemoteUpdate) return;
       try {
-        setSyncStatus('saving', '클라우드 저장 중...');
         isSavingToFirestore = true;
 
         const currentMeta = {
@@ -1732,11 +1732,10 @@
         await db.collection('cits_storyboard_meta').doc('current').set(currentMeta);
 
         const sceneElements = [...board.querySelectorAll('.scene')];
+        if (!sceneElements.length) return;
+
         const sceneCol = db.collection('cits_storyboard_scenes');
         const batch = db.batch();
-
-        const existingSnap = await sceneCol.get();
-        const existingIds = new Set(existingSnap.docs.map(d => d.id));
 
         sceneElements.forEach((sceneEl, idx) => {
           const docId = `scene_${String(idx).padStart(2, '0')}`;
@@ -1748,18 +1747,19 @@
             image: sceneEl.querySelector('.image-zone img')?.src || '',
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
-          existingIds.delete(docId);
         });
 
-        existingIds.forEach(id => {
-          batch.delete(sceneCol.doc(id));
-        });
+        if (lastSavedSceneCount > sceneElements.length) {
+          for (let i = sceneElements.length; i < lastSavedSceneCount; i++) {
+            const docId = `scene_${String(i).padStart(2, '0')}`;
+            batch.delete(sceneCol.doc(docId));
+          }
+        }
+        lastSavedSceneCount = sceneElements.length;
 
         await batch.commit();
-        setSyncStatus('synced', '동기화 완료');
       } catch (err) {
         console.error('Firestore save error:', err);
-        setSyncStatus('error', '동기화 오류');
       } finally {
         isSavingToFirestore = false;
       }
@@ -1796,15 +1796,6 @@
     function applyRemoteScenes(scenesData) {
       if (!scenesData || !scenesData.length) return;
       const currentScenes = [...board.querySelectorAll('.scene')];
-      const isEditingBoard = board.contains(document.activeElement);
-
-      if (!isEditingBoard && currentScenes.length !== scenesData.length) {
-        board.innerHTML = '';
-        scenesData.forEach(item => addScene(item, null, true));
-        renumber();
-        updateNarrationStats();
-        return;
-      }
 
       scenesData.forEach((item, idx) => {
         let sceneEl = currentScenes[idx];
@@ -1814,7 +1805,7 @@
           const motionEl = sceneEl.querySelector('.motion');
           const narrationEl = sceneEl.querySelector('.narration');
           const zone = sceneEl.querySelector('.image-zone');
-          const currentImg = zone.querySelector('img')?.src || '';
+          const currentImg = zone?.querySelector('img')?.src || '';
 
           if (motionEl && motionEl !== document.activeElement && motionEl.innerText !== (item.motion || '')) {
             motionEl.innerText = item.motion || '';
@@ -1822,15 +1813,17 @@
           if (narrationEl && narrationEl !== document.activeElement && narrationEl.innerText !== (item.narration || '')) {
             narrationEl.innerText = item.narration || '';
           }
-          if (currentImg !== (item.image || '')) {
+          if (zone && currentImg !== (item.image || '')) {
             setImage(zone, item.image || '', true);
           }
         }
       });
 
-      while (currentScenes.length > scenesData.length) {
-        const extra = currentScenes.pop();
-        extra.remove();
+      if (!board.contains(document.activeElement)) {
+        while (currentScenes.length > scenesData.length) {
+          const extra = currentScenes.pop();
+          extra.remove();
+        }
       }
 
       renumber();
@@ -1838,22 +1831,11 @@
     }
 
     function initFirestoreSync() {
-      if (!db) {
-        setSyncStatus('error', '클라우드 미연결');
-        return;
-      }
-      setSyncStatus('saving', '클라우드 연결 중...');
+      if (!db) return;
 
-      let initialMetaLoaded = false;
-      let initialScenesLoaded = false;
-
-      // Meta listener
-      db.collection('cits_storyboard_meta').doc('current').onSnapshot(async (doc) => {
+      db.collection('cits_storyboard_meta').doc('current').onSnapshot((doc) => {
         if (!doc.exists) {
-          if (!initialMetaLoaded) {
-            initialMetaLoaded = true;
-            await saveToFirestore();
-          }
+          saveToFirestore();
           return;
         }
         if (doc.metadata.hasPendingWrites || isSavingToFirestore) return;
@@ -1863,23 +1845,17 @@
           isApplyingRemoteUpdate = true;
           try {
             applyRemoteMeta(data);
-            setSyncStatus('synced', '동기화 완료');
           } finally {
             isApplyingRemoteUpdate = false;
           }
         }
       }, (err) => {
         console.error('Meta sync error:', err);
-        setSyncStatus('error', '동기화 오류');
       });
 
-      // Scenes listener
-      db.collection('cits_storyboard_scenes').orderBy('order').onSnapshot(async (snapshot) => {
+      db.collection('cits_storyboard_scenes').orderBy('order').onSnapshot((snapshot) => {
         if (snapshot.empty) {
-          if (!initialScenesLoaded) {
-            initialScenesLoaded = true;
-            await saveToFirestore();
-          }
+          saveToFirestore();
           return;
         }
         if (snapshot.metadata.hasPendingWrites || isSavingToFirestore) return;
@@ -1888,13 +1864,11 @@
         isApplyingRemoteUpdate = true;
         try {
           applyRemoteScenes(scenes);
-          setSyncStatus('synced', '동기화 완료');
         } finally {
           isApplyingRemoteUpdate = false;
         }
       }, (err) => {
         console.error('Scenes sync error:', err);
-        setSyncStatus('error', '동기화 오류');
       });
     }
 
@@ -1903,14 +1877,13 @@
       enforceSlideHeaders();
       updateNarrationStats();
       updateAllSlideNarrationStats();
-      setSyncStatus('saving', '저장 중...');
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
         } catch (e) {}
         saveToFirestore();
-      }, 500);
+      }, 400);
     }
 
     function saveImmediately() {
@@ -1995,7 +1968,7 @@
             .replace(/03-③/g, '03-3')
             .replace(/03-④/g, '03-4');
         }
-        addScene(item);
+        addScene(item, null, true);
       });
       renumber();
       updateNarrationStats();
