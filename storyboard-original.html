@@ -6,6 +6,9 @@
   <title>C-ITS 영상 스토리보드</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <style>
     :root {
       --primary: #2563eb;
@@ -198,6 +201,10 @@
     }
     .sidebar-header {
       padding: 0 8px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
     }
     .sidebar-brand-title {
       margin: 0;
@@ -950,6 +957,64 @@
     }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+    /* Cloud Sync Status Indicator */
+    .cloud-sync-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #64748b;
+      padding: 4px 10px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      transition: all .2s ease;
+      user-select: none;
+      height: 28px;
+      box-sizing: border-box;
+      white-space: nowrap;
+    }
+    .cloud-sync-status.synced {
+      background: #ecfdf5;
+      color: #059669;
+      border-color: #a7f3d0;
+    }
+    .cloud-sync-status.saving {
+      background: #eff6ff;
+      color: #2563eb;
+      border-color: #bfdbfe;
+    }
+    .cloud-sync-status.error {
+      background: #fef2f2;
+      color: #dc2626;
+      border-color: #fecaca;
+    }
+    .sync-dot {
+      width: 6.5px;
+      height: 6.5px;
+      border-radius: 50%;
+      background: #94a3b8;
+      display: inline-block;
+      flex-shrink: 0;
+      transition: background-color .2s ease;
+    }
+    .cloud-sync-status.synced .sync-dot {
+      background: #10b981;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    }
+    .cloud-sync-status.saving .sync-dot {
+      background: #3b82f6;
+      animation: pulseSync 1s infinite;
+    }
+    .cloud-sync-status.error .sync-dot {
+      background: #ef4444;
+    }
+    @keyframes pulseSync {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.8); }
+    }
+
 
     @media (max-width: 1050px) {
       .app { padding: 24px 18px 60px; }
@@ -982,6 +1047,9 @@
     <aside class="app-sidebar" id="appSidebar">
       <div class="sidebar-header">
         <h2 class="sidebar-brand-title">C-ITS 기획</h2>
+        <div class="cloud-sync-status synced" title="모든 사용자에게 실시간 동기화됩니다">
+          <span class="sync-dot"></span><span class="sync-text">동기화</span>
+        </div>
       </div>
 
       <div class="sidebar-action-box">
@@ -1016,6 +1084,9 @@
       <div class="header-right">
         <!-- 스토리보드 모드 시 도구 -->
         <div class="actions storyboard-tools">
+          <div class="cloud-sync-status synced" title="모든 사용자에게 실시간 동기화됩니다">
+            <span class="sync-dot"></span><span class="sync-text">동기화 완료</span>
+          </div>
           <div class="narration-summary" id="narrationSummary" title="공백 제외 · 분당 300자 기준">
             <span>나레이션</span><strong>0자 · 약 0초</strong>
           </div>
@@ -1027,6 +1098,9 @@
     <section class="slides-section" aria-label="기획안 슬라이드">
       <div class="slide-external-top-bar presentation-tools">
         <div class="slide-external-tools" id="externalSlideTools" style="display: none;">
+          <div class="cloud-sync-status synced" title="모든 사용자에게 실시간 동기화됩니다">
+            <span class="sync-dot"></span><span class="sync-text">동기화 완료</span>
+          </div>
           <div class="slide-narration-plain" id="externalNarrationStats">
             <span>나레이션</span> <strong id="externalNarrationCount">0자 · 약 0초</strong>
           </div>
@@ -1189,6 +1263,61 @@
   <script>
     const STORAGE_KEY = 'cits-storyboard-v1';
     const SLIDE_TEMPLATE_VERSION = 42;
+
+    // --- Firebase & Firestore Configuration ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyD2HQZe647qN3Knnn2JghkX9bb8I8Y18qE",
+      authDomain: "moodboard-b51ff.firebaseapp.com",
+      projectId: "moodboard-b51ff",
+      storageBucket: "moodboard-b51ff.firebasestorage.app",
+      messagingSenderId: "43409864736",
+      appId: "1:43409864736:web:bf044bab27f27ee6996445"
+    };
+
+    let db = null;
+    try {
+      if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+      }
+    } catch (e) {
+      console.warn('Firebase init error:', e);
+    }
+
+    function setSyncStatus(status, text) {
+      document.querySelectorAll('.cloud-sync-status').forEach(el => {
+        el.className = `cloud-sync-status ${status}`;
+        const textEl = el.querySelector('.sync-text');
+        if (textEl) textEl.textContent = text;
+      });
+    }
+
+    function compressImage(base64Data, maxWidth = 1280, quality = 0.75) {
+      return new Promise((resolve) => {
+        if (!base64Data || typeof base64Data !== 'string' || !base64Data.startsWith('data:image')) {
+          return resolve(base64Data);
+        }
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressed);
+        };
+        img.onerror = () => resolve(base64Data);
+        img.src = base64Data;
+      });
+    }
+
     const board = document.querySelector('#board');
     const template = document.querySelector('#sceneTemplate');
     const filePicker = document.querySelector('#filePicker');
@@ -1276,7 +1405,7 @@
       }
     ];
 
-    function setImage(zone, src) {
+    function setImage(zone, src, skipSave = false) {
       zone.querySelector('img')?.remove();
       if (src) {
         const img = new Image();
@@ -1287,13 +1416,22 @@
       } else {
         zone.classList.remove('has-image');
       }
-      scheduleSave();
+      if (!skipSave) scheduleSave();
     }
 
     function readImage(file, zone) {
       if (!file?.type.startsWith('image/')) return;
       const reader = new FileReader();
-      reader.onload = () => setImage(zone, reader.result);
+      reader.onload = async () => {
+        setSyncStatus('saving', '이미지 압축 중...');
+        try {
+          const compressed = await compressImage(reader.result);
+          setImage(zone, compressed);
+        } catch (err) {
+          console.error(err);
+          setImage(zone, reader.result);
+        }
+      };
       reader.readAsDataURL(file);
     }
 
@@ -1314,15 +1452,15 @@
       toast('복사했습니다.');
     }
 
-    function addScene(data = {}, after = null) {
+    function addScene(data = {}, after = null, skipSave = false) {
       const scene = template.content.firstElementChild.cloneNode(true);
       scene.querySelector('.motion').innerText = data.motion || '';
       scene.querySelector('.narration').innerText = data.narration || '';
-      if (data.image) setImage(scene.querySelector('.image-zone'), data.image);
+      if (data.image) setImage(scene.querySelector('.image-zone'), data.image, true);
       after ? after.after(scene) : board.append(scene);
       bindScene(scene);
       renumber();
-      scheduleSave();
+      if (!skipSave) scheduleSave();
       return scene;
     }
 
@@ -1648,22 +1786,216 @@
       toast('기획안 데이터가 저장(다운로드)되었습니다.');
     }
 
+    let isSavingToFirestore = false;
+    let isApplyingRemoteUpdate = false;
+
+    async function saveToFirestore() {
+      if (!db || isApplyingRemoteUpdate) return;
+      try {
+        setSyncStatus('saving', '클라우드 저장 중...');
+        isSavingToFirestore = true;
+
+        const currentMeta = {
+          title: title ? title.innerText.trim() : 'C-ITS 기능 소개 영상',
+          slideTemplateVersion: SLIDE_TEMPLATE_VERSION,
+          slides: slideCanvases.map(slide => slide.innerHTML),
+          revisionNums: [...document.querySelectorAll('.revision-slide')].map(s => {
+            const m = s.id.match(/slideRevision_(\d+)/);
+            return m ? parseInt(m[1], 10) : 0;
+          }).filter(n => n > 0),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await db.collection('cits_storyboard_meta').doc('current').set(currentMeta);
+
+        const sceneElements = [...board.querySelectorAll('.scene')];
+        const sceneCol = db.collection('cits_storyboard_scenes');
+        const batch = db.batch();
+
+        const existingSnap = await sceneCol.get();
+        const existingIds = new Set(existingSnap.docs.map(d => d.id));
+
+        sceneElements.forEach((sceneEl, idx) => {
+          const docId = `scene_${String(idx).padStart(2, '0')}`;
+          const docRef = sceneCol.doc(docId);
+          batch.set(docRef, {
+            order: idx,
+            motion: sceneEl.querySelector('.motion')?.innerText || '',
+            narration: sceneEl.querySelector('.narration')?.innerText || '',
+            image: sceneEl.querySelector('.image-zone img')?.src || '',
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          existingIds.delete(docId);
+        });
+
+        existingIds.forEach(id => {
+          batch.delete(sceneCol.doc(id));
+        });
+
+        await batch.commit();
+        setSyncStatus('synced', '동기화 완료');
+      } catch (err) {
+        console.error('Firestore save error:', err);
+        setSyncStatus('error', '동기화 오류');
+      } finally {
+        isSavingToFirestore = false;
+      }
+    }
+
+    function applyRemoteMeta(data) {
+      if (!data) return;
+      if (data.title && title && document.activeElement !== title) {
+        title.innerText = data.title;
+      }
+      if (data.revisionNums && Array.isArray(data.revisionNums)) {
+        data.revisionNums.forEach(num => {
+          if (!document.querySelector(`#slideRevision_${num}`)) {
+            createRevisionSlideSilently(num);
+          }
+        });
+      }
+      refreshSlideReferences();
+      slideCanvases.forEach((slide, index) => {
+        if (slide === document.activeElement || slide.contains(document.activeElement)) {
+          return;
+        }
+        const saved = data.slides?.[index];
+        if (saved) {
+          slide.innerHTML = saved;
+        }
+      });
+      enforceSlideHeaders();
+      updateNarrationStats();
+      updateExternalTools();
+      updateSidebarNav();
+    }
+
+    function applyRemoteScenes(scenesData) {
+      if (!scenesData || !scenesData.length) return;
+      const currentScenes = [...board.querySelectorAll('.scene')];
+      const isEditingBoard = board.contains(document.activeElement);
+
+      if (!isEditingBoard && currentScenes.length !== scenesData.length) {
+        board.innerHTML = '';
+        scenesData.forEach(item => addScene(item, null, true));
+        renumber();
+        updateNarrationStats();
+        return;
+      }
+
+      scenesData.forEach((item, idx) => {
+        let sceneEl = currentScenes[idx];
+        if (!sceneEl) {
+          sceneEl = addScene(item, null, true);
+        } else {
+          const motionEl = sceneEl.querySelector('.motion');
+          const narrationEl = sceneEl.querySelector('.narration');
+          const zone = sceneEl.querySelector('.image-zone');
+          const currentImg = zone.querySelector('img')?.src || '';
+
+          if (motionEl && motionEl !== document.activeElement && motionEl.innerText !== (item.motion || '')) {
+            motionEl.innerText = item.motion || '';
+          }
+          if (narrationEl && narrationEl !== document.activeElement && narrationEl.innerText !== (item.narration || '')) {
+            narrationEl.innerText = item.narration || '';
+          }
+          if (currentImg !== (item.image || '')) {
+            setImage(zone, item.image || '', true);
+          }
+        }
+      });
+
+      while (currentScenes.length > scenesData.length) {
+        const extra = currentScenes.pop();
+        extra.remove();
+      }
+
+      renumber();
+      updateNarrationStats();
+    }
+
+    function initFirestoreSync() {
+      if (!db) {
+        setSyncStatus('error', '클라우드 미연결');
+        return;
+      }
+      setSyncStatus('saving', '클라우드 연결 중...');
+
+      let initialMetaLoaded = false;
+      let initialScenesLoaded = false;
+
+      // Meta listener
+      db.collection('cits_storyboard_meta').doc('current').onSnapshot(async (doc) => {
+        if (!doc.exists) {
+          if (!initialMetaLoaded) {
+            initialMetaLoaded = true;
+            await saveToFirestore();
+          }
+          return;
+        }
+        if (doc.metadata.hasPendingWrites || isSavingToFirestore) return;
+
+        const data = doc.data();
+        if (data) {
+          isApplyingRemoteUpdate = true;
+          try {
+            applyRemoteMeta(data);
+            setSyncStatus('synced', '동기화 완료');
+          } finally {
+            isApplyingRemoteUpdate = false;
+          }
+        }
+      }, (err) => {
+        console.error('Meta sync error:', err);
+        setSyncStatus('error', '동기화 오류');
+      });
+
+      // Scenes listener
+      db.collection('cits_storyboard_scenes').orderBy('order').onSnapshot(async (snapshot) => {
+        if (snapshot.empty) {
+          if (!initialScenesLoaded) {
+            initialScenesLoaded = true;
+            await saveToFirestore();
+          }
+          return;
+        }
+        if (snapshot.metadata.hasPendingWrites || isSavingToFirestore) return;
+
+        const scenes = snapshot.docs.map(d => d.data());
+        isApplyingRemoteUpdate = true;
+        try {
+          applyRemoteScenes(scenes);
+          setSyncStatus('synced', '동기화 완료');
+        } finally {
+          isApplyingRemoteUpdate = false;
+        }
+      }, (err) => {
+        console.error('Scenes sync error:', err);
+        setSyncStatus('error', '동기화 오류');
+      });
+    }
+
     function scheduleSave() {
+      if (isApplyingRemoteUpdate) return;
       enforceSlideHeaders();
       updateNarrationStats();
       updateAllSlideNarrationStats();
+      setSyncStatus('saving', '저장 중...');
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
         } catch (e) {}
-      }, 350);
+        saveToFirestore();
+      }, 500);
     }
 
     function saveImmediately() {
+      if (isApplyingRemoteUpdate) return;
       enforceSlideHeaders();
       clearTimeout(saveTimer);
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(getData())); } catch {}
+      saveToFirestore();
     }
 
     function loadData(data) {
@@ -1884,6 +2216,7 @@
     } catch { loadData({ scenes: initialScenes }); }
     enforceSlideHeaders();
     showSlide(0);
+    initFirestoreSync();
   </script>
 </body>
 </html>
