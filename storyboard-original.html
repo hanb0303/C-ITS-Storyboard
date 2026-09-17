@@ -201,10 +201,6 @@
     }
     .sidebar-header {
       padding: 0 8px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
     }
     .sidebar-brand-title {
       margin: 0;
@@ -957,64 +953,6 @@
     }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
-    /* Cloud Sync Status Indicator */
-    .cloud-sync-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 500;
-      color: #64748b;
-      padding: 4px 10px;
-      background: #f1f5f9;
-      border: 1px solid #e2e8f0;
-      border-radius: 16px;
-      transition: all .2s ease;
-      user-select: none;
-      height: 28px;
-      box-sizing: border-box;
-      white-space: nowrap;
-    }
-    .cloud-sync-status.synced {
-      background: #ecfdf5;
-      color: #059669;
-      border-color: #a7f3d0;
-    }
-    .cloud-sync-status.saving {
-      background: #eff6ff;
-      color: #2563eb;
-      border-color: #bfdbfe;
-    }
-    .cloud-sync-status.error {
-      background: #fef2f2;
-      color: #dc2626;
-      border-color: #fecaca;
-    }
-    .sync-dot {
-      width: 6.5px;
-      height: 6.5px;
-      border-radius: 50%;
-      background: #94a3b8;
-      display: inline-block;
-      flex-shrink: 0;
-      transition: background-color .2s ease;
-    }
-    .cloud-sync-status.synced .sync-dot {
-      background: #10b981;
-      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-    }
-    .cloud-sync-status.saving .sync-dot {
-      background: #3b82f6;
-      animation: pulseSync 1s infinite;
-    }
-    .cloud-sync-status.error .sync-dot {
-      background: #ef4444;
-    }
-    @keyframes pulseSync {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.3; transform: scale(0.8); }
-    }
-
 
     @media (max-width: 1050px) {
       .app { padding: 24px 18px 60px; }
@@ -1047,9 +985,6 @@
     <aside class="app-sidebar" id="appSidebar">
       <div class="sidebar-header">
         <h2 class="sidebar-brand-title">C-ITS 기획</h2>
-        <div class="cloud-sync-status synced" title="모든 사용자에게 실시간 동기화됩니다">
-          <span class="sync-dot"></span><span class="sync-text">동기화</span>
-        </div>
       </div>
 
       <div class="sidebar-action-box">
@@ -1084,9 +1019,6 @@
       <div class="header-right">
         <!-- 스토리보드 모드 시 도구 -->
         <div class="actions storyboard-tools">
-          <div class="cloud-sync-status synced" title="모든 사용자에게 실시간 동기화됩니다">
-            <span class="sync-dot"></span><span class="sync-text">동기화 완료</span>
-          </div>
           <div class="narration-summary" id="narrationSummary" title="공백 제외 · 분당 300자 기준">
             <span>나레이션</span><strong>0자 · 약 0초</strong>
           </div>
@@ -1098,9 +1030,6 @@
     <section class="slides-section" aria-label="기획안 슬라이드">
       <div class="slide-external-top-bar presentation-tools">
         <div class="slide-external-tools" id="externalSlideTools" style="display: none;">
-          <div class="cloud-sync-status synced" title="모든 사용자에게 실시간 동기화됩니다">
-            <span class="sync-dot"></span><span class="sync-text">동기화 완료</span>
-          </div>
           <div class="slide-narration-plain" id="externalNarrationStats">
             <span>나레이션</span> <strong id="externalNarrationCount">0자 · 약 0초</strong>
           </div>
@@ -1284,13 +1213,7 @@
       console.warn('Firebase init error:', e);
     }
 
-    function setSyncStatus(status, text) {
-      document.querySelectorAll('.cloud-sync-status').forEach(el => {
-        el.className = `cloud-sync-status ${status}`;
-        const textEl = el.querySelector('.sync-text');
-        if (textEl) textEl.textContent = text;
-      });
-    }
+    function setSyncStatus() {}
 
     function compressImage(base64Data, maxWidth = 1280, quality = 0.75) {
       return new Promise((resolve) => {
