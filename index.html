@@ -1537,7 +1537,7 @@
 
     function setSyncStatus() {}
 
-    function compressImage(base64Data, maxWidth = 1280, quality = 0.75) {
+    function compressImage(base64Data, maxWidth = 1200, quality = 0.75) {
       return new Promise((resolve) => {
         if (!base64Data || typeof base64Data !== 'string' || !base64Data.startsWith('data:image')) {
           return resolve(base64Data);
@@ -1555,7 +1555,27 @@
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
-          const compressed = canvas.toDataURL('image/jpeg', quality);
+
+          // First pass: JPEG at specified quality
+          let compressed = canvas.toDataURL('image/jpeg', quality);
+
+          // Second pass: if still > 350KB, scale down slightly
+          if (compressed.length > 350000) {
+            const scale = 0.8;
+            canvas.width = Math.round(width * scale);
+            canvas.height = Math.round(height * scale);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            compressed = canvas.toDataURL('image/jpeg', 0.65);
+          }
+
+          // Third pass safeguard: if still > 450KB, scale down further
+          if (compressed.length > 450000) {
+            const scale = 0.65;
+            canvas.width = Math.round(width * scale);
+            canvas.height = Math.round(height * scale);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            compressed = canvas.toDataURL('image/jpeg', 0.55);
+          }
           resolve(compressed);
         };
         img.onerror = () => resolve(base64Data);
@@ -1661,7 +1681,7 @@
       } else {
         zone.classList.remove('has-image');
       }
-      if (!skipSave) scheduleSave();
+      if (!skipSave) saveImmediately();
     }
 
     function readImage(file, zone) {
@@ -2071,13 +2091,41 @@
     }
 
     let isSavingToFirestore = false;
+    let pendingSaveRequest = false;
     let isApplyingRemoteUpdate = false;
     let lastSavedSceneCount = 7;
 
+    function saveToLocalStorage() {
+      const fullData = getData();
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(fullData));
+      } catch (e) {
+        console.warn('localStorage quota exceeded, saving text-only fallback:', e);
+        try {
+          const fallbackData = {
+            ...fullData,
+            scenes: (fullData.scenes || []).map(sc => ({
+              ...sc,
+              image: '' // Images are safely persisted in Google Cloud Firestore
+            }))
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(fallbackData));
+        } catch (err2) {
+          console.warn('localStorage fallback failed:', err2);
+        }
+      }
+    }
+
     async function saveToFirestore() {
       if (!db || isApplyingRemoteUpdate) return;
+      if (isSavingToFirestore) {
+        pendingSaveRequest = true;
+        return;
+      }
+
       try {
         isSavingToFirestore = true;
+        pendingSaveRequest = false;
 
         const currentMeta = {
           title: title ? title.innerText.trim() : 'C-ITS 기능 소개 영상',
@@ -2098,17 +2146,31 @@
         const sceneCol = db.collection('cits_storyboard_scenes');
         const batch = db.batch();
 
-        sceneElements.forEach((sceneEl, idx) => {
+        for (let idx = 0; idx < sceneElements.length; idx++) {
+          const sceneEl = sceneElements[idx];
           const docId = `scene_${String(idx).padStart(2, '0')}`;
           const docRef = sceneCol.doc(docId);
+          let imgSrc = sceneEl.querySelector('.image-zone img')?.src || '';
+
+          // If image is still over 500KB, re-compress before batch commit to stay well under 1MB Firestore limit
+          if (imgSrc.length > 500000) {
+            try {
+              imgSrc = await compressImage(imgSrc, 1000, 0.65);
+              const domImg = sceneEl.querySelector('.image-zone img');
+              if (domImg) domImg.src = imgSrc;
+            } catch (errCompress) {
+              console.warn('Pre-save compression error:', errCompress);
+            }
+          }
+
           batch.set(docRef, {
             order: idx,
             motion: getEditableText(sceneEl.querySelector('.motion')),
             narration: getEditableText(sceneEl.querySelector('.narration')),
-            image: sceneEl.querySelector('.image-zone img')?.src || '',
+            image: imgSrc,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
-        });
+        }
 
         if (lastSavedSceneCount > sceneElements.length) {
           for (let i = sceneElements.length; i < lastSavedSceneCount; i++) {
@@ -2123,6 +2185,10 @@
         console.error('Firestore save error:', err);
       } finally {
         isSavingToFirestore = false;
+        if (pendingSaveRequest) {
+          pendingSaveRequest = false;
+          saveToFirestore();
+        }
       }
     }
 
@@ -2182,7 +2248,14 @@
             }
           }
           if (zone && currentImg !== (item.image || '')) {
-            setImage(zone, item.image || '', true);
+            // Guard against remote snapshot wiping locally added image:
+            // If local already has an image and remote snapshot is empty,
+            // keep the local image and trigger cloud save!
+            if (currentImg && !item.image) {
+              scheduleSave();
+            } else {
+              setImage(zone, item.image || '', true);
+            }
           }
         }
       });
@@ -2247,9 +2320,7 @@
       updateAllSlideNarrationStats();
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
-        } catch (e) {}
+        saveToLocalStorage();
         saveToFirestore();
       }, 400);
     }
@@ -2258,7 +2329,7 @@
       if (isApplyingRemoteUpdate) return;
       enforceSlideHeaders();
       clearTimeout(saveTimer);
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(getData())); } catch {}
+      saveToLocalStorage();
       saveToFirestore();
     }
 
