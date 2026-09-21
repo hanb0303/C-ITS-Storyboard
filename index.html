@@ -585,7 +585,7 @@
     }
     body[data-view="presentation"] .script-grid-view {
       flex: 1;
-      min-height: 0;
+      min-height: 280px;
       height: 100%;
       max-height: 100%;
       column-count: 2;
@@ -1020,15 +1020,26 @@
       background: #475569;
       margin: 0 2px;
     }
+    .title-highlight,
+    span.title-highlight,
+    .slide-canvas .title-highlight,
     .editable span.title-highlight,
     .script-body-text span.title-highlight {
       color: #2563eb !important;
       font-weight: 800 !important;
       font-size: 1.05em;
+      line-height: inherit;
     }
     .editable b, .editable strong,
+    .slide-canvas b, .slide-canvas strong,
     .script-body-text b, .script-body-text strong {
-      font-weight: 700;
+      font-weight: 700 !important;
+    }
+    .script-body-text:empty::before {
+      content: '시나리오 텍스트를 입력하세요...';
+      color: #94a3b8;
+      pointer-events: none;
+      font-weight: 400;
     }
 
 
@@ -1597,15 +1608,17 @@
         return;
       }
 
-      const hasScript = !!currentSlideEl.querySelector('.script-body-text');
-      if (!hasScript) {
-        extTools.style.display = 'none';
-        return;
-      }
       extTools.style.display = 'flex';
 
-      const bodyTexts = [...currentSlideEl.querySelectorAll('.script-body-text')].map(el => el.innerText).join('');
-      const characters = bodyTexts.replace(/\s/g, '').length;
+      const canvasEl = currentSlideEl.querySelector('.slide-canvas');
+      let fullText = '';
+      if (canvasEl) {
+        const clone = canvasEl.cloneNode(true);
+        clone.querySelector('.slide-header-block')?.remove();
+        clone.querySelector('.slide-header-tools')?.remove();
+        fullText = clone.innerText || '';
+      }
+      const characters = fullText.replace(/\s/g, '').length;
       const totalSeconds = characters ? Math.max(1, Math.ceil(characters / 300 * 60)) : 0;
       const minutes = Math.floor(totalSeconds / 60);
       const seconds = totalSeconds % 60;
@@ -2122,17 +2135,114 @@
     });
     document.addEventListener('focusout', saveImmediately);
     window.addEventListener('beforeunload', saveImmediately);
+    function resetSlideCanvasContent(canvas) {
+      if (!canvas) return;
+      const header = canvas.querySelector('.slide-header-block');
+      [...canvas.children].forEach(child => {
+        if (child !== header) child.remove();
+      });
+
+      const grid = document.createElement('div');
+      grid.className = 'script-grid-view';
+      grid.innerHTML = `
+        <div class="script-column">
+          <div class="script-unit">
+            <p class="script-body-text"><br></p>
+          </div>
+        </div>
+      `;
+      canvas.appendChild(grid);
+
+      const p = grid.querySelector('.script-body-text');
+      const sel = window.getSelection();
+      if (sel && p) {
+        sel.removeAllRanges();
+        const newRange = document.createRange();
+        newRange.setStart(p, 0);
+        newRange.collapse(true);
+        sel.addRange(newRange);
+        p.focus();
+      }
+
+      updateExternalTools();
+      scheduleSave();
+    }
+
+    function ensureSlideEditableBody(canvas) {
+      if (!canvas) return null;
+      const header = canvas.querySelector('.slide-header-block');
+      const otherChildren = [...canvas.children].filter(c => c !== header);
+
+      const hasValidChild = otherChildren.length > 0 && otherChildren.some(c => {
+        return c.textContent.trim().length > 0 || c.querySelector('img, video, input, textarea, br, p, div');
+      });
+
+      if (!hasValidChild) {
+        otherChildren.forEach(c => c.remove());
+        const grid = document.createElement('div');
+        grid.className = 'script-grid-view';
+        grid.innerHTML = `
+          <div class="script-column">
+            <div class="script-unit">
+              <p class="script-body-text"><br></p>
+            </div>
+          </div>
+        `;
+        canvas.appendChild(grid);
+        return grid.querySelector('.script-body-text');
+      }
+      return otherChildren[0]?.querySelector('.script-body-text') || otherChildren[0];
+    }
+
     document.addEventListener('keydown', e => {
       if (e.key === 'Backspace' || e.key === 'Delete') {
-        const sel = window.getSelection();
-        if (!sel || !sel.rangeCount) return;
-        const range = sel.getRangeAt(0);
-        const header = e.target.closest?.('.slide-canvas')?.querySelector('.slide-header-block');
-        if (header && (range.intersectsNode(header) || (sel.containsNode && sel.containsNode(header, true)))) {
-          e.preventDefault();
+        const canvas = e.target.closest?.('.slide-canvas');
+        if (canvas) {
+          const header = canvas.querySelector('.slide-header-block');
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount) {
+            const range = sel.getRangeAt(0);
+            const touchesHeader = header && (range.intersectsNode(header) || (sel.containsNode && sel.containsNode(header, true)));
+            if (touchesHeader) {
+              e.preventDefault();
+              resetSlideCanvasContent(canvas);
+              return;
+            }
+          }
         }
       }
     });
+
+    document.addEventListener('keyup', e => {
+      if (e.key === 'Backspace' || e.key === 'Delete') {
+        const canvas = e.target.closest?.('.slide-canvas');
+        if (canvas) {
+          ensureSlideEditableBody(canvas);
+        }
+      }
+    });
+
+    document.addEventListener('click', e => {
+      const canvas = e.target.closest?.('.slide-canvas');
+      if (canvas && !e.target.closest('.slide-header-block')) {
+        const bodyTarget = ensureSlideEditableBody(canvas);
+        if (e.target === canvas || !canvas.querySelector('.script-body-text, .showcase-card')) {
+          const p = canvas.querySelector('.script-body-text') || bodyTarget;
+          if (p) {
+            const sel = window.getSelection();
+            if (sel) {
+              sel.removeAllRanges();
+              const range = document.createRange();
+              range.selectNodeContents(p);
+              range.collapse(false);
+              sel.addRange(range);
+            }
+            p.focus();
+          }
+        }
+      }
+    });
+
     prevSlide.addEventListener('click', () => showSlide(currentSlide - 1));
     nextSlide.addEventListener('click', () => {
       currentSlide < slideItems.length - 1 ? showSlide(currentSlide + 1) : showStoryboard();
@@ -2188,12 +2298,30 @@
         const plainText = (e.clipboardData || window.clipboardData).getData('text/plain');
         if (!plainText) return;
 
-        // Clean line breaks and insert as text
-        const selection = window.getSelection();
-        if (!selection || !selection.rangeCount) return;
-        selection.deleteFromDocument();
+        const canvas = editableTarget.closest('.slide-canvas');
+        if (canvas) {
+          ensureSlideEditableBody(canvas);
+        }
 
-        // Convert newlines into text node and line breaks
+        const selection = window.getSelection();
+        if (!selection || !selection.rangeCount) {
+          const range = document.createRange();
+          const targetNode = canvas ? (canvas.querySelector('.script-body-text') || canvas) : editableTarget;
+          range.selectNodeContents(targetNode);
+          range.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } else {
+          if (canvas) {
+            const header = canvas.querySelector('.slide-header-block');
+            const curRange = selection.getRangeAt(0);
+            if (header && (curRange.intersectsNode(header) || (selection.containsNode && selection.containsNode(header, true)))) {
+              resetSlideCanvasContent(canvas);
+            }
+          }
+          selection.deleteFromDocument();
+        }
+
         const lines = plainText.replace(/\r\n/g, '\n').split('\n');
         const fragment = document.createDocumentFragment();
         lines.forEach((line, idx) => {
@@ -2201,15 +2329,13 @@
           if (line) fragment.appendChild(document.createTextNode(line));
         });
 
-        const range = selection.getRangeAt(0);
-        range.insertNode(fragment);
+        const activeRange = selection.getRangeAt(0);
+        activeRange.insertNode(fragment);
 
-        // Move cursor to end of inserted content
-        range.collapse(false);
+        activeRange.collapse(false);
         selection.removeAllRanges();
-        selection.addRange(range);
+        selection.addRange(activeRange);
 
-        // Trigger input event to auto-save and update counters
         editableTarget.dispatchEvent(new Event('input', { bubbles: true }));
       }
     });
@@ -2219,6 +2345,12 @@
     const fmtBoldBtn = document.querySelector('#fmtBoldBtn');
     const fmtTitleBtn = document.querySelector('#fmtTitleBtn');
     const fmtClearBtn = document.querySelector('#fmtClearBtn');
+    let lastSavedSelectionRange = null;
+
+    // Prevent buttons from taking focus and collapsing text selection on mousedown
+    fmtToolbar?.addEventListener('mousedown', e => {
+      e.preventDefault();
+    });
 
     function hideFormatToolbar() {
       if (fmtToolbar) fmtToolbar.classList.remove('show');
@@ -2243,7 +2375,7 @@
         ? range.commonAncestorContainer.closest('.editable, .slide-canvas, [contenteditable="true"]')
         : range.commonAncestorContainer.parentElement?.closest('.editable, .slide-canvas, [contenteditable="true"]');
 
-      if (!parentEditable) {
+      if (!parentEditable || range.commonAncestorContainer.closest?.('.slide-header-block')) {
         hideFormatToolbar();
         return;
       }
@@ -2253,6 +2385,8 @@
         hideFormatToolbar();
         return;
       }
+
+      lastSavedSelectionRange = range.cloneRange();
 
       // Position toolbar directly above selected text
       const top = window.scrollY + rect.top - 8;
@@ -2264,9 +2398,8 @@
     }
 
     document.addEventListener('selectionchange', () => {
-      // Debounce slightly to allow user drag selection to settle
       clearTimeout(window._selChangeTimer);
-      window._selChangeTimer = setTimeout(checkSelectionAndShowToolbar, 120);
+      window._selChangeTimer = setTimeout(checkSelectionAndShowToolbar, 100);
     });
 
     document.addEventListener('mousedown', e => {
@@ -2275,9 +2408,19 @@
       }
     });
 
+    function restoreSelectionIfLost() {
+      const sel = window.getSelection();
+      if ((!sel || sel.isCollapsed || !sel.rangeCount) && lastSavedSelectionRange) {
+        sel.removeAllRanges();
+        sel.addRange(lastSavedSelectionRange);
+      }
+      return sel && sel.rangeCount ? sel.getRangeAt(0) : null;
+    }
+
     // Formatting Toolbar Action: Bold
     fmtBoldBtn?.addEventListener('click', e => {
       e.preventDefault();
+      restoreSelectionIfLost();
       document.execCommand('bold', false, null);
       scheduleSave();
       hideFormatToolbar();
@@ -2286,58 +2429,111 @@
     // Formatting Toolbar Action: Blue Title Highlight
     fmtTitleBtn?.addEventListener('click', e => {
       e.preventDefault();
+      const range = restoreSelectionIfLost();
+      if (!range) return;
       const sel = window.getSelection();
-      if (!sel || !sel.rangeCount) return;
 
-      const range = sel.getRangeAt(0);
-      const selectedContent = range.extractContents();
+      let container = range.commonAncestorContainer;
+      if (container.nodeType !== 1) container = container.parentElement;
 
-      // Check if already highlighted
-      const existingHighlight = range.commonAncestorContainer.nodeType === 1
-        ? range.commonAncestorContainer.closest('.title-highlight')
-        : range.commonAncestorContainer.parentElement?.closest('.title-highlight');
-
+      // Check if already highlighted in .title-highlight
+      const existingHighlight = container?.closest('.title-highlight');
       if (existingHighlight) {
-        // Toggle off
+        // Toggle off (unwrap)
         const parent = existingHighlight.parentNode;
         while (existingHighlight.firstChild) {
           parent.insertBefore(existingHighlight.firstChild, existingHighlight);
         }
         existingHighlight.remove();
-      } else {
+        scheduleSave();
+        hideFormatToolbar();
+        return;
+      }
+
+      // Check if inside .script-title-label (already title)
+      if (container?.closest('.script-title-label')) {
+        hideFormatToolbar();
+        return;
+      }
+
+      // Wrap in .title-highlight
+      try {
         const span = document.createElement('span');
         span.className = 'title-highlight';
+        const selectedContent = range.extractContents();
         span.appendChild(selectedContent);
         range.insertNode(span);
 
-        // Reselect wrapped span
         sel.removeAllRanges();
         const newRange = document.createRange();
         newRange.selectNodeContents(span);
         sel.addRange(newRange);
+      } catch (err) {
+        document.execCommand('insertHTML', false, `<span class="title-highlight">${sel.toString()}</span>`);
       }
 
       scheduleSave();
       hideFormatToolbar();
     });
 
-    // Formatting Toolbar Action: Clear Styles
+    // Formatting Toolbar Action: Clear Styles / Normal Text
     fmtClearBtn?.addEventListener('click', e => {
       e.preventDefault();
+      const range = restoreSelectionIfLost();
+
+      // 1. Native removeFormat
       document.execCommand('removeFormat', false, null);
-      const sel = window.getSelection();
-      if (sel && sel.rangeCount) {
-        const range = sel.getRangeAt(0);
-        const container = range.commonAncestorContainer.nodeType === 1
-          ? range.commonAncestorContainer
-          : range.commonAncestorContainer.parentElement;
-        const highlights = container?.querySelectorAll?.('.title-highlight');
-        highlights?.forEach(h => {
-          const parent = h.parentNode;
-          while (h.firstChild) parent.insertBefore(h.firstChild, h);
-          h.remove();
-        });
+
+      if (range) {
+        let container = range.commonAncestorContainer;
+        if (container.nodeType !== 1) container = container.parentElement;
+
+        if (container) {
+          // 2. Remove ancestor .title-highlight
+          const ancestorHighlight = container.closest('.title-highlight');
+          if (ancestorHighlight) {
+            const parent = ancestorHighlight.parentNode;
+            while (ancestorHighlight.firstChild) {
+              parent.insertBefore(ancestorHighlight.firstChild, ancestorHighlight);
+            }
+            ancestorHighlight.remove();
+          }
+
+          // 3. Convert ancestor .script-title-label to .script-body-text
+          const ancestorTitleLabel = container.closest('.script-title-label');
+          if (ancestorTitleLabel) {
+            ancestorTitleLabel.classList.remove('script-title-label');
+            ancestorTitleLabel.classList.add('script-body-text');
+            ancestorTitleLabel.removeAttribute('style');
+          }
+
+          // 4. Unwrap all descendant .title-highlight
+          container.querySelectorAll('.title-highlight').forEach(h => {
+            const parent = h.parentNode;
+            while (h.firstChild) parent.insertBefore(h.firstChild, h);
+            h.remove();
+          });
+
+          // 5. Convert all descendant .script-title-label to .script-body-text
+          container.querySelectorAll('.script-title-label').forEach(label => {
+            label.classList.remove('script-title-label');
+            label.classList.add('script-body-text');
+            label.removeAttribute('style');
+          });
+
+          // 6. Unwrap any bold tags
+          container.querySelectorAll('b, strong').forEach(b => {
+            const parent = b.parentNode;
+            while (b.firstChild) parent.insertBefore(b.firstChild, b);
+            b.remove();
+          });
+
+          // 7. Strip inline styles
+          if (container.hasAttribute('style')) container.removeAttribute('style');
+          container.querySelectorAll('[style]').forEach(el => el.removeAttribute('style'));
+        }
       }
+
       scheduleSave();
       hideFormatToolbar();
     });
