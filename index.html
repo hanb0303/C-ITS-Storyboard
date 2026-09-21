@@ -953,6 +953,84 @@
     }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+    /* Text Formatting Toolbar */
+    .text-format-toolbar {
+      position: absolute;
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 8px;
+      background: #1e293b;
+      color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.3), 0 4px 10px -2px rgba(0, 0, 0, 0.2);
+      transform: translate(-50%, -100%);
+      pointer-events: auto;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .text-format-toolbar.show {
+      display: flex;
+    }
+    .text-format-toolbar::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 6px 6px 0;
+      border-style: solid;
+      border-color: #1e293b transparent transparent transparent;
+    }
+    .fmt-btn {
+      height: 28px;
+      padding: 0 9px;
+      border-radius: 5px;
+      background: transparent;
+      color: #f8fafc;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background .12s ease, color .12s ease;
+    }
+    .fmt-btn:hover {
+      background: #334155;
+      color: #ffffff;
+    }
+    .fmt-btn.primary {
+      color: #60a5fa;
+    }
+    .fmt-btn.primary:hover {
+      background: #1e3a8a;
+      color: #93c5fd;
+    }
+    .fmt-btn.active {
+      background: #2563eb;
+      color: #ffffff;
+    }
+    .fmt-divider {
+      width: 1px;
+      height: 16px;
+      background: #475569;
+      margin: 0 2px;
+    }
+    .editable span.title-highlight,
+    .script-body-text span.title-highlight {
+      color: #2563eb !important;
+      font-weight: 800 !important;
+      font-size: 1.05em;
+    }
+    .editable b, .editable strong,
+    .script-body-text b, .script-body-text strong {
+      font-weight: 700;
+    }
+
 
     @media (max-width: 1050px) {
       .app { padding: 24px 18px 60px; }
@@ -1158,6 +1236,15 @@
 
   <input class="hidden-input" type="file" id="filePicker" accept="image/*" />
   <div class="toast" id="toast"></div>
+
+  <!-- Text Formatting Floating Toolbar -->
+  <div class="text-format-toolbar" id="textFormatToolbar">
+    <button type="button" class="fmt-btn" id="fmtBoldBtn" title="굵게 (Ctrl+B)"><b>B</b></button>
+    <div class="fmt-divider"></div>
+    <button type="button" class="fmt-btn primary" id="fmtTitleBtn" title="문단 제목 (블루 강조)">🔵 제목 강조</button>
+    <div class="fmt-divider"></div>
+    <button type="button" class="fmt-btn" id="fmtClearBtn" title="서식 지우기">✕ 일반 텍스트</button>
+  </div>
 
   <template id="sceneTemplate">
     <article class="scene">
@@ -1366,25 +1453,39 @@
 
     function getEditableText(el) {
       if (!el) return '';
-      const html = el.innerHTML;
-      if (!html) return '';
-      const temp = document.createElement('div');
-      temp.innerHTML = html;
-      temp.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
-      temp.querySelectorAll('div, p').forEach(block => {
-        block.prepend('\n');
+      // Clone to sanitize and format
+      const temp = el.cloneNode(true);
+      // Remove any unwanted wrapper tags or inline styles from paste, keeping only semantic classes
+      temp.querySelectorAll('*').forEach(node => {
+        if (node.classList.contains('title-highlight')) {
+          node.removeAttribute('style');
+        } else if (node.tagName === 'B' || node.tagName === 'STRONG') {
+          node.removeAttribute('style');
+        } else if (node.tagName !== 'BR') {
+          // Flatten any other styled wrappers
+          node.removeAttribute('style');
+        }
       });
-      return temp.textContent.replace(/^\n+/, '').replace(/\r\n/g, '\n');
+      return temp.innerHTML;
     }
 
-    function setEditableText(el, text) {
+    function setEditableText(el, htmlOrText) {
       if (!el) return;
-      const safeText = (text || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/\n/g, '<br>');
-      el.innerHTML = safeText;
+      if (!htmlOrText) {
+        el.innerHTML = '';
+        return;
+      }
+      // If it contains tags (like <span class="title-highlight"> or <br>), set innerHTML directly
+      if (/<[a-z][\s\S]*>/i.test(htmlOrText)) {
+        el.innerHTML = htmlOrText;
+      } else {
+        const safeText = htmlOrText
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\n/g, '<br>');
+        el.innerHTML = safeText;
+      }
     }
 
     async function copyText(value) {
@@ -2067,11 +2168,178 @@
       addScene().scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
     document.addEventListener('paste', e => {
-      if (document.activeElement?.classList.contains('image-zone')) return;
+      // 1. If pasting an image into image-zone, let image handler process it
       const file = clipboardImage(e.clipboardData);
-      if (!file) return;
-      const zone = document.activeElement?.closest?.('.scene')?.querySelector('.image-zone');
-      if (zone) { e.preventDefault(); readImage(file, zone); }
+      if (file) {
+        const zone = document.activeElement?.closest?.('.scene')?.querySelector('.image-zone');
+        if (zone) {
+          e.preventDefault();
+          readImage(file, zone);
+          return;
+        }
+      }
+
+      // 2. If pasting text into an editable field (motion, narration, or slide canvas)
+      const target = e.target;
+      const editableTarget = target.closest?.('.editable, .slide-canvas, [contenteditable="true"]');
+      if (editableTarget && !target.classList.contains('image-zone')) {
+        e.preventDefault();
+        // Extract plain text only (stripping font-size, font-family, background, colors, etc.)
+        const plainText = (e.clipboardData || window.clipboardData).getData('text/plain');
+        if (!plainText) return;
+
+        // Clean line breaks and insert as text
+        const selection = window.getSelection();
+        if (!selection || !selection.rangeCount) return;
+        selection.deleteFromDocument();
+
+        // Convert newlines into text node and line breaks
+        const lines = plainText.replace(/\r\n/g, '\n').split('\n');
+        const fragment = document.createDocumentFragment();
+        lines.forEach((line, idx) => {
+          if (idx > 0) fragment.appendChild(document.createElement('br'));
+          if (line) fragment.appendChild(document.createTextNode(line));
+        });
+
+        const range = selection.getRangeAt(0);
+        range.insertNode(fragment);
+
+        // Move cursor to end of inserted content
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        // Trigger input event to auto-save and update counters
+        editableTarget.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+
+    // --- Floating Text Formatting Toolbar Logic ---
+    const fmtToolbar = document.querySelector('#textFormatToolbar');
+    const fmtBoldBtn = document.querySelector('#fmtBoldBtn');
+    const fmtTitleBtn = document.querySelector('#fmtTitleBtn');
+    const fmtClearBtn = document.querySelector('#fmtClearBtn');
+
+    function hideFormatToolbar() {
+      if (fmtToolbar) fmtToolbar.classList.remove('show');
+    }
+
+    function checkSelectionAndShowToolbar() {
+      if (!fmtToolbar) return;
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || !sel.rangeCount) {
+        hideFormatToolbar();
+        return;
+      }
+
+      const text = sel.toString().trim();
+      if (!text) {
+        hideFormatToolbar();
+        return;
+      }
+
+      const range = sel.getRangeAt(0);
+      const parentEditable = range.commonAncestorContainer.nodeType === 1
+        ? range.commonAncestorContainer.closest('.editable, .slide-canvas, [contenteditable="true"]')
+        : range.commonAncestorContainer.parentElement?.closest('.editable, .slide-canvas, [contenteditable="true"]');
+
+      if (!parentEditable) {
+        hideFormatToolbar();
+        return;
+      }
+
+      const rect = range.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) {
+        hideFormatToolbar();
+        return;
+      }
+
+      // Position toolbar directly above selected text
+      const top = window.scrollY + rect.top - 8;
+      const left = window.scrollX + rect.left + (rect.width / 2);
+
+      fmtToolbar.style.top = `${top}px`;
+      fmtToolbar.style.left = `${left}px`;
+      fmtToolbar.classList.add('show');
+    }
+
+    document.addEventListener('selectionchange', () => {
+      // Debounce slightly to allow user drag selection to settle
+      clearTimeout(window._selChangeTimer);
+      window._selChangeTimer = setTimeout(checkSelectionAndShowToolbar, 120);
+    });
+
+    document.addEventListener('mousedown', e => {
+      if (fmtToolbar && !fmtToolbar.contains(e.target)) {
+        hideFormatToolbar();
+      }
+    });
+
+    // Formatting Toolbar Action: Bold
+    fmtBoldBtn?.addEventListener('click', e => {
+      e.preventDefault();
+      document.execCommand('bold', false, null);
+      scheduleSave();
+      hideFormatToolbar();
+    });
+
+    // Formatting Toolbar Action: Blue Title Highlight
+    fmtTitleBtn?.addEventListener('click', e => {
+      e.preventDefault();
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount) return;
+
+      const range = sel.getRangeAt(0);
+      const selectedContent = range.extractContents();
+
+      // Check if already highlighted
+      const existingHighlight = range.commonAncestorContainer.nodeType === 1
+        ? range.commonAncestorContainer.closest('.title-highlight')
+        : range.commonAncestorContainer.parentElement?.closest('.title-highlight');
+
+      if (existingHighlight) {
+        // Toggle off
+        const parent = existingHighlight.parentNode;
+        while (existingHighlight.firstChild) {
+          parent.insertBefore(existingHighlight.firstChild, existingHighlight);
+        }
+        existingHighlight.remove();
+      } else {
+        const span = document.createElement('span');
+        span.className = 'title-highlight';
+        span.appendChild(selectedContent);
+        range.insertNode(span);
+
+        // Reselect wrapped span
+        sel.removeAllRanges();
+        const newRange = document.createRange();
+        newRange.selectNodeContents(span);
+        sel.addRange(newRange);
+      }
+
+      scheduleSave();
+      hideFormatToolbar();
+    });
+
+    // Formatting Toolbar Action: Clear Styles
+    fmtClearBtn?.addEventListener('click', e => {
+      e.preventDefault();
+      document.execCommand('removeFormat', false, null);
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount) {
+        const range = sel.getRangeAt(0);
+        const container = range.commonAncestorContainer.nodeType === 1
+          ? range.commonAncestorContainer
+          : range.commonAncestorContainer.parentElement;
+        const highlights = container?.querySelectorAll?.('.title-highlight');
+        highlights?.forEach(h => {
+          const parent = h.parentNode;
+          while (h.firstChild) parent.insertBefore(h.firstChild, h);
+          h.remove();
+        });
+      }
+      scheduleSave();
+      hideFormatToolbar();
     });
 
     // Sidebar & Revision buttons binding
