@@ -48,7 +48,7 @@
     }
     button, input { font: inherit; }
     button { border: 0; cursor: pointer; }
-    .app { max-width: 1440px; margin: 0 auto; padding: 22px 32px 80px; }
+    .app { width: 100%; max-width: 1440px; margin: 0 auto; padding: 22px 32px 80px; box-sizing: border-box; }
     
     /* Header Area - Completely Locked Position */
     .page-header {
@@ -867,7 +867,7 @@
     }
 
     /* STORYBOARD VIEW */
-    .board-shell { width: min(1280px, 100%); margin: 0 auto; overflow-x: auto; }
+    .board-shell { width: min(1280px, 100%); margin: 0 auto; overflow-x: auto; box-sizing: border-box; }
     .column-head, .scene {
       display: grid;
       grid-template-columns: 48px 400px minmax(320px, 1fr) minmax(320px, 1fr);
@@ -877,7 +877,7 @@
     }
     .column-head > div { padding: 0 16px; }
     .column-head .head-narration { color: var(--primary); }
-    .board { min-width: 1088px; display: grid; gap: 12px; }
+    .board { width: 100%; min-width: 1088px; display: grid; gap: 12px; box-sizing: border-box; }
     .scene {
       position: relative; overflow: hidden; background: white; border: 1px solid var(--border-default);
       border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
@@ -1002,6 +1002,7 @@
       width: min(1280px, 100%);
       margin: 0 auto;
       overflow-x: auto;
+      box-sizing: border-box;
     }
     body[data-sb-mode="cards"] .column-head {
       display: none !important;
