@@ -956,18 +956,19 @@
       background: rgba(15, 23, 42, 0.88);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      display: flex;
+      display: none !important;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       opacity: 0;
-      pointer-events: none;
+      pointer-events: none !important;
       transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
       user-select: none;
     }
     .image-lightbox.active {
+      display: flex !important;
       opacity: 1;
-      pointer-events: auto;
+      pointer-events: auto !important;
     }
     .lightbox-header {
       position: absolute;
@@ -978,7 +979,6 @@
       align-items: center;
       justify-content: space-between;
       z-index: 10;
-      pointer-events: auto;
     }
     .lightbox-title-box {
       display: flex;
@@ -1039,7 +1039,6 @@
       max-width: 92vw;
       max-height: 80vh;
       box-sizing: border-box;
-      pointer-events: auto;
     }
     .lightbox-img {
       max-width: 90vw;
@@ -1482,7 +1481,7 @@
       </div>
 
       <div class="sidebar-footer">
-        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.3.0 · 최신 동기화됨</div>
+        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.3.1 · 최신 동기화됨</div>
         <button type="button" class="sidebar-footer-btn share-btn" id="sidebarShareBtn">공유하기</button>
       </div>
     </aside>
@@ -3223,6 +3222,7 @@
       const btn = e.target.closest('.sb-view-btn');
       if (btn && btn.dataset.mode) {
         setStoryboardLayoutMode(btn.dataset.mode);
+        toast(btn.dataset.mode === 'cards' ? '카드 뷰(스토리보드)로 전환되었습니다.' : '테이블 뷰로 전환되었습니다.');
       }
     });
 
