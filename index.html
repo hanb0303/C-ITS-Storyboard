@@ -2439,7 +2439,7 @@
 
       refreshSlideReferences();
       enforceSlideHeaders();
-      updateSlideNarrationStats(newSlide);
+      updateExternalTools();
     }
 
     function exportData() {
@@ -2681,7 +2681,7 @@
       if (isApplyingRemoteUpdate) return;
       enforceSlideHeaders();
       updateNarrationStats();
-      updateAllSlideNarrationStats();
+      updateExternalTools();
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
         saveToLocalStorage();
