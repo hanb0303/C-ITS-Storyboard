@@ -1481,7 +1481,7 @@
       </div>
 
       <div class="sidebar-footer">
-        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.3.1 · 최신 동기화됨</div>
+        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.3.2 · 최신 동기화됨</div>
         <button type="button" class="sidebar-footer-btn share-btn" id="sidebarShareBtn">공유하기</button>
       </div>
     </aside>
@@ -1705,7 +1705,7 @@
 
   <script>
     const STORAGE_KEY = 'cits-storyboard-v1';
-    const SLIDE_TEMPLATE_VERSION = 42;
+    const SLIDE_TEMPLATE_VERSION = 43;
 
     // --- Firebase & Firestore Configuration ---
     const firebaseConfig = {
@@ -2367,45 +2367,53 @@
         }
       }
 
-      let scriptContent = sourceGrid ? sourceGrid.outerHTML : '';
-
-      if (!scriptContent) {
+      let scriptContent = '';
+      if (revNum === 1) {
         scriptContent = `
           <div class="script-grid-view">
+            <!-- Left Column -->
             <div class="script-column">
               <div class="script-unit">
-                <div class="script-title-label">01. 추진 배경과 C-ITS 역할</div>
-                <p class="script-body-text">교차로 모퉁이, 주차된 차량 너머. 차량이 직접 보기 어려운 위험이 있습니다. 도로가 먼저 보고, 차량에 알려준다면 어떨까요? 도로와 차량이 정보를 주고받는 C-ITS. 시야 밖 정보를 연결해 차량의 인지와 판단을 돕습니다.</p>
+                <div class="script-title-label">01. 자율주행차의 인지·판단·제어</div>
+                <p class="script-body-text">자율주행차는 센서를 통해 주변 상황을 ‘인지’하고, 자체 시스템으로 ‘판단’하여, 실시간으로 차량 스스로를 ‘제어’합니다.</p>
               </div>
               <div class="script-unit">
-                <div class="script-title-label">02. 광주 실증 인프라 구축</div>
-                <p class="script-body-text">광주 쌍촌역사거리와 수창초등학교 후문에 실증 인프라를 구축했습니다. 실제 도로에서 네 가지 기능을 확인합니다.</p>
+                <div class="script-title-label">02. 센서 사각지대와 C-ITS</div>
+                <p class="script-body-text">시설물과 주정차 차량 뒤편에는 센서가 보지 못하는 사각지대가 있습니다.<br>기존 협력주행이 인프라의 판단 결과를 전달했다면, C-ITS는 사각지대의 객체정보를 차량에 전달합니다.<br>인프라는 차량의 시야를 넓히고, 최종 판단은 자율주행차가 수행합니다.</p>
               </div>
               <div class="script-unit">
-                <div class="script-title-label">03-1. 우회전 사각지대 보행자</div>
-                <p class="script-body-text">첫 번째, 우회전 사각지대의 보행자. 시설물과 주차 차량 뒤에 가려진 보행자를 도로 인프라가 감지해 위치 정보를 전달합니다. 차량은 이 정보를 바탕으로 속도를 줄이고, 부드럽게 멈춰 섭니다.</p>
+                <div class="script-title-label">03. 광주 실증 인프라 구축</div>
+                <p class="script-body-text">광주 쌍촌역사거리와 수창초등학교 후문에 ‘자율차 지원 실증 인프라’를 구축했습니다.<br>차량이 직접 보지 못하는 공간의 객체정보를 차량 시스템과 융합해 인지 영역을 확장하고, 실제 도로에서 네 가지 기능을 검증합니다.</p>
               </div>
               <div class="script-unit">
-                <div class="script-title-label">03-2. 좌회전 중 무단횡단 보행자</div>
-                <p class="script-body-text">두 번째, 좌회전 중 무단횡단 보행자. 반대편 차선의 차량에 가려진 보행자. 도로 인프라가 도로를 건너는 보행자의 위치를 알려줍니다. 차량은 보이지 않던 보행자를 확인하고, 속도를 낮춰 움직임에 대비합니다.</p>
+                <div class="script-title-label">04-1. 우회전 사각지대의 보행자</div>
+                <p class="script-body-text">첫 번째, 우회전 시 모퉁이에 가려진 보행자입니다.<br>인프라가 보행자의 위치와 이동 정보를 전달하면, 자율주행차가 접근 상황을 미리 판단하고 주행 궤적을 조정하며 여유 있게 감속합니다.</p>
               </div>
             </div>
+
+            <!-- Right Column -->
             <div class="script-column">
               <div class="script-unit">
-                <div class="script-title-label">03-3. 어린이 보호구역 보행자</div>
-                <p class="script-body-text">세 번째, 어린이 보호구역의 보행자. 더 세심한 주의가 필요한 학교 주변. 도로 인프라가 차량 뒤에 가려진 보행자 정보를 공유합니다. 차량의 인지 범위를 넓혀, 보행자가 있는 구간의 주행 판단을 돕습니다.</p>
+                <div class="script-title-label">04-2. 좌회전 시 차량 뒤 보행자</div>
+                <p class="script-body-text">두 번째, 좌회전 시 대형차 뒤에서 나타나는 보행자입니다.<br>차량에 가려진 보행자 정보를 인프라가 전달하고, 자율주행차는 속도를 낮춰 돌발 움직임에 대비합니다.</p>
               </div>
               <div class="script-unit">
-                <div class="script-title-label">03-4. 실시간 신호정보</div>
-                <p class="script-body-text">네 번째, 실시간 신호정보. 역광과 빛 반사로 신호가 잘 보이지 않을 때 도로에서 전달한 실시간 신호정보를 함께 활용합니다. 카메라만으로 확인하기 어려운 신호 상태를 보완합니다.</p>
+                <div class="script-title-label">04-3. 어린이보호구역의 보행자</div>
+                <p class="script-body-text">세 번째, 어린이보호구역에서 정차 차량 뒤에 가려진 보행자입니다.<br>인프라가 객체정보를 공유하면 자율주행차의 인지 범위가 넓어지고, 보행자의 움직임에 맞춰 안전하게 주행할 수 있습니다.</p>
               </div>
               <div class="script-unit">
-                <div class="script-title-label">04. 기대효과와 마무리</div>
-                <p class="script-body-text">도로가 전하는 위험정보로, 차량은 미리 상황을 파악하고 여유 있게 속도를 줄일 수 있습니다. 도로와 차량의 협력은 급제동을 줄이고 안정적인 주행을 돕습니다. 차량의 시야를 넘어, 도로와 정보를 나누다. C-ITS로 더 안전한 주행을 향합니다.</p>
+                <div class="script-title-label">04-4. 실시간 신호정보 연계</div>
+                <p class="script-body-text">네 번째, 역광이나 빛 반사로 신호가 잘 보이지 않는 상황입니다.<br>인프라가 제공하는 실시간 신호정보를 차량 시스템과 융합해 신호 인식과 우회전 판단을 보완합니다.</p>
+              </div>
+              <div class="script-unit">
+                <div class="script-title-label">05. 비포·애프터와 엔딩</div>
+                <p class="script-body-text">인프라 정보가 없을 때는 위험을 늦게 발견해 급제동과 불안정한 주행이 발생할 수 있습니다.<br>하지만 객체정보를 미리 공유하면 자율주행차가 상황을 먼저 판단하고, 여유 있게 감속할 수 있습니다.<br>기존 협력주행을 넘어, 자율주행차를 지원하는 인프라로 나아갑니다.<br>차량의 시야를 넓히는 C-ITS.<br>더 안전한 자율주행의 미래를 만듭니다.</p>
               </div>
             </div>
           </div>
         `;
+      } else if (sourceGrid) {
+        scriptContent = sourceGrid.outerHTML;
       }
 
       const slidesGrid = document.querySelector('.slides-grid');
