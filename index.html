@@ -175,9 +175,19 @@
     }
     
     body[data-view="presentation"] .storyboard-tools,
-    body[data-view="presentation"] .board-shell { display: none; }
+    body[data-view="presentation"] .styleframes-tools,
+    body[data-view="presentation"] .board-shell,
+    body[data-view="presentation"] .styleframes-section { display: none; }
+
     body[data-view="storyboard"] .presentation-tools,
-    body[data-view="storyboard"] .slides-section { display: none; }
+    body[data-view="storyboard"] .styleframes-tools,
+    body[data-view="storyboard"] .slides-section,
+    body[data-view="storyboard"] .styleframes-section { display: none; }
+
+    body[data-view="styleframes"] .presentation-tools,
+    body[data-view="styleframes"] .storyboard-tools,
+    body[data-view="styleframes"] .slides-section,
+    body[data-view="styleframes"] .board-shell { display: none; }
 
     /* App Layout & TDS Sidebar */
     .app-layout {
@@ -418,6 +428,9 @@
       overflow-y: hidden;
     }
     body[data-view="storyboard"] {
+      overflow-y: scroll;
+    }
+    body[data-view="styleframes"] {
       overflow-y: scroll;
     }
     body[data-view="presentation"] .app-layout {
@@ -1456,6 +1469,506 @@
       font-weight: 400;
     }
 
+    /* ========================================================
+       STYLEFRAMES (스타일프레임) SLIDE VIEWER
+       ======================================================== */
+    body[data-view="styleframes"] .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 16px 28px 48px;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+    }
+
+    .styleframes-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sf-header-counter {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      padding: 0 12px;
+      height: 38px;
+      border-radius: 9px;
+      font-size: 13px;
+      color: #64748b;
+      box-sizing: border-box;
+    }
+    .sf-header-counter strong {
+      color: #191f28;
+      font-weight: 700;
+    }
+    .sf-header-del-btn {
+      height: 38px;
+      padding: 0 14px;
+      border-radius: 9px;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      color: #64748b;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s ease;
+      box-sizing: border-box;
+    }
+    .sf-header-del-btn:hover:not(:disabled) {
+      background: #fee2e2;
+      color: #ef4444;
+      border-color: #fca5a5;
+    }
+    .sf-header-del-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .styleframes-section {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-top: 4px;
+      box-sizing: border-box;
+    }
+
+    /* Single Slide Viewer Card */
+    .sf-viewer-card {
+      background: #ffffff;
+      border: 1px solid #e5e8eb;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: border-color .2s ease;
+    }
+
+    /* Card Top Header */
+    .sf-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 22px;
+      border-bottom: 1px solid #f2f4f6;
+      background: #ffffff;
+    }
+    .sf-card-badge-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sf-badge-tag {
+      font-size: 12px;
+      font-weight: 800;
+      color: #3182f6;
+      background: #e8f3ff;
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+    .sf-badge-total {
+      font-size: 13px;
+      font-weight: 700;
+      color: #8b95a1;
+    }
+    .sf-card-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sf-nav-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid #e5e8eb;
+      background: #ffffff;
+      color: #4e5968;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+    .sf-nav-btn:hover:not(:disabled) {
+      background: #f2f4f6;
+      color: #191f28;
+      border-color: #d1d6db;
+    }
+    .sf-nav-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    /* 16:9 Cinematic Stage */
+    .sf-stage-container {
+      padding: 22px 24px;
+      background: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .sf-image-zone {
+      width: 100%;
+      max-width: 960px;
+      aspect-ratio: 16 / 9;
+      background: #ffffff;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      outline: none;
+      overflow: hidden;
+      transition: all .2s ease;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+    }
+    .sf-image-zone:hover {
+      border-color: #94a3b8;
+      background: #fbfcfe;
+    }
+    .sf-image-zone:focus-visible,
+    .sf-image-zone.drag-over {
+      border-color: #3182f6;
+      background: #f0f7ff;
+      box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.18);
+    }
+    .sf-image-zone.has-image {
+      border: 1px solid #1e293b;
+      background: #090d16;
+      cursor: default;
+    }
+    .sf-image-zone.has-image:hover {
+      border-color: #3182f6;
+    }
+
+    /* Placeholder content */
+    .sf-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 10px;
+      padding: 32px 20px;
+      user-select: none;
+    }
+    .sf-placeholder-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      background: #e8f3ff;
+      color: #3182f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2px;
+      transition: transform .2s ease;
+    }
+    .sf-image-zone:hover .sf-placeholder-icon,
+    .sf-image-zone.drag-over .sf-placeholder-icon {
+      transform: scale(1.08);
+    }
+    .sf-placeholder-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #191f28;
+      letter-spacing: -0.02em;
+    }
+    .sf-placeholder-desc {
+      font-size: 13.5px;
+      color: #64748b;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .sf-placeholder-desc b {
+      color: #3182f6;
+    }
+    .sf-placeholder-tag {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #8b95a1;
+      background: #f1f5f9;
+      border-radius: 6px;
+      letter-spacing: 0.4px;
+    }
+
+    /* Rendered Image */
+    .sf-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      border-radius: 11px;
+    }
+
+    /* Action Tools Overlay on Image */
+    .sf-image-tools {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: none;
+      gap: 6px;
+      z-index: 5;
+    }
+    .sf-image-zone.has-image:hover .sf-image-tools,
+    .sf-image-zone.has-image:focus-within .sf-image-tools {
+      display: flex;
+    }
+    .sf-mini-btn {
+      height: 28px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(6px);
+      color: #ffffff;
+      cursor: pointer;
+      transition: all .15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sf-mini-btn:hover {
+      background: rgba(15, 23, 42, 0.95);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+    .sf-mini-btn.danger:hover {
+      background: #dc2626;
+      border-color: #ef4444;
+    }
+
+    /* Card Details Pane (Title & Desc) */
+    .sf-info-pane {
+      padding: 18px 24px 22px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      border-top: 1px solid #f2f4f6;
+    }
+    .sf-info-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sf-pane-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #8b95a1;
+      letter-spacing: 0.3px;
+    }
+    .sf-title-field {
+      font-size: 16px;
+      font-weight: 700;
+      color: #191f28;
+      min-height: 24px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #e5e8eb;
+      background: #ffffff;
+      transition: all .15s ease;
+      outline: none;
+      line-height: 1.45;
+    }
+    .sf-title-field:hover {
+      border-color: #cbd5e1;
+    }
+    .sf-title-field:focus {
+      border-color: #3182f6;
+      background: #f8faff;
+      box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+    }
+    .sf-desc-field {
+      font-size: 14px;
+      color: #333d4b;
+      min-height: 48px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #e5e8eb;
+      background: #ffffff;
+      line-height: 1.6;
+      transition: all .15s ease;
+      outline: none;
+      white-space: pre-wrap;
+    }
+    .sf-desc-field:hover {
+      border-color: #cbd5e1;
+    }
+    .sf-desc-field:focus {
+      border-color: #3182f6;
+      background: #f8faff;
+      box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.12);
+    }
+    .sf-editable:empty:before {
+      content: attr(data-placeholder);
+      color: #94a3b8;
+      pointer-events: none;
+      font-weight: 400;
+    }
+
+    /* Filmstrip (Thumbnail Bottom Strip) */
+    .sf-filmstrip-container {
+      background: #ffffff;
+      border: 1px solid #e5e8eb;
+      border-radius: 14px;
+      padding: 16px 20px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .sf-filmstrip-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sf-filmstrip-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #333d4b;
+    }
+    .sf-filmstrip-hint {
+      font-size: 12px;
+      color: #8b95a1;
+    }
+    .sf-filmstrip-scroll {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
+    .sf-filmstrip-scroll::-webkit-scrollbar {
+      height: 6px;
+    }
+    .sf-filmstrip-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    .sf-filmstrip-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .sf-thumb-card {
+      flex: 0 0 148px;
+      width: 148px;
+      border: 2px solid transparent;
+      border-radius: 10px;
+      padding: 5px;
+      background: #f8fafc;
+      cursor: pointer;
+      transition: all .15s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-sizing: border-box;
+      outline: none;
+    }
+    .sf-thumb-card:hover {
+      background: #f1f5f9;
+      transform: translateY(-2px);
+    }
+    .sf-thumb-card.active {
+      border-color: #3182f6;
+      background: #e8f3ff;
+      box-shadow: 0 4px 12px rgba(49, 130, 246, 0.15);
+      transform: translateY(-2px);
+    }
+    .sf-thumb-screen {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 6px;
+      background: #e2e8f0;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .sf-thumb-screen img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .sf-thumb-screen .sf-thumb-empty {
+      font-size: 10px;
+      font-weight: 700;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: 0.5px;
+    }
+    .sf-thumb-num-badge {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      font-size: 9.5px;
+      font-weight: 800;
+      color: #ffffff;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(2px);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    .sf-thumb-card.active .sf-thumb-num-badge {
+      background: #3182f6;
+    }
+    .sf-thumb-caption {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #4e5968;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+    .sf-thumb-card.active .sf-thumb-caption {
+      color: #3182f6;
+      font-weight: 700;
+    }
+    .sf-thumb-add-btn {
+      flex: 0 0 80px;
+      height: 94px;
+      border-radius: 10px;
+      border: 1px dashed #cbd5e1;
+      background: #f8fafc;
+      color: #8b95a1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s ease;
+      outline: none;
+    }
+    .sf-thumb-add-btn:hover {
+      border-color: #3182f6;
+      background: #f0f7ff;
+      color: #3182f6;
+    }
+    .sf-thumb-add-btn span {
+      font-size: 18px;
+      line-height: 1;
+    }
+
 
     @media (max-width: 1050px) {
       .app { padding: 24px 18px 60px; }
@@ -1506,10 +2019,11 @@
 
       <div class="sidebar-nav-list">
         <button type="button" class="sidebar-nav-item" id="sidebarStoryboardItem">스토리보드</button>
+        <button type="button" class="sidebar-nav-item" id="sidebarStyleframeItem">스타일프레임</button>
       </div>
 
       <div class="sidebar-footer">
-        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.3.3 · 최신 동기화됨</div>
+        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.4.0 · 최신 동기화됨</div>
         <button type="button" class="sidebar-footer-btn share-btn" id="sidebarShareBtn">공유하기</button>
       </div>
     </aside>
@@ -1537,6 +2051,14 @@
             </button>
           </div>
           <button class="btn primary" id="addBtn">+ 장면 추가</button>
+        </div>
+        <!-- 스타일프레임 모드 시 도구 -->
+        <div class="actions styleframes-tools">
+          <div class="sf-header-counter" id="sfHeaderCounter">
+            <span>프레임</span><strong id="sfHeaderCount">1 / 6</strong>
+          </div>
+          <button type="button" class="sf-header-del-btn" id="sfDeleteFrameBtn" title="현재 프레임 삭제">삭제</button>
+          <button type="button" class="btn primary" id="sfAddFrameBtn">+ 프레임 추가</button>
         </div>
       </div>
     </header>
@@ -1666,11 +2188,80 @@
       </div>
       <section class="board" id="board"></section>
     </div>
+
+    <!-- Styleframe Section (1 Slide at a Time Viewer + Filmstrip) -->
+    <section class="styleframes-section" id="styleframesSection" aria-label="스타일프레임 슬라이더">
+      <!-- Main Single Slide Viewer Card (16:9 view) -->
+      <div class="sf-viewer-card">
+        <!-- Top Card Meta Bar -->
+        <div class="sf-card-header">
+          <div class="sf-card-badge-group">
+            <span class="sf-badge-tag" id="sfBadgeTag">FRAME 01</span>
+            <span class="sf-badge-total" id="sfBadgeCount">1 / 6</span>
+          </div>
+          <div class="sf-card-nav">
+            <button type="button" class="sf-nav-btn" id="sfPrevBtn" title="이전 프레임 (← 또는 마우스 휠 위)" aria-label="이전 프레임">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <button type="button" class="sf-nav-btn" id="sfNextBtn" title="다음 프레임 (→ 또는 마우스 휠 아래)" aria-label="다음 프레임">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 16:9 Main Visual Stage -->
+        <div class="sf-stage-container">
+          <div class="sf-image-zone" id="sfImageZone" tabindex="0" title="클릭하여 파일 선택 · Ctrl+V 붙여넣기 · 이미지 파일 드래그">
+            <!-- Empty Placeholder state -->
+            <div class="sf-placeholder" id="sfPlaceholder">
+              <div class="sf-placeholder-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <strong class="sf-placeholder-title">스타일프레임 이미지 추가</strong>
+              <p class="sf-placeholder-desc">클릭하여 이미지 파일 선택 &nbsp;·&nbsp; <b>Ctrl+V</b> 복사 붙여넣기 &nbsp;·&nbsp; 파일 드래그 & 드롭</p>
+              <span class="sf-placeholder-tag">16 : 9 Widescreen</span>
+            </div>
+
+            <!-- Real Image display -->
+            <img src="" alt="스타일프레임" class="sf-image" id="sfImage" style="display: none;" />
+
+            <!-- Hover action overlay for image -->
+            <div class="sf-image-tools" id="sfImageTools">
+              <button type="button" class="sf-mini-btn" id="sfZoomBtn" title="이미지 크게 보기">확대</button>
+              <button type="button" class="sf-mini-btn" id="sfReplaceBtn" title="이미지 교체">교체</button>
+              <button type="button" class="sf-mini-btn danger" id="sfRemoveImgBtn" title="이미지 삭제">삭제</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide Info / Notes Pane -->
+        <div class="sf-info-pane">
+          <div class="sf-info-row">
+            <label class="sf-pane-label" for="sfTitleInput">프레임 제목</label>
+            <div class="sf-editable sf-title-field" id="sfTitleInput" contenteditable="true" spellcheck="true" data-placeholder="프레임 제목을 입력하세요 (예: 01. 자율주행차의 인지·판단·제어)"></div>
+          </div>
+          <div class="sf-info-row">
+            <label class="sf-pane-label" for="sfDescInput">주요 연출 / 모션 메모</label>
+            <div class="sf-editable sf-desc-field" id="sfDescInput" contenteditable="true" spellcheck="true" data-placeholder="화면 구도, 톤앤매너, 핵심 3D/2D 그래픽 연출 내용을 입력하세요."></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Thumbnail Strip (Filmstrip) -->
+      <div class="sf-filmstrip-container">
+        <div class="sf-filmstrip-header">
+          <span class="sf-filmstrip-title">전체 프레임 목록</span>
+          <span class="sf-filmstrip-hint">썸네일을 클릭하거나 키보드 방향키(←, →), 마우스 휠로 넘겨볼 수 있습니다</span>
+        </div>
+        <div class="sf-filmstrip-scroll" id="sfFilmstripScroll"></div>
+      </div>
+    </section>
   </main>
   </div>
 </div>
 
   <input class="hidden-input" type="file" id="filePicker" accept="image/*" />
+  <input class="hidden-input" type="file" id="sfFilePicker" accept="image/*" />
   <div class="toast" id="toast"></div>
 
   <!-- Text Formatting Floating Toolbar -->
@@ -2133,14 +2724,22 @@
       }, 250);
     }
 
+    function navigateLightbox(dir) {
+      if (imageLightbox.dataset.mode === 'styleframes') {
+        renderStyleframeLightboxScene(currentLightboxIndex + dir);
+      } else {
+        renderLightboxScene(currentLightboxIndex + dir);
+      }
+    }
+
     lightboxCloseBtn?.addEventListener('click', closeImageLightbox);
     lightboxPrevBtn?.addEventListener('click', e => {
       e.stopPropagation();
-      renderLightboxScene(currentLightboxIndex - 1);
+      navigateLightbox(-1);
     });
     lightboxNextBtn?.addEventListener('click', e => {
       e.stopPropagation();
-      renderLightboxScene(currentLightboxIndex + 1);
+      navigateLightbox(1);
     });
 
     imageLightbox?.addEventListener('click', e => {
@@ -2156,10 +2755,10 @@
         closeImageLightbox();
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        renderLightboxScene(currentLightboxIndex - 1);
+        navigateLightbox(-1);
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        renderLightboxScene(currentLightboxIndex + 1);
+        navigateLightbox(1);
       }
     });
 
@@ -2179,11 +2778,11 @@
       if (e.deltaY > 0) {
         // Wheel Down -> Next Scene
         lastWheelTime = now;
-        renderLightboxScene(currentLightboxIndex + 1);
+        navigateLightbox(1);
       } else if (e.deltaY < 0) {
         // Wheel Up -> Previous Scene
         lastWheelTime = now;
-        renderLightboxScene(currentLightboxIndex - 1);
+        navigateLightbox(-1);
       }
     }, { passive: false });
 
@@ -2303,6 +2902,7 @@
     function updateSidebarNav() {
       const isPres = document.body.dataset.view === 'presentation';
       const isSb = document.body.dataset.view === 'storyboard';
+      const isSf = document.body.dataset.view === 'styleframes';
 
       document.querySelectorAll('#sidebarSlideList > .sidebar-nav-item, #sidebarSlideList > .sidebar-nested-group > .sidebar-nav-item').forEach((item) => {
         const idx = parseInt(item.dataset.slideIndex, 10);
@@ -2318,6 +2918,9 @@
 
       const sbItem = document.querySelector('#sidebarStoryboardItem');
       if (sbItem) sbItem.classList.toggle('active', isSb);
+
+      const sfItem = document.querySelector('#sidebarStyleframeItem');
+      if (sfItem) sfItem.classList.toggle('active', isSf);
     }
 
     function createRevisionSlide() {
@@ -2948,28 +3551,46 @@
       currentSlide < slideItems.length - 1 ? showSlide(currentSlide + 1) : showStoryboard();
     });
     window.addEventListener('keydown', e => {
-      if (document.body.dataset.view !== 'presentation') return;
       if (e.target.isContentEditable || ['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
-      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
-        e.preventDefault();
-        currentSlide < slideItems.length - 1 ? showSlide(currentSlide + 1) : showStoryboard();
-      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
-        e.preventDefault();
-        if (currentSlide > 0) showSlide(currentSlide - 1);
+      if (document.body.dataset.view === 'presentation') {
+        if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+          e.preventDefault();
+          currentSlide < slideItems.length - 1 ? showSlide(currentSlide + 1) : showStoryboard();
+        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+          e.preventDefault();
+          if (currentSlide > 0) showSlide(currentSlide - 1);
+        }
+      } else if (document.body.dataset.view === 'styleframes') {
+        if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+          e.preventDefault();
+          if (currentStyleframe < styleframes.length - 1) showStyleframe(currentStyleframe + 1);
+        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+          e.preventDefault();
+          if (currentStyleframe > 0) showStyleframe(currentStyleframe - 1);
+        }
       }
     });
     let wheelLock = false;
     window.addEventListener('wheel', e => {
-      if (document.body.dataset.view !== 'presentation') return;
       if (wheelLock) return;
       if (Math.abs(e.deltaY) < 25) return;
-      wheelLock = true;
-      setTimeout(() => { wheelLock = false; }, 380);
 
-      if (e.deltaY > 0) {
-        if (currentSlide < slideItems.length - 1) showSlide(currentSlide + 1);
-      } else if (e.deltaY < 0) {
-        if (currentSlide > 0) showSlide(currentSlide - 1);
+      if (document.body.dataset.view === 'presentation') {
+        wheelLock = true;
+        setTimeout(() => { wheelLock = false; }, 380);
+        if (e.deltaY > 0) {
+          if (currentSlide < slideItems.length - 1) showSlide(currentSlide + 1);
+        } else if (e.deltaY < 0) {
+          if (currentSlide > 0) showSlide(currentSlide - 1);
+        }
+      } else if (document.body.dataset.view === 'styleframes') {
+        wheelLock = true;
+        setTimeout(() => { wheelLock = false; }, 320);
+        if (e.deltaY > 0) {
+          if (currentStyleframe < styleframes.length - 1) showStyleframe(currentStyleframe + 1);
+        } else if (e.deltaY < 0) {
+          if (currentStyleframe > 0) showStyleframe(currentStyleframe - 1);
+        }
       }
     }, { passive: true });
     document.querySelector('#slidesBtn')?.addEventListener('click', () => showPresentation(1));
@@ -2984,6 +3605,16 @@
       }, 120);
     });
     document.addEventListener('paste', e => {
+      // 0. If in styleframes view and pasting image, process into current styleframe
+      if (document.body.dataset.view === 'styleframes') {
+        const file = clipboardImage(e.clipboardData);
+        if (file) {
+          e.preventDefault();
+          handleStyleframeImageFile(file);
+          return;
+        }
+      }
+
       // 1. If pasting an image into image-zone, let image handler process it
       const file = clipboardImage(e.clipboardData);
       if (file) {
@@ -3310,6 +3941,7 @@
       }
     });
     document.querySelector('#sidebarStoryboardItem')?.addEventListener('click', showStoryboard);
+    document.querySelector('#sidebarStyleframeItem')?.addEventListener('click', () => showStyleframes());
     document.querySelector('#sidebarShareBtn')?.addEventListener('click', async () => {
       saveImmediately();
       const shareUrl = window.location.href;
@@ -3330,6 +3962,487 @@
       }
     });
 
+    // ========================================================
+    // STYLEFRAMES (스타일프레임) LOGIC & STATE
+    // ========================================================
+    const SF_STORAGE_KEY = 'cits_styleframes_v1';
+    const DEFAULT_STYLEFRAMES = [
+      {
+        id: 'sf_01',
+        title: '01. 자율주행차의 인지·판단·제어',
+        desc: '자율주행차 센서(라이다·카메라·레이더) 인지 및 차량 제어 시각화',
+        image: ''
+      },
+      {
+        id: 'sf_02',
+        title: '02. 센서 사각지대와 C-ITS',
+        desc: '교차로 모퉁이 사각지대 및 인프라 객체정보 차량 전송 흐름',
+        image: ''
+      },
+      {
+        id: 'sf_03',
+        title: '03. 광주 실증 인프라 구축',
+        desc: '광주 쌍촌역사거리 및 수창초교 실증 인프라 전경 및 인지 영역 확장',
+        image: ''
+      },
+      {
+        id: 'sf_04',
+        title: '04-1. 우회전 사각지대의 보행자',
+        desc: '모퉁이에 가려진 보행자 정보 전달 및 자율차 주행 궤적 조정/사전 감속',
+        image: ''
+      },
+      {
+        id: 'sf_05',
+        title: '04-2. 좌회전 차량 뒤 보행자 & 신호연계',
+        desc: '대형차 뒤 보행자 및 역광 신호정보 차량 시스템 융합 및 안전 대응',
+        image: ''
+      },
+      {
+        id: 'sf_06',
+        title: '05. 비포·애프터와 엔딩',
+        desc: '급제동 없는 사전 감속 비포/애프터 비교 및 C-ITS 미래 자율주행 비전',
+        image: ''
+      }
+    ];
+
+    let styleframes = [ ...DEFAULT_STYLEFRAMES ];
+    let currentStyleframe = 0;
+    let sfSaveTimer;
+    let isSavingStyleframes = false;
+    let isApplyingRemoteStyleframes = false;
+    let currentSfLightboxFrames = [];
+
+    function saveStyleframesToLocalStorage() {
+      try {
+        localStorage.setItem(SF_STORAGE_KEY, JSON.stringify(styleframes));
+      } catch (e) {
+        console.warn('localStorage quota reached for styleframes:', e);
+        try {
+          const fallback = styleframes.map(sf => ({ ...sf, image: '' }));
+          localStorage.setItem(SF_STORAGE_KEY, JSON.stringify(fallback));
+        } catch (err2) {}
+      }
+    }
+
+    async function saveStyleframesToFirestore() {
+      if (!db || isApplyingRemoteStyleframes) return;
+      if (isSavingStyleframes) return;
+      try {
+        isSavingStyleframes = true;
+        const col = db.collection('cits_styleframes');
+        const batch = db.batch();
+
+        batch.set(db.collection('cits_styleframes_meta').doc('current'), {
+          count: styleframes.length,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        for (let i = 0; i < styleframes.length; i++) {
+          const sf = styleframes[i];
+          const docRef = col.doc(`frame_${String(i).padStart(2, '0')}`);
+          let imgSrc = sf.image || '';
+          if (imgSrc.length > 500000) {
+            try {
+              imgSrc = await compressImage(imgSrc, 1200, 0.7);
+              sf.image = imgSrc;
+            } catch (errCompress) {}
+          }
+          batch.set(docRef, {
+            order: i,
+            id: sf.id || `sf_${i + 1}`,
+            title: sf.title || '',
+            desc: sf.desc || '',
+            image: imgSrc,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+
+        await batch.commit();
+      } catch (err) {
+        console.warn('Firestore styleframe save error:', err);
+      } finally {
+        isSavingStyleframes = false;
+      }
+    }
+
+    function scheduleSaveStyleframes() {
+      if (isApplyingRemoteStyleframes) return;
+      clearTimeout(sfSaveTimer);
+      sfSaveTimer = setTimeout(() => {
+        saveStyleframesImmediately();
+      }, 400);
+    }
+
+    function saveStyleframesImmediately() {
+      if (isApplyingRemoteStyleframes) return;
+      clearTimeout(sfSaveTimer);
+      saveStyleframesToLocalStorage();
+      saveStyleframesToFirestore();
+    }
+
+    function initStyleframeFirestoreSync() {
+      if (!db) return;
+      db.collection('cits_styleframes').orderBy('order').onSnapshot(snapshot => {
+        if (snapshot.empty) {
+          saveStyleframesToFirestore();
+          return;
+        }
+        if (snapshot.metadata.hasPendingWrites || isSavingStyleframes) return;
+
+        isApplyingRemoteStyleframes = true;
+        try {
+          const remoteFrames = snapshot.docs.map(doc => doc.data());
+          if (remoteFrames.length > 0) {
+            styleframes = remoteFrames.map((rf, idx) => ({
+              id: rf.id || `sf_${idx + 1}`,
+              title: rf.title || '',
+              desc: rf.desc || '',
+              image: rf.image || ''
+            }));
+            saveStyleframesToLocalStorage();
+            renderStyleframeCurrent();
+            renderFilmstrip();
+          }
+        } finally {
+          isApplyingRemoteStyleframes = false;
+        }
+      }, err => {
+        console.warn('Styleframes sync listener error:', err);
+      });
+    }
+
+    function showStyleframes(frameIndex = currentStyleframe) {
+      document.body.dataset.view = 'styleframes';
+      try { localStorage.setItem('cits_active_view', 'styleframes'); } catch (e) {}
+      showStyleframe(frameIndex);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      updateSidebarNav();
+    }
+
+    function showStyleframe(index) {
+      if (!styleframes.length) return;
+      currentStyleframe = Math.max(0, Math.min(index, styleframes.length - 1));
+      renderStyleframeCurrent();
+    }
+
+    function renderStyleframeCurrent() {
+      if (!styleframes.length) return;
+      currentStyleframe = Math.max(0, Math.min(currentStyleframe, styleframes.length - 1));
+      const sf = styleframes[currentStyleframe];
+
+      const total = styleframes.length;
+      const currentNum = String(currentStyleframe + 1).padStart(2, '0');
+
+      const badgeTag = document.querySelector('#sfBadgeTag');
+      const badgeCount = document.querySelector('#sfBadgeCount');
+      const headerCount = document.querySelector('#sfHeaderCount');
+      const prevBtn = document.querySelector('#sfPrevBtn');
+      const nextBtn = document.querySelector('#sfNextBtn');
+      const deleteFrameBtn = document.querySelector('#sfDeleteFrameBtn');
+
+      if (badgeTag) badgeTag.textContent = `FRAME ${currentNum}`;
+      if (badgeCount) badgeCount.textContent = `${currentStyleframe + 1} / ${total}`;
+      if (headerCount) headerCount.textContent = `${currentStyleframe + 1} / ${total}`;
+
+      if (prevBtn) prevBtn.disabled = currentStyleframe === 0;
+      if (nextBtn) nextBtn.disabled = currentStyleframe === total - 1;
+      if (deleteFrameBtn) deleteFrameBtn.disabled = total <= 1;
+
+      const zone = document.querySelector('#sfImageZone');
+      const imgEl = document.querySelector('#sfImage');
+      const placeholder = document.querySelector('#sfPlaceholder');
+
+      if (sf.image) {
+        imgEl.src = sf.image;
+        imgEl.style.display = 'block';
+        placeholder.style.display = 'none';
+        zone.classList.add('has-image');
+      } else {
+        imgEl.src = '';
+        imgEl.style.display = 'none';
+        placeholder.style.display = 'flex';
+        zone.classList.remove('has-image');
+      }
+
+      const titleEl = document.querySelector('#sfTitleInput');
+      const descEl = document.querySelector('#sfDescInput');
+      if (titleEl && document.activeElement !== titleEl) {
+        setEditableText(titleEl, sf.title || '');
+      }
+      if (descEl && document.activeElement !== descEl) {
+        setEditableText(descEl, sf.desc || '');
+      }
+
+      updateFilmstripActiveState();
+    }
+
+    function renderFilmstrip() {
+      const filmstripScroll = document.querySelector('#sfFilmstripScroll');
+      if (!filmstripScroll) return;
+      filmstripScroll.innerHTML = '';
+
+      styleframes.forEach((sf, idx) => {
+        const card = document.createElement('div');
+        card.className = `sf-thumb-card ${idx === currentStyleframe ? 'active' : ''}`;
+        card.dataset.index = idx;
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', `스타일프레임 ${idx + 1}`);
+
+        const screenHtml = sf.image
+          ? `<img src="${sf.image}" alt="썸네일 ${idx + 1}" />`
+          : `<span class="sf-thumb-empty">EMPTY</span>`;
+
+        card.innerHTML = `
+          <div class="sf-thumb-screen">
+            <span class="sf-thumb-num-badge">${String(idx + 1).padStart(2, '0')}</span>
+            ${screenHtml}
+          </div>
+          <div class="sf-thumb-caption" title="${sf.title || `FRAME ${idx + 1}`}">${sf.title || `FRAME ${idx + 1}`}</div>
+        `;
+
+        card.addEventListener('click', () => {
+          showStyleframe(idx);
+        });
+
+        card.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            showStyleframe(idx);
+          }
+        });
+
+        filmstripScroll.appendChild(card);
+      });
+
+      const addCard = document.createElement('button');
+      addCard.type = 'button';
+      addCard.className = 'sf-thumb-add-btn';
+      addCard.title = '새 프레임 추가';
+      addCard.innerHTML = `<span>+</span>추가`;
+      addCard.addEventListener('click', () => addStyleframe());
+      filmstripScroll.appendChild(addCard);
+    }
+
+    function updateFilmstripActiveState() {
+      const cards = document.querySelectorAll('.sf-thumb-card');
+      cards.forEach((card, idx) => {
+        const isActive = idx === currentStyleframe;
+        card.classList.toggle('active', isActive);
+        if (isActive) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        }
+      });
+    }
+
+    function addStyleframe(titleText = '', descText = '', imageSrc = '') {
+      const nextNum = styleframes.length + 1;
+      const newFrame = {
+        id: `sf_${Date.now()}`,
+        title: titleText || `0${nextNum}. 장면 ${String(nextNum).padStart(2, '0')}`,
+        desc: descText || '',
+        image: imageSrc || ''
+      };
+      styleframes.push(newFrame);
+      currentStyleframe = styleframes.length - 1;
+      renderFilmstrip();
+      renderStyleframeCurrent();
+      saveStyleframesImmediately();
+      toast(`새 스타일프레임(FRAME ${String(nextNum).padStart(2, '0')})이 추가되었습니다.`);
+    }
+
+    function deleteCurrentStyleframe() {
+      if (styleframes.length <= 1) {
+        toast('더 이상 삭제할 수 없습니다. (최소 1개 유지)');
+        return;
+      }
+      const deletedNum = currentStyleframe + 1;
+      styleframes.splice(currentStyleframe, 1);
+      if (currentStyleframe >= styleframes.length) {
+        currentStyleframe = styleframes.length - 1;
+      }
+      renderFilmstrip();
+      renderStyleframeCurrent();
+      saveStyleframesImmediately();
+      toast(`FRAME ${String(deletedNum).padStart(2, '0')} 프레임이 삭제되었습니다.`);
+    }
+
+    async function handleStyleframeImageFile(file) {
+      if (!file?.type.startsWith('image/')) {
+        toast('이미지 파일만 등록할 수 있습니다.');
+        return;
+      }
+      toast('이미지 처리 및 압축 중...');
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const compressed = await compressImage(reader.result, 1600, 0.82);
+          styleframes[currentStyleframe].image = compressed;
+          renderStyleframeCurrent();
+          renderFilmstrip();
+          saveStyleframesImmediately();
+          toast('스타일프레임 이미지가 등록되었습니다.');
+        } catch (err) {
+          console.error('Styleframe image compress failed:', err);
+          styleframes[currentStyleframe].image = reader.result;
+          renderStyleframeCurrent();
+          renderFilmstrip();
+          saveStyleframesImmediately();
+          toast('스타일프레임 이미지가 등록되었습니다.');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function renderStyleframeLightboxScene(index) {
+      if (!currentSfLightboxFrames.length) return;
+      if (index < 0) index = currentSfLightboxFrames.length - 1;
+      if (index >= currentSfLightboxFrames.length) index = 0;
+      currentLightboxIndex = index;
+
+      const sf = currentSfLightboxFrames[currentLightboxIndex];
+      lightboxImg.src = sf.image || '';
+      lightboxBadge.textContent = `스타일프레임 #${String(sf.origIndex + 1).padStart(2, '0')}`;
+      lightboxCounter.textContent = `${currentLightboxIndex + 1} / ${currentSfLightboxFrames.length}`;
+
+      const caption = (sf.title || '') + (sf.desc ? ` - ${sf.desc}` : '');
+      if (caption.trim()) {
+        lightboxCaption.textContent = caption;
+        lightboxCaption.style.display = 'block';
+      } else {
+        lightboxCaption.style.display = 'none';
+      }
+
+      if (currentSfLightboxFrames.length <= 1) {
+        lightboxPrevBtn.style.display = 'none';
+        lightboxNextBtn.style.display = 'none';
+      } else {
+        lightboxPrevBtn.style.display = 'flex';
+        lightboxNextBtn.style.display = 'flex';
+      }
+    }
+
+    function openStyleframeLightbox(frameIndex = currentStyleframe) {
+      currentSfLightboxFrames = styleframes
+        .map((sf, idx) => ({ ...sf, origIndex: idx }))
+        .filter(sf => !!sf.image);
+
+      if (!currentSfLightboxFrames.length) {
+        toast('확대할 이미지가 없습니다.');
+        return;
+      }
+
+      let idx = currentSfLightboxFrames.findIndex(sf => sf.origIndex === frameIndex);
+      if (idx === -1) idx = 0;
+
+      imageLightbox.dataset.mode = 'styleframes';
+      renderStyleframeLightboxScene(idx);
+      imageLightbox.classList.add('active');
+      imageLightbox.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Styleframe DOM Element Event Listeners
+    const sfPrevBtn = document.querySelector('#sfPrevBtn');
+    const sfNextBtn = document.querySelector('#sfNextBtn');
+    const sfAddBtn = document.querySelector('#sfAddFrameBtn');
+    const sfDeleteBtn = document.querySelector('#sfDeleteFrameBtn');
+    const sfImageZone = document.querySelector('#sfImageZone');
+    const sfPlaceholder = document.querySelector('#sfPlaceholder');
+    const sfFilePicker = document.querySelector('#sfFilePicker');
+    const sfZoomBtn = document.querySelector('#sfZoomBtn');
+    const sfReplaceBtn = document.querySelector('#sfReplaceBtn');
+    const sfRemoveImgBtn = document.querySelector('#sfRemoveImgBtn');
+    const sfTitleInput = document.querySelector('#sfTitleInput');
+    const sfDescInput = document.querySelector('#sfDescInput');
+
+    sfPrevBtn?.addEventListener('click', () => {
+      if (currentStyleframe > 0) showStyleframe(currentStyleframe - 1);
+    });
+    sfNextBtn?.addEventListener('click', () => {
+      if (currentStyleframe < styleframes.length - 1) showStyleframe(currentStyleframe + 1);
+    });
+    sfAddBtn?.addEventListener('click', () => addStyleframe());
+    sfDeleteBtn?.addEventListener('click', () => deleteCurrentStyleframe());
+
+    // File picker click
+    sfPlaceholder?.addEventListener('click', () => sfFilePicker?.click());
+    sfReplaceBtn?.addEventListener('click', e => {
+      e.stopPropagation();
+      sfFilePicker?.click();
+    });
+    sfFilePicker?.addEventListener('change', async () => {
+      const file = sfFilePicker.files[0];
+      if (file) await handleStyleframeImageFile(file);
+      sfFilePicker.value = '';
+    });
+
+    // Remove image
+    sfRemoveImgBtn?.addEventListener('click', e => {
+      e.stopPropagation();
+      styleframes[currentStyleframe].image = '';
+      renderStyleframeCurrent();
+      renderFilmstrip();
+      saveStyleframesImmediately();
+      toast('이미지가 삭제되었습니다.');
+    });
+
+    // Zoom image in lightbox
+    sfZoomBtn?.addEventListener('click', e => {
+      e.stopPropagation();
+      openStyleframeLightbox(currentStyleframe);
+    });
+    sfImageZone?.addEventListener('click', e => {
+      if (sfImageZone.classList.contains('has-image') && !e.target.closest('.sf-mini-btn')) {
+        openStyleframeLightbox(currentStyleframe);
+      }
+    });
+
+    // Drag and Drop on styleframe zone
+    sfImageZone?.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      sfImageZone.classList.add('drag-over');
+    });
+    sfImageZone?.addEventListener('dragleave', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      sfImageZone.classList.remove('drag-over');
+    });
+    sfImageZone?.addEventListener('drop', async e => {
+      e.preventDefault();
+      e.stopPropagation();
+      sfImageZone.classList.remove('drag-over');
+      const file = [...(e.dataTransfer.files || [])].find(f => f.type.startsWith('image/'));
+      if (file) await handleStyleframeImageFile(file);
+    });
+
+    // Text inputs
+    sfTitleInput?.addEventListener('input', () => {
+      styleframes[currentStyleframe].title = getEditableText(sfTitleInput);
+      scheduleSaveStyleframes();
+      const thumb = document.querySelector(`.sf-thumb-card[data-index="${currentStyleframe}"] .sf-thumb-caption`);
+      if (thumb) thumb.textContent = styleframes[currentStyleframe].title || `FRAME ${currentStyleframe + 1}`;
+    });
+    sfDescInput?.addEventListener('input', () => {
+      styleframes[currentStyleframe].desc = getEditableText(sfDescInput);
+      scheduleSaveStyleframes();
+    });
+    sfTitleInput?.addEventListener('focusout', saveStyleframesImmediately);
+    sfDescInput?.addEventListener('focusout', saveStyleframesImmediately);
+
+    // Initial load for Styleframes
+    try {
+      const savedSf = JSON.parse(localStorage.getItem(SF_STORAGE_KEY));
+      if (savedSf && Array.isArray(savedSf) && savedSf.length > 0) {
+        styleframes = savedSf;
+      }
+    } catch (e) {
+      console.warn('Styleframes local load error:', e);
+    }
+    renderFilmstrip();
+    renderStyleframeCurrent();
+
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
       loadData(saved?.scenes ? saved : { scenes: initialScenes });
@@ -3338,10 +4451,13 @@
     const initialView = localStorage.getItem('cits_active_view') || 'storyboard';
     if (initialView === 'presentation') {
       showPresentation(0);
+    } else if (initialView === 'styleframes') {
+      showStyleframes();
     } else {
       showStoryboard();
     }
     initFirestoreSync();
+    initStyleframeFirestoreSync();
   </script>
 </body>
 </html>
