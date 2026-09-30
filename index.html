@@ -452,7 +452,7 @@
       max-width: 1440px;
       margin: 0 auto;
       width: 100%;
-      padding: 18px 32px 14px;
+      padding: 22px 32px 14px;
       display: flex;
       flex-direction: column;
       box-sizing: border-box;
@@ -1513,42 +1513,55 @@
       gap: 8px;
     }
     .sf-header-counter {
+      height: 38px;
+      padding: 0 4px;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: #f1f5f9;
-      border: 1px solid #e2e8f0;
-      padding: 0 12px;
-      height: 38px;
-      border-radius: 9px;
-      font-size: 13px;
-      color: #64748b;
+      color: #4e5968;
+      background: transparent;
+      border: none;
+      font-size: 13.5px;
+      font-weight: 500;
       box-sizing: border-box;
+      user-select: none;
     }
     .sf-header-counter strong {
-      color: #191f28;
+      color: #3182f6;
+      font-size: 13.5px;
       font-weight: 700;
     }
     .sf-header-del-btn {
       height: 38px;
-      padding: 0 14px;
-      border-radius: 9px;
-      border: 1px solid #e2e8f0;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border-default);
       background: #ffffff;
-      color: #64748b;
+      color: #4e5968;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
       transition: all .15s ease;
       box-sizing: border-box;
     }
+    .sf-header-del-btn svg {
+      color: #8b95a1;
+      transition: color .15s ease;
+    }
     .sf-header-del-btn:hover:not(:disabled) {
-      background: #fee2e2;
+      background: #fef2f2;
       color: #ef4444;
       border-color: #fca5a5;
     }
+    .sf-header-del-btn:hover:not(:disabled) svg {
+      color: #ef4444;
+    }
     .sf-header-del-btn:disabled {
-      opacity: 0.4;
+      opacity: 0.35;
       cursor: not-allowed;
     }
 
@@ -1673,12 +1686,12 @@
       box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.18);
     }
     .sf-image-zone.has-image {
-      border: 1px solid #1e293b;
-      background: #090d16;
+      border: none;
+      background: transparent;
       cursor: default;
     }
     .sf-image-zone.has-image:hover {
-      border-color: #3182f6;
+      border-color: transparent;
     }
 
     /* Placeholder content */
@@ -2132,7 +2145,7 @@
       </div>
 
       <div class="sidebar-footer">
-        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.4.1 · 최신 동기화됨</div>
+        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.4.2 · 최신 동기화됨</div>
         <button type="button" class="sidebar-footer-btn share-btn" id="sidebarShareBtn">공유하기</button>
       </div>
     </aside>
@@ -2164,7 +2177,7 @@
         <!-- 스타일프레임 모드 시 도구 -->
         <div class="actions styleframes-tools">
           <div class="sf-header-counter" id="sfHeaderCounter">
-            <span>프레임</span><strong id="sfHeaderCount">1 / 6</strong>
+            <span>프레임</span><strong id="sfHeaderCount">1 / 7</strong>
           </div>
           <div class="sb-view-switcher sf-view-switcher" id="sfViewSwitcher">
             <button type="button" class="sb-view-btn sf-view-mode-btn active" id="sfViewSlideBtn" data-mode="slide" title="1장씩 보기 (슬라이드 뷰)">
@@ -2176,8 +2189,11 @@
               카드 뷰
             </button>
           </div>
-          <button type="button" class="sf-header-del-btn" id="sfDeleteFrameBtn" title="현재 프레임 삭제">삭제</button>
           <button type="button" class="btn primary" id="sfAddFrameBtn">+ 프레임 추가</button>
+          <button type="button" class="btn sf-header-del-btn" id="sfDeleteFrameBtn" title="현재 프레임 삭제" aria-label="현재 프레임 삭제">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+            <span>삭제</span>
+          </button>
         </div>
       </div>
     </header>
@@ -2316,7 +2332,7 @@
           <!-- Top Card Meta Bar -->
           <div class="sf-card-header">
             <div class="sf-card-badge-group">
-              <span class="sf-badge-tag" id="sfBadgeTag">FRAME 01</span>
+              <span class="sf-badge-tag" id="sfBadgeTag">#01</span>
               <span class="sf-badge-total" id="sfBadgeCount">1 / 6</span>
             </div>
             <div class="sf-card-nav">
@@ -3015,6 +3031,7 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
       updateSidebarNav();
     }
+    window.showStoryboard = showStoryboard;
 
     function updateSidebarNav() {
       const isPres = document.body.dataset.view === 'presentation';
@@ -4271,6 +4288,8 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
       updateSidebarNav();
     }
+    window.showStyleframes = showStyleframes;
+    window.setStyleframeLayoutMode = setStyleframeLayoutMode;
 
     function showStyleframe(index) {
       if (!styleframes.length) return;
@@ -4293,7 +4312,7 @@
       const nextBtn = document.querySelector('#sfNextBtn');
       const deleteFrameBtn = document.querySelector('#sfDeleteFrameBtn');
 
-      if (badgeTag) badgeTag.textContent = `FRAME ${currentNum}`;
+      if (badgeTag) badgeTag.textContent = `#${currentNum}`;
       if (badgeCount) badgeCount.textContent = `${currentStyleframe + 1} / ${total}`;
       if (headerCount && (document.body.dataset.sfMode || 'slide') === 'slide') {
         headerCount.textContent = `${currentStyleframe + 1} / ${total}`;
@@ -4489,7 +4508,7 @@
       renderStyleframeCurrent();
       renderCardsView();
       saveStyleframesImmediately();
-      toast(`FRAME ${String(deletedNum).padStart(2, '0')} 프레임이 삭제되었습니다.`);
+      toast(`#${String(deletedNum).padStart(2, '0')} 프레임이 삭제되었습니다.`);
     }
 
     async function handleStyleframeImageFile(file, targetIndex = currentStyleframe) {
