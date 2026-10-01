@@ -1521,6 +1521,7 @@
     .sf-header-counter {
       height: 38px;
       padding: 0 4px;
+      min-width: 90px;
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -1649,6 +1650,38 @@
       border-color: #d1d6db;
     }
     .sf-nav-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .sf-slide-del-btn {
+      height: 32px;
+      padding: 0 11px;
+      margin-left: 6px;
+      border-radius: 8px;
+      border: 1px solid #e5e8eb;
+      background: #ffffff;
+      color: #64748b;
+      font-size: 12.5px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+    .sf-slide-del-btn svg {
+      color: #8b95a1;
+      transition: color .15s ease;
+    }
+    .sf-slide-del-btn:hover:not(:disabled) {
+      background: #fef2f2;
+      color: #ef4444;
+      border-color: #fecaca;
+    }
+    .sf-slide-del-btn:hover:not(:disabled) svg {
+      color: #ef4444;
+    }
+    .sf-slide-del-btn:disabled {
       opacity: 0.35;
       cursor: not-allowed;
     }
@@ -2151,7 +2184,7 @@
       </div>
 
       <div class="sidebar-footer">
-        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.4.4 · 최신 동기화됨</div>
+        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.4.5 · 최신 동기화됨</div>
         <button type="button" class="sidebar-footer-btn share-btn" id="sidebarShareBtn">공유하기</button>
       </div>
     </aside>
@@ -2196,10 +2229,6 @@
             </button>
           </div>
           <button type="button" class="btn primary" id="sfAddFrameBtn">+ 프레임 추가</button>
-          <button type="button" class="btn sf-header-del-btn" id="sfDeleteFrameBtn" title="현재 프레임 삭제" aria-label="현재 프레임 삭제">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-            <span>삭제</span>
-          </button>
         </div>
       </div>
     </header>
@@ -2347,6 +2376,10 @@
               </button>
               <button type="button" class="sf-nav-btn" id="sfNextBtn" title="다음 프레임 (→ 또는 마우스 휠 아래)" aria-label="다음 프레임">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+              <button type="button" class="sf-slide-del-btn" id="sfDeleteFrameBtn" title="현재 프레임 삭제" aria-label="현재 프레임 삭제">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                <span>삭제</span>
               </button>
             </div>
           </div>
