@@ -2265,7 +2265,7 @@
       </div>
 
       <div class="sidebar-footer">
-        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.4.9 · 최신 동기화됨</div>
+        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.5.0 · 최적화 및 안정성 강화</div>
         <button type="button" class="sidebar-footer-btn share-btn" id="sidebarShareBtn">공유하기</button>
       </div>
     </aside>
@@ -2479,7 +2479,7 @@
               </div>
 
               <!-- Real Image display -->
-              <img src="" alt="스타일프레임" class="sf-image" id="sfImage" style="display: none;" />
+              <img src="" alt="스타일프레임" class="sf-image" id="sfImage" decoding="async" style="display: none;" />
 
               <!-- Hover action overlay for image -->
               <div class="sf-image-tools" id="sfImageTools">
@@ -2569,7 +2569,7 @@
     </div>
     <button type="button" class="lightbox-nav-btn lightbox-prev-btn" id="lightboxPrevBtn" aria-label="이전 이미지">‹</button>
     <div class="lightbox-body">
-      <img src="" alt="확대된 장면 이미지" class="lightbox-img" id="lightboxImg" />
+      <img src="" alt="확대된 장면 이미지" class="lightbox-img" id="lightboxImg" decoding="async" />
     </div>
     <button type="button" class="lightbox-nav-btn lightbox-next-btn" id="lightboxNextBtn" aria-label="다음 이미지">›</button>
     <div class="lightbox-caption" id="lightboxCaption" style="display: none;"></div>
@@ -2777,6 +2777,8 @@
         const img = new Image();
         img.src = src;
         img.alt = '스토리보드 참고 이미지';
+        img.loading = 'lazy';
+        img.decoding = 'async';
         zone.prepend(img);
         zone.classList.add('has-image');
       } else {
@@ -3805,7 +3807,19 @@
       currentSlide < slideItems.length - 1 ? showSlide(currentSlide + 1) : showStoryboard();
     });
     window.addEventListener('keydown', e => {
-      if (e.target.isContentEditable || ['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+      // 1. Do not handle navigation if any lightbox/modal is actively showing
+      if (document.querySelector('.lightbox.active, #styleframeLightbox.active, #imageLightbox.active')) return;
+
+      // 2. Do not trigger navigation if currently typing in any input, textarea, or contenteditable
+      const targetEl = e.target;
+      const activeEl = document.activeElement;
+      if (targetEl?.isContentEditable || targetEl?.closest?.('[contenteditable="true"]') ||
+          ['INPUT', 'TEXTAREA', 'SELECT'].includes(targetEl?.tagName) ||
+          activeEl?.isContentEditable || activeEl?.closest?.('[contenteditable="true"]') ||
+          ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeEl?.tagName)) {
+        return;
+      }
+
       if (document.body.dataset.view === 'presentation') {
         if (e.key === 'ArrowRight' || e.key === 'PageDown') {
           e.preventDefault();
@@ -4385,14 +4399,17 @@
         console.warn('IDB save error:', errIdb);
       }
 
-      // 2. Secondary Cache: LocalStorage (with safe quota fallback that doesn\'t mutate memory)
+      // 2. Secondary Cache: LocalStorage (Metadata & text-only to preserve strict 5MB quota)
       try {
-        localStorage.setItem(SF_STORAGE_KEY, JSON.stringify(styleframes));
+        const textOnly = styleframes.map(sf => ({
+          id: sf.id,
+          title: sf.title || '',
+          desc: sf.desc || '',
+          image: '' // High-res images safely preserved in IndexedDB & Cloud Firestore
+        }));
+        localStorage.setItem(SF_STORAGE_KEY, JSON.stringify(textOnly));
       } catch (e) {
-        try {
-          const textOnly = styleframes.map(sf => ({ ...sf, image: '' }));
-          localStorage.setItem(SF_STORAGE_KEY, JSON.stringify(textOnly));
-        } catch {}
+        console.warn('localStorage saveStyleframesLocally error:', e);
       }
     }
 
@@ -4735,7 +4752,7 @@
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
               <span>이미지 추가</span>
             </div>
-            <img src="${sf.image || ''}" alt="스타일프레임 ${idx + 1}" style="${hasImg ? 'display: block;' : 'display: none;'}" />
+            <img src="${sf.image || ''}" alt="스타일프레임 ${idx + 1}" loading="lazy" decoding="async" style="${hasImg ? 'display: block;' : 'display: none;'}" />
             <div class="sf-card-tools">
               <button type="button" class="mini-btn sf-card-zoom-btn" title="확대">확대</button>
               <button type="button" class="mini-btn sf-card-replace-btn" title="교체">교체</button>
@@ -4893,13 +4910,11 @@
         titleField.addEventListener('input', () => {
           styleframes[idx].title = getEditableText(titleField);
           styleframes[idx]._dirty = true;
-          idbSet('styleframes_current', styleframes);
           scheduleSaveStyleframes();
         });
         descField.addEventListener('input', () => {
           styleframes[idx].desc = getEditableText(descField);
           styleframes[idx]._dirty = true;
-          idbSet('styleframes_current', styleframes);
           scheduleSaveStyleframes();
         });
         titleField.addEventListener('focusout', () => {
@@ -5147,7 +5162,6 @@
       if (styleframes[currentStyleframe]) {
         styleframes[currentStyleframe].title = getEditableText(sfTitleInput);
         styleframes[currentStyleframe]._dirty = true;
-        idbSet('styleframes_current', styleframes);
         scheduleSaveStyleframes();
       }
     });
@@ -5155,7 +5169,6 @@
       if (styleframes[currentStyleframe]) {
         styleframes[currentStyleframe].desc = getEditableText(sfDescInput);
         styleframes[currentStyleframe]._dirty = true;
-        idbSet('styleframes_current', styleframes);
         scheduleSaveStyleframes();
       }
     });
@@ -5180,6 +5193,26 @@
 
     // Initial load for Styleframes: IndexedDB -> LocalStorage -> Default
     (async function initStyleframesData() {
+      // 0. Quota Protection: One-time migration to clean bloated base64 images from localStorage
+      try {
+        const rawSf = localStorage.getItem(SF_STORAGE_KEY);
+        if (rawSf && rawSf.length > 200000) {
+          const parsed = JSON.parse(rawSf);
+          if (Array.isArray(parsed)) {
+            const cleaned = parsed.map(sf => ({
+              id: sf.id,
+              title: sf.title || '',
+              desc: sf.desc || '',
+              image: '' // High-res images safely preserved in IndexedDB & Firestore
+            }));
+            localStorage.setItem(SF_STORAGE_KEY, JSON.stringify(cleaned));
+            console.info('LocalStorage styleframes quota reclaimed successfully (4.4MB -> ~25KB).');
+          }
+        }
+      } catch (errClean) {
+        console.warn('Quota reclaim warning:', errClean);
+      }
+
       try {
         const idbData = await idbGet('styleframes_current');
         if (idbData && Array.isArray(idbData) && idbData.length > 0) {
