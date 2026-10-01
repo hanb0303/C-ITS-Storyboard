@@ -1620,11 +1620,26 @@
       padding: 4px 10px;
       border-radius: 6px;
       letter-spacing: 0.5px;
+      min-width: 48px;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum";
+      text-align: center;
+      user-select: none;
     }
     .sf-badge-total {
       font-size: 13px;
       font-weight: 700;
       color: #8b95a1;
+      min-width: 56px;
+      display: inline-flex;
+      align-items: center;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum";
+      user-select: none;
     }
     .sf-card-nav {
       display: flex;
@@ -1860,7 +1875,8 @@
       font-size: 14.5px;
       font-weight: 700;
       color: #191f28;
-      min-height: 22px;
+      min-height: 48px;
+      max-height: 48px;
       padding: 6px 10px;
       border-radius: 8px;
       border: 1px solid #e5e8eb;
@@ -1868,6 +1884,8 @@
       transition: all .15s ease;
       outline: none;
       line-height: 1.4;
+      box-sizing: border-box;
+      overflow-y: auto;
     }
     .sf-title-field:hover {
       border-color: #cbd5e1;
@@ -1880,7 +1898,8 @@
     .sf-desc-field {
       font-size: 13px;
       color: #333d4b;
-      min-height: 22px;
+      min-height: 48px;
+      max-height: 68px;
       padding: 6px 10px;
       border-radius: 8px;
       border: 1px solid #e5e8eb;
@@ -1889,6 +1908,17 @@
       transition: all .15s ease;
       outline: none;
       white-space: pre-wrap;
+      box-sizing: border-box;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
+    .sf-desc-field::-webkit-scrollbar {
+      width: 4px;
+    }
+    .sf-desc-field::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 4px;
     }
     .sf-desc-field:hover {
       border-color: #cbd5e1;
@@ -2184,7 +2214,7 @@
       </div>
 
       <div class="sidebar-footer">
-        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.4.5 · 최신 동기화됨</div>
+        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.4.6 · 최신 동기화됨</div>
         <button type="button" class="sidebar-footer-btn share-btn" id="sidebarShareBtn">공유하기</button>
       </div>
     </aside>
