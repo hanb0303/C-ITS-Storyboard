@@ -823,6 +823,12 @@
       box-sizing: border-box;
       scrollbar-width: thin;
       scrollbar-color: #cbd5e1 transparent;
+      user-select: text !important;
+      -webkit-user-select: text !important;
+    }
+    .script-column, .script-unit, .script-body-text {
+      user-select: text !important;
+      -webkit-user-select: text !important;
     }
     .script-grid-view::-webkit-scrollbar {
       width: 6px;
@@ -2145,7 +2151,7 @@
       </div>
 
       <div class="sidebar-footer">
-        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.4.3 · 최신 동기화됨</div>
+        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.4.4 · 최신 동기화됨</div>
         <button type="button" class="sidebar-footer-btn share-btn" id="sidebarShareBtn">공유하기</button>
       </div>
     </aside>
@@ -3710,8 +3716,16 @@
     let wheelLock = false;
     window.addEventListener('wheel', e => {
       if (document.body.dataset.view === 'presentation') {
+        // If cursor is inside scenario script or any slide canvas or text is selected:
+        const insideCanvas = e.target.closest('.slide-canvas, .script-grid-view, .slide-item');
+        const hasSelection = !window.getSelection()?.isCollapsed;
+        const activeEditing = document.activeElement && document.activeElement.closest?.('.slide-canvas');
+        if (insideCanvas || hasSelection || activeEditing) {
+          // DO NOT switch slides! Allow smooth vertical scrolling & text selection without interruption!
+          return;
+        }
         if (wheelLock) return;
-        if (Math.abs(e.deltaY) < 25) return;
+        if (Math.abs(e.deltaY) < 35) return;
         wheelLock = true;
         setTimeout(() => { wheelLock = false; }, 380);
         if (e.deltaY > 0) {
@@ -3879,15 +3893,34 @@
       fmtToolbar.classList.add('show');
     }
 
-    document.addEventListener('selectionchange', () => {
-      clearTimeout(window._selChangeTimer);
-      window._selChangeTimer = setTimeout(checkSelectionAndShowToolbar, 100);
-    });
+    let isMouseDownForSelection = false;
 
     document.addEventListener('mousedown', e => {
       if (fmtToolbar && !fmtToolbar.contains(e.target)) {
         hideFormatToolbar();
       }
+      if (!e.target.closest('#textFormatToolbar')) {
+        isMouseDownForSelection = true;
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isMouseDownForSelection) {
+        isMouseDownForSelection = false;
+        // Selection toolbar only triggers AFTER mouse drag is released!
+        setTimeout(checkSelectionAndShowToolbar, 50);
+      }
+    });
+
+    document.addEventListener('keyup', () => {
+      setTimeout(checkSelectionAndShowToolbar, 60);
+    });
+
+    document.addEventListener('selectionchange', () => {
+      // NEVER show toolbar while mouse is actively dragging/selecting text!
+      if (isMouseDownForSelection) return;
+      clearTimeout(window._selChangeTimer);
+      window._selChangeTimer = setTimeout(checkSelectionAndShowToolbar, 100);
     });
 
     function restoreSelectionIfLost() {
@@ -4305,6 +4338,7 @@
         console.warn('Firestore styleframe save error:', err);
       } finally {
         isSavingStyleframes = false;
+        styleframes.forEach(sf => { if (sf) sf._dirty = false; });
         if (pendingSfSave) {
           pendingSfSave = false;
           saveStyleframesToFirestore();
@@ -4327,6 +4361,66 @@
       saveStyleframesToFirestore();
     }
 
+    function updateCardsViewInPlace() {
+      const grid = document.querySelector('#sfCardsGrid');
+      if (!grid) return;
+      const existingCards = grid.querySelectorAll('.sf-card-item');
+      if (existingCards.length !== styleframes.length) {
+        renderCardsView();
+        return;
+      }
+
+      existingCards.forEach((card, idx) => {
+        const sf = styleframes[idx];
+        if (!sf) return;
+
+        // Title
+        const titleField = card.querySelector('.sf-card-title');
+        if (titleField && document.activeElement !== titleField) {
+          const currentText = getEditableText(titleField);
+          if (currentText !== (sf.title || '')) {
+            setEditableText(titleField, sf.title || '');
+          }
+        }
+
+        // Desc
+        const descField = card.querySelector('.sf-card-desc');
+        if (descField && document.activeElement !== descField) {
+          const currentDesc = getEditableText(descField);
+          if (currentDesc !== (sf.desc || '')) {
+            setEditableText(descField, sf.desc || '');
+          }
+        }
+
+        // Image
+        const imgZone = card.querySelector('.sf-card-img-zone');
+        const imgEl = card.querySelector('img');
+        const placeholder = card.querySelector('.sf-card-placeholder-box');
+        const hasImg = !!sf.image;
+
+        if (imgZone && imgEl && placeholder) {
+          if (imgEl.src !== (sf.image || '')) {
+            imgEl.src = sf.image || '';
+          }
+          if (hasImg) {
+            imgEl.style.display = 'block';
+            placeholder.style.display = 'none';
+            imgZone.classList.add('has-image');
+          } else {
+            imgEl.style.display = 'none';
+            placeholder.style.display = 'flex';
+            imgZone.classList.remove('has-image');
+          }
+        }
+
+        // Badge
+        const badge = card.querySelector('.sf-card-num-badge');
+        if (badge) {
+          badge.textContent = String(idx + 1).padStart(2, '0');
+        }
+      });
+    }
+
     function initStyleframeFirestoreSync() {
       if (!db) return;
       db.collection('cits_styleframes').orderBy('order').onSnapshot(snapshot => {
@@ -4336,34 +4430,56 @@
         }
         if (snapshot.metadata.hasPendingWrites || isSavingStyleframes) return;
 
-        // Check if user is currently typing in an input
         const active = document.activeElement;
-        const isEditing = active && (
-          active.id === 'sfTitleInput' ||
-          active.id === 'sfDescInput' ||
-          active.classList?.contains('sf-card-title') ||
-          active.classList?.contains('sf-card-desc')
-        );
+        const activeCard = active?.closest?.('.sf-card-item');
+        const activeCardIdx = activeCard ? parseInt(activeCard.dataset.index, 10) : -1;
+        const isSlideEditing = active && (active.id === 'sfTitleInput' || active.id === 'sfDescInput');
 
         isApplyingRemoteStyleframes = true;
         try {
           const remoteFrames = snapshot.docs.map(doc => doc.data());
           if (remoteFrames.length > 0) {
-            styleframes = remoteFrames.map((rf, idx) => {
+            // Apply remote updates conservatively:
+            // NEVER overwrite a frame that has pending local edits or is actively focused!
+            remoteFrames.forEach((rf, idx) => {
+              if (!styleframes[idx]) {
+                styleframes[idx] = {
+                  id: rf.id || `sf_${idx + 1}`,
+                  title: rf.title || '',
+                  desc: rf.desc || '',
+                  image: rf.image || ''
+                };
+                return;
+              }
+
               const localSf = styleframes[idx];
-              return {
-                id: rf.id || `sf_${idx + 1}`,
-                title: rf.title || '',
-                desc: rf.desc || '',
-                image: rf.image || (localSf ? localSf.image : '') || ''
-              };
+              const isThisCardEditing = (idx === activeCardIdx) || (isSlideEditing && idx === currentStyleframe);
+              const isDirty = pendingSfSave || isSavingStyleframes || localSf._dirty;
+
+              // If currently editing this frame or has pending unsaved local edits, keep local title & desc!
+              if (!isThisCardEditing && !isDirty) {
+                if (rf.title !== undefined) localSf.title = rf.title;
+                if (rf.desc !== undefined) localSf.desc = rf.desc;
+              }
+              // Always preserve image if remote has it, or keep local if remote empty
+              if (rf.image) {
+                localSf.image = rf.image;
+              }
             });
+
+            // If remote has fewer frames (and not currently editing extra ones), trim
+            if (!pendingSfSave && !isSavingStyleframes && !activeCard && !isSlideEditing) {
+              if (styleframes.length > remoteFrames.length) {
+                styleframes.length = remoteFrames.length;
+              }
+            }
+
             saveStyleframesLocally();
 
-            // Do not destroy DOM or steal focus while user is actively typing
-            if (!isEditing) {
+            // In-place UI update without destroying DOM elements!
+            updateCardsViewInPlace();
+            if (!isSlideEditing) {
               renderStyleframeCurrent();
-              renderCardsView();
             }
           }
         } finally {
@@ -4569,14 +4685,24 @@
         // Text editable handlers
         titleField.addEventListener('input', () => {
           styleframes[idx].title = getEditableText(titleField);
+          styleframes[idx]._dirty = true;
+          idbSet('styleframes_current', styleframes);
           scheduleSaveStyleframes();
         });
         descField.addEventListener('input', () => {
           styleframes[idx].desc = getEditableText(descField);
+          styleframes[idx]._dirty = true;
+          idbSet('styleframes_current', styleframes);
           scheduleSaveStyleframes();
         });
-        titleField.addEventListener('focusout', saveStyleframesImmediately);
-        descField.addEventListener('focusout', saveStyleframesImmediately);
+        titleField.addEventListener('focusout', () => {
+          if (styleframes[idx]) styleframes[idx]._dirty = false;
+          saveStyleframesImmediately();
+        });
+        descField.addEventListener('focusout', () => {
+          if (styleframes[idx]) styleframes[idx]._dirty = false;
+          saveStyleframesImmediately();
+        });
 
         // Delete card button
         deleteCardBtn.addEventListener('click', e => {
@@ -4811,15 +4937,39 @@
 
     // Text inputs in slide view
     sfTitleInput?.addEventListener('input', () => {
-      styleframes[currentStyleframe].title = getEditableText(sfTitleInput);
-      scheduleSaveStyleframes();
+      if (styleframes[currentStyleframe]) {
+        styleframes[currentStyleframe].title = getEditableText(sfTitleInput);
+        styleframes[currentStyleframe]._dirty = true;
+        idbSet('styleframes_current', styleframes);
+        scheduleSaveStyleframes();
+      }
     });
     sfDescInput?.addEventListener('input', () => {
-      styleframes[currentStyleframe].desc = getEditableText(sfDescInput);
-      scheduleSaveStyleframes();
+      if (styleframes[currentStyleframe]) {
+        styleframes[currentStyleframe].desc = getEditableText(sfDescInput);
+        styleframes[currentStyleframe]._dirty = true;
+        idbSet('styleframes_current', styleframes);
+        scheduleSaveStyleframes();
+      }
     });
-    sfTitleInput?.addEventListener('focusout', saveStyleframesImmediately);
-    sfDescInput?.addEventListener('focusout', saveStyleframesImmediately);
+    sfTitleInput?.addEventListener('focusout', () => {
+      if (styleframes[currentStyleframe]) styleframes[currentStyleframe]._dirty = false;
+      saveStyleframesImmediately();
+    });
+    sfDescInput?.addEventListener('focusout', () => {
+      if (styleframes[currentStyleframe]) styleframes[currentStyleframe]._dirty = false;
+      saveStyleframesImmediately();
+    });
+
+    // Global Ctrl+S / Cmd+S Quick Save Shortcut
+    window.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        saveImmediately();
+        saveStyleframesImmediately();
+        toast('💾 모든 수정 내용이 안전하게 저장되었습니다.');
+      }
+    });
 
     // Initial load for Styleframes: IndexedDB -> LocalStorage -> Default
     (async function initStyleframesData() {
