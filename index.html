@@ -1970,21 +1970,48 @@
       overflow: hidden;
       min-height: 0;
       box-sizing: border-box;
+      cursor: grab;
+      user-select: none;
     }
     .sf-card-item:hover {
       transform: translateY(-2px);
       box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.1);
       border-color: #cbd5e1;
     }
+    .sf-card-item:active {
+      cursor: grabbing;
+    }
+    .sf-card-item.is-dragging {
+      opacity: 0.35;
+      transform: scale(0.97);
+      border: 2px dashed #3182f6 !important;
+      box-shadow: 0 12px 28px rgba(49, 130, 246, 0.18);
+      cursor: grabbing;
+    }
+    .sf-card-item.drag-over-before {
+      border-left: 4px solid #3182f6 !important;
+      box-shadow: -4px 0 12px rgba(49, 130, 246, 0.25);
+      transform: translateX(4px);
+    }
+    .sf-card-item.drag-over-after {
+      border-right: 4px solid #3182f6 !important;
+      box-shadow: 4px 0 12px rgba(49, 130, 246, 0.25);
+      transform: translateX(-4px);
+    }
+    .sf-card-item .sf-card-title,
+    .sf-card-item .sf-card-desc {
+      cursor: text;
+      user-select: text;
+    }
 
-    /* Badge at top-left (#01, #02, ...) */
+    /* Badge at top-left (#01, #02, ...) with Drag Handle Grip */
     .sf-card-item .sf-card-num-badge {
       position: absolute;
       top: 10px;
       left: 10px;
       z-index: 4;
       height: 26px;
-      padding: 0 10px;
+      padding: 0 8px 0 6px;
       background: rgba(15, 23, 42, 0.78);
       backdrop-filter: blur(4px);
       border: 1px solid rgba(255, 255, 255, 0.18);
@@ -1996,6 +2023,25 @@
       align-items: center;
       justify-content: center;
       letter-spacing: 0.02em;
+      gap: 3px;
+      cursor: grab;
+      user-select: none;
+      transition: all .15s ease;
+    }
+    .sf-card-item .sf-card-num-badge:hover {
+      background: rgba(15, 23, 42, 0.95);
+      border-color: rgba(96, 165, 250, 0.6);
+      transform: scale(1.04);
+    }
+    .sf-card-item .sf-card-num-badge:active {
+      cursor: grabbing;
+    }
+    .sf-card-item .sf-card-num-badge svg {
+      opacity: 0.7;
+    }
+    .sf-card-item .sf-card-num-badge:hover svg {
+      opacity: 1;
+      color: #60a5fa;
     }
     .sf-card-item .sf-card-num-badge::before {
       content: '#';
@@ -2219,7 +2265,7 @@
       </div>
 
       <div class="sidebar-footer">
-        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.4.8 · 최신 동기화됨</div>
+        <div style="padding: 0 4px 8px; font-size: 11px; color: #94a3b8; font-weight: 600;">v1.4.9 · 최신 동기화됨</div>
         <button type="button" class="sidebar-footer-btn share-btn" id="sidebarShareBtn">공유하기</button>
       </div>
     </aside>
@@ -4329,6 +4375,7 @@
     let pendingSfSave = false;
     let isApplyingRemoteStyleframes = false;
     let currentSfLightboxFrames = [];
+    let sfDragSourceIndex = null;
 
     async function saveStyleframesLocally() {
       // 1. Primary High-Capacity Store: IndexedDB (Never loses images or text)
@@ -4481,10 +4528,14 @@
           }
         }
 
+        card.dataset.index = idx;
         // Badge
-        const badge = card.querySelector('.sf-card-num-badge');
-        if (badge) {
-          badge.textContent = String(idx + 1).padStart(2, '0');
+        const badgeSpan = card.querySelector('.sf-card-num-badge .sf-num-val');
+        if (badgeSpan) {
+          badgeSpan.textContent = String(idx + 1).padStart(2, '0');
+        } else {
+          const badge = card.querySelector('.sf-card-num-badge');
+          if (badge) badge.textContent = String(idx + 1).padStart(2, '0');
         }
       });
     }
@@ -4674,7 +4725,10 @@
         const hasImg = !!sf.image;
 
         card.innerHTML = `
-          <div class="sf-card-num-badge">${numStr}</div>
+          <div class="sf-card-num-badge" title="드래그하여 카드 위치 이동">
+            <svg width="8" height="12" viewBox="0 0 8 12" fill="currentColor"><circle cx="2" cy="2" r="1.2"/><circle cx="6" cy="2" r="1.2"/><circle cx="2" cy="6" r="1.2"/><circle cx="6" cy="6" r="1.2"/><circle cx="2" cy="10" r="1.2"/><circle cx="6" cy="10" r="1.2"/></svg>
+            <span class="sf-num-val">${numStr}</span>
+          </div>
           <button type="button" class="sf-card-delete-btn" title="프레임 삭제" aria-label="프레임 ${idx + 1} 삭제">×</button>
           <div class="sf-card-img-zone ${hasImg ? 'has-image' : ''}" tabindex="0" title="클릭하여 파일 선택 · Ctrl+V 붙여넣기 · 이미지 파일 드래그">
             <div class="sf-card-placeholder-box" style="${hasImg ? 'display: none;' : 'display: flex;'}">
@@ -4693,6 +4747,87 @@
             <div class="sf-card-desc" contenteditable="true" spellcheck="true" data-placeholder="연출 / 모션 메모 입력">${sf.desc || ''}</div>
           </div>
         `;
+
+        // Card drag and drop reordering
+        card.setAttribute('draggable', 'true');
+
+        card.addEventListener('dragstart', e => {
+          if (e.target.closest('[contenteditable="true"], button, input, .mini-btn')) {
+            e.preventDefault();
+            return;
+          }
+          sfDragSourceIndex = idx;
+          card.classList.add('is-dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', String(idx));
+        });
+
+        card.addEventListener('dragend', () => {
+          sfDragSourceIndex = null;
+          document.querySelectorAll('.sf-card-item').forEach(c => {
+            c.classList.remove('is-dragging', 'drag-over-before', 'drag-over-after');
+          });
+        });
+
+        card.addEventListener('dragover', e => {
+          if (sfDragSourceIndex !== null) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (sfDragSourceIndex === idx) return;
+
+            e.dataTransfer.dropEffect = 'move';
+            const rect = card.getBoundingClientRect();
+            const midX = rect.left + rect.width / 2;
+            if (e.clientX < midX) {
+              card.classList.add('drag-over-before');
+              card.classList.remove('drag-over-after');
+            } else {
+              card.classList.add('drag-over-after');
+              card.classList.remove('drag-over-before');
+            }
+          }
+        });
+
+        card.addEventListener('dragleave', e => {
+          if (sfDragSourceIndex !== null) {
+            if (!card.contains(e.relatedTarget)) {
+              card.classList.remove('drag-over-before', 'drag-over-after');
+            }
+          }
+        });
+
+        card.addEventListener('drop', e => {
+          if (sfDragSourceIndex !== null) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const fromIdx = sfDragSourceIndex;
+            const targetIdx = idx;
+            const rect = card.getBoundingClientRect();
+            const isAfter = (e.clientX >= rect.left + rect.width / 2);
+
+            card.classList.remove('drag-over-before', 'drag-over-after');
+            sfDragSourceIndex = null;
+
+            const targetItem = styleframes[targetIdx];
+            if (!targetItem || fromIdx === targetIdx) {
+              renderCardsView();
+              return;
+            }
+
+            const [movedItem] = styleframes.splice(fromIdx, 1);
+            const newTargetIdx = styleframes.indexOf(targetItem);
+            const finalIdx = isAfter ? newTargetIdx + 1 : newTargetIdx;
+            styleframes.splice(finalIdx, 0, movedItem);
+
+            currentStyleframe = finalIdx;
+
+            renderCardsView();
+            renderStyleframeCurrent();
+            saveStyleframesImmediately();
+            toast(`프레임이 #${String(finalIdx + 1).padStart(2, '0')} 위치로 이동되었습니다.`);
+          }
+        });
 
         // Card Image Zone interactions
         const imgZone = card.querySelector('.sf-card-img-zone');
@@ -4731,18 +4866,22 @@
           }
         });
 
-        // Drag and Drop on card
+        // Image file drop on card
         imgZone.addEventListener('dragover', e => {
+          if (sfDragSourceIndex !== null) return;
+          if (!e.dataTransfer.types.includes('Files')) return;
           e.preventDefault();
           e.stopPropagation();
           imgZone.classList.add('drag-over');
         });
         imgZone.addEventListener('dragleave', e => {
+          if (sfDragSourceIndex !== null) return;
           e.preventDefault();
           e.stopPropagation();
           imgZone.classList.remove('drag-over');
         });
         imgZone.addEventListener('drop', async e => {
+          if (sfDragSourceIndex !== null) return;
           e.preventDefault();
           e.stopPropagation();
           imgZone.classList.remove('drag-over');
