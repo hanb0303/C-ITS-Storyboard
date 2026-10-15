@@ -3292,11 +3292,12 @@
         countEl.textContent = `${characters.toLocaleString('ko-KR')}자 · ${duration}`;
       }
 
-      // Requirement: "수정본3에서는 시나리오 수정 버튼 없애."
+      // Show '시나리오 수정' button on draft, v.0.1, v.0.2, v.0.3, v.0.4, and only hide when max 5 reached
       const reviseBtn = document.querySelector('#externalReviseBtn');
       if (reviseBtn) {
-        const isRevision3 = currentSlideEl.id === 'slideRevision_3';
-        reviseBtn.style.display = isRevision3 ? 'none' : 'inline-flex';
+        const existingRevisions = document.querySelectorAll('.revision-slide');
+        const isMaxRevisions = existingRevisions.length >= 5;
+        reviseBtn.style.display = isMaxRevisions ? 'none' : 'inline-flex';
       }
     }
 
