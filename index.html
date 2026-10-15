@@ -592,6 +592,27 @@
       gap: 10px;
       transition: opacity .15s ease;
     }
+    .slide-split-btn {
+      height: 34px;
+      padding: 0 13px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #334155;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s ease;
+      box-shadow: none !important;
+    }
+    .slide-split-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+      border-color: #94a3b8;
+    }
     .slide-confirm-btn,
     .slide-save-btn {
       height: 34px;
@@ -701,6 +722,8 @@
       flex-direction: column;
       gap: 14px;
       min-width: 0;
+      min-height: 380px;
+      cursor: text;
     }
     body[data-view="presentation"] .script-unit {
       display: flex;
@@ -729,9 +752,14 @@
       outline: none;
       cursor: text;
     }
-    body[data-view="presentation"] .script-body-text:empty::before {
-      content: '내용을 입력하세요...';
-      color: #cbd5e1;
+    body[data-view="presentation"] .script-column:nth-child(1) .script-body-text:empty::before {
+      content: '1단(왼쪽) 내용을 입력하세요...';
+      color: #94a3b8;
+      pointer-events: none;
+    }
+    body[data-view="presentation"] .script-column:nth-child(2) .script-body-text:empty::before {
+      content: '2단(오른쪽) 내용을 입력하세요 (클릭하여 작성)...';
+      color: #94a3b8;
       pointer-events: none;
     }
     body[data-view="presentation"] .script-body-text p,
@@ -900,6 +928,8 @@
       flex-direction: column;
       gap: 14px;
       min-width: 0;
+      min-height: 380px;
+      cursor: text;
     }
     .script-unit {
       display: flex;
@@ -928,9 +958,14 @@
       outline: none;
       cursor: text;
     }
-    .script-body-text:empty::before {
-      content: '내용을 입력하세요...';
-      color: #cbd5e1;
+    .script-column:nth-child(1) .script-body-text:empty::before {
+      content: '1단(왼쪽) 내용을 입력하세요...';
+      color: #94a3b8;
+      pointer-events: none;
+    }
+    .script-column:nth-child(2) .script-body-text:empty::before {
+      content: '2단(오른쪽) 내용을 입력하세요 (클릭하여 작성)...';
+      color: #94a3b8;
       pointer-events: none;
     }
     .script-body-text p,
@@ -2388,6 +2423,7 @@
             <span>나레이션</span> <strong id="externalNarrationCount">0자 · 약 0초</strong>
           </div>
           <button type="button" class="btn slide-revise-btn" id="externalReviseBtn">시나리오 수정</button>
+          <button type="button" class="btn slide-split-btn" id="externalSplitBtn" title="1단에 모인 글을 좌우 2단으로 균등하게 배분합니다">2단 분할</button>
           <button type="button" class="btn primary slide-save-btn" id="externalSaveBtn">저장</button>
         </div>
       </div>
@@ -2792,6 +2828,49 @@
         titleEl.setAttribute('spellcheck', 'false');
         if (titleEl.innerHTML !== expectedTitleHtml) {
           titleEl.innerHTML = expectedTitleHtml;
+        }
+      });
+      enforceTwoColumns();
+    }
+
+    function enforceTwoColumns() {
+      slideCanvases.forEach((canvas, idx) => {
+        if (idx === 0) return; // Skip stage showcase flow slide
+        const grid = canvas.querySelector('.script-grid-view');
+        if (!grid) return;
+        let columns = [...grid.querySelectorAll('.script-column')];
+        if (columns.length === 0) {
+          grid.innerHTML = `
+            <div class="script-column">
+              <div class="script-unit">
+                <p class="script-body-text"><br></p>
+              </div>
+            </div>
+            <div class="script-column">
+              <div class="script-unit">
+                <p class="script-body-text"><br></p>
+              </div>
+            </div>
+          `;
+        } else if (columns.length === 1) {
+          const rightCol = document.createElement('div');
+          rightCol.className = 'script-column';
+          rightCol.innerHTML = `
+            <div class="script-unit">
+              <p class="script-body-text"><br></p>
+            </div>
+          `;
+          grid.appendChild(rightCol);
+        } else {
+          // Ensure each column has at least one valid editable unit
+          columns.forEach(col => {
+            if (!col.querySelector('.script-body-text')) {
+              const u = document.createElement('div');
+              u.className = 'script-unit';
+              u.innerHTML = '<p class="script-body-text"><br></p>';
+              col.appendChild(u);
+            }
+          });
         }
       });
     }
@@ -3235,6 +3314,7 @@
     function showPresentation(slideIndex = currentSlide) {
       document.body.dataset.view = 'presentation';
       try { localStorage.setItem('cits_active_view', 'presentation'); } catch (e) {}
+      enforceTwoColumns();
       showSlide(slideIndex);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       updateSidebarNav();
@@ -3837,6 +3917,21 @@
           }
         }
       }
+
+      const col = e.target.closest('.script-column');
+      if (col && col.closest('.slide-canvas') && !e.target.closest('.script-unit')) {
+        let bodyText = col.querySelector('.script-body-text');
+        if (!bodyText) {
+          const u = document.createElement('div');
+          u.className = 'script-unit';
+          u.innerHTML = '<p class="script-body-text"><br></p>';
+          col.appendChild(u);
+          bodyText = u.querySelector('.script-body-text');
+        }
+        if (bodyText) {
+          bodyText.focus();
+        }
+      }
     });
     function resetSlideCanvasContent(canvas) {
       if (!canvas) return;
@@ -3848,6 +3943,11 @@
       const grid = document.createElement('div');
       grid.className = 'script-grid-view';
       grid.innerHTML = `
+        <div class="script-column">
+          <div class="script-unit">
+            <p class="script-body-text"><br></p>
+          </div>
+        </div>
         <div class="script-column">
           <div class="script-unit">
             <p class="script-body-text"><br></p>
@@ -3885,6 +3985,11 @@
         const grid = document.createElement('div');
         grid.className = 'script-grid-view';
         grid.innerHTML = `
+          <div class="script-column">
+            <div class="script-unit">
+              <p class="script-body-text"><br></p>
+            </div>
+          </div>
           <div class="script-column">
             <div class="script-unit">
               <p class="script-body-text"><br></p>
@@ -4358,6 +4463,11 @@
         createRevisionSlide();
         return;
       }
+      const splitBtn = e.target.closest('#externalSplitBtn, .slide-split-btn');
+      if (splitBtn) {
+        splitScenarioToTwoColumns();
+        return;
+      }
       const saveBtn = e.target.closest('#externalSaveBtn, #externalConfirmBtn, .slide-save-btn, .slide-confirm-btn');
       if (saveBtn) {
         saveImmediately();
@@ -4366,6 +4476,75 @@
         return;
       }
     });
+
+    function splitScenarioToTwoColumns() {
+      const activeSlide = slideItems[currentSlide];
+      if (!activeSlide) return;
+      const canvas = activeSlide.querySelector('.slide-canvas');
+      if (!canvas) return;
+      const grid = canvas.querySelector('.script-grid-view');
+      if (!grid) return;
+
+      enforceTwoColumns();
+      const cols = grid.querySelectorAll('.script-column');
+      if (cols.length < 2) return;
+
+      const col1 = cols[0];
+      const col2 = cols[1];
+
+      // Case 1: Col1 has multiple .script-unit elements
+      const units = [...col1.querySelectorAll('.script-unit')];
+      if (units.length >= 2) {
+        const half = Math.ceil(units.length / 2);
+        const toMove = units.slice(half);
+        toMove.forEach(u => col2.appendChild(u));
+        // Remove empty units from col2 if any
+        col2.querySelectorAll('.script-unit').forEach(u => {
+          if (!u.textContent.trim() && col2.children.length > 1) u.remove();
+        });
+        updateExternalTools();
+        scheduleSave();
+        toast('글이 좌우 2단으로 균등하게 분할되었습니다.');
+        return;
+      }
+
+      // Case 2: Col1 has single .script-unit with multiple lines or paragraphs
+      const bodyP = col1.querySelector('.script-body-text');
+      if (bodyP) {
+        const rawHtml = bodyP.innerHTML;
+        let parts = rawHtml.split(/<br\s*[\/]?>\s*<br\s*[\/]?>/i);
+        if (parts.length < 2) {
+          parts = rawHtml.split(/<br\s*[\/]?>/i);
+        }
+        if (parts.length >= 2) {
+          const half = Math.ceil(parts.length / 2);
+          const p1 = parts.slice(0, half).join('<br><br>');
+          const p2 = parts.slice(half).join('<br><br>');
+          bodyP.innerHTML = p1;
+
+          let targetUnit2 = col2.querySelector('.script-unit');
+          if (!targetUnit2) {
+            targetUnit2 = document.createElement('div');
+            targetUnit2.className = 'script-unit';
+            col2.appendChild(targetUnit2);
+          }
+          let targetP2 = targetUnit2.querySelector('.script-body-text');
+          if (!targetP2) {
+            targetP2 = document.createElement('p');
+            targetP2.className = 'script-body-text';
+            targetUnit2.appendChild(targetP2);
+          }
+          targetP2.innerHTML = p2;
+
+          updateExternalTools();
+          scheduleSave();
+          toast('글이 좌우 2단으로 균등하게 분할되었습니다.');
+          return;
+        }
+      }
+
+      toast('분할할 문단 또는 줄바꿈이 2개 이상 필요합니다.');
+    }
     document.querySelector('#sidebarSlideList')?.addEventListener('click', e => {
       const delBtn = e.target.closest('.sidebar-sub-del-btn');
       if (delBtn) {
