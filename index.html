@@ -3184,8 +3184,8 @@
     function createRevisionSlide() {
       refreshSlideReferences();
       const existingRevisions = document.querySelectorAll('.revision-slide');
-      if (existingRevisions.length >= 3) {
-        toast('수정본은 최대 3개까지 생성할 수 있습니다.');
+      if (existingRevisions.length >= 5) {
+        toast('수정본은 최대 5개까지 생성할 수 있습니다.');
         const lastRev = existingRevisions[existingRevisions.length - 1];
         const idx = slideItems.indexOf(lastRev);
         if (idx >= 0) showPresentation(idx);
@@ -3197,7 +3197,7 @@
         return m ? parseInt(m[1], 10) : 0;
       });
       let nextNum = 1;
-      for (let i = 1; i <= 3; i++) {
+      for (let i = 1; i <= 5; i++) {
         if (!existingNums.includes(i)) {
           nextNum = i;
           break;
@@ -3609,7 +3609,7 @@
         });
       } else {
         const revCount = data.revisionCount || (data.hasRevision ? 1 : 0);
-        for (let i = 1; i <= Math.min(3, revCount); i++) {
+        for (let i = 1; i <= Math.min(5, revCount); i++) {
           if (!document.querySelector(`#slideRevision_${i}`)) {
             createRevisionSlideSilently(i);
           }
