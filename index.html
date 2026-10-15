@@ -725,6 +725,14 @@
       margin: 0;
       word-break: keep-all;
       overflow-wrap: break-word;
+      min-height: 28px;
+      outline: none;
+      cursor: text;
+    }
+    body[data-view="presentation"] .script-body-text:empty::before {
+      content: '내용을 입력하세요...';
+      color: #cbd5e1;
+      pointer-events: none;
     }
     body[data-view="presentation"] .script-body-text p,
     body[data-view="presentation"] .script-body-text div {
@@ -916,6 +924,14 @@
       margin: 0;
       word-break: keep-all;
       overflow-wrap: break-word;
+      min-height: 28px;
+      outline: none;
+      cursor: text;
+    }
+    .script-body-text:empty::before {
+      content: '내용을 입력하세요...';
+      color: #cbd5e1;
+      pointer-events: none;
     }
     .script-body-text p,
     .script-body-text div {
@@ -3775,6 +3791,53 @@
     });
     document.addEventListener('focusout', saveImmediately);
     window.addEventListener('beforeunload', saveImmediately);
+
+    // Scenario script unit navigation (Tab / Shift+Tab) & easy click focus
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Tab') {
+        const sel = window.getSelection();
+        const activeNode = sel?.anchorNode;
+        const activeUnit = activeNode?.parentElement?.closest?.('.script-unit') || document.activeElement?.closest?.('.script-unit');
+        if (activeUnit) {
+          const canvas = activeUnit.closest('.slide-canvas');
+          if (canvas) {
+            const allUnits = [...canvas.querySelectorAll('.script-unit')];
+            const currentIdx = allUnits.indexOf(activeUnit);
+            const nextIdx = e.shiftKey ? currentIdx - 1 : currentIdx + 1;
+            if (nextIdx >= 0 && nextIdx < allUnits.length) {
+              e.preventDefault();
+              const targetP = allUnits[nextIdx].querySelector('.script-body-text');
+              if (targetP) {
+                targetP.focus();
+                const newRange = document.createRange();
+                newRange.selectNodeContents(targetP);
+                newRange.collapse(false);
+                sel.removeAllRanges();
+                sel.addRange(newRange);
+              }
+            }
+          }
+        }
+      }
+    });
+
+    document.addEventListener('click', e => {
+      const unit = e.target.closest('.script-unit');
+      if (unit && unit.closest('.slide-canvas')) {
+        const bodyText = unit.querySelector('.script-body-text');
+        if (bodyText && (e.target === unit || e.target.classList.contains('script-title-label'))) {
+          bodyText.focus();
+          const sel = window.getSelection();
+          if (sel) {
+            const range = document.createRange();
+            range.selectNodeContents(bodyText);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        }
+      }
+    });
     function resetSlideCanvasContent(canvas) {
       if (!canvas) return;
       const header = canvas.querySelector('.slide-header-block');
