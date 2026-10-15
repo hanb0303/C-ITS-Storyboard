@@ -547,7 +547,8 @@
       gap: 10px;
       transition: opacity .15s ease;
     }
-    .slide-confirm-btn {
+    .slide-confirm-btn,
+    .slide-save-btn {
       height: 34px;
       padding: 0 16px;
       font-size: 13px;
@@ -563,7 +564,8 @@
       box-shadow: none !important;
       transition: background-color .15s ease, border-color .15s ease;
     }
-    .slide-confirm-btn:hover {
+    .slide-confirm-btn:hover,
+    .slide-save-btn:hover {
       background: #1b64da !important;
       border-color: #1b64da !important;
       color: #ffffff !important;
@@ -2321,7 +2323,7 @@
             <span>나레이션</span> <strong id="externalNarrationCount">0자 · 약 0초</strong>
           </div>
           <button type="button" class="btn slide-revise-btn" id="externalReviseBtn">시나리오 수정</button>
-          <button type="button" class="btn primary slide-confirm-btn" id="externalConfirmBtn">확정</button>
+          <button type="button" class="btn primary slide-save-btn" id="externalSaveBtn">저장</button>
         </div>
       </div>
       <div class="slides-grid">
@@ -4214,11 +4216,11 @@
         createRevisionSlide();
         return;
       }
-      const confirmBtn = e.target.closest('#externalConfirmBtn, .slide-confirm-btn');
-      if (confirmBtn) {
+      const saveBtn = e.target.closest('#externalSaveBtn, #externalConfirmBtn, .slide-save-btn, .slide-confirm-btn');
+      if (saveBtn) {
         saveImmediately();
-        showStoryboard();
-        toast('시나리오가 확정되어 스토리보드로 이동했습니다.');
+        saveStyleframesImmediately();
+        toast('💾 모든 수정 내용이 안전하게 저장되었습니다.');
         return;
       }
     });
