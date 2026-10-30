@@ -5017,65 +5017,159 @@
       const grid = canvas.querySelector('.script-grid-view');
       if (!grid) return;
 
-      enforceTwoColumns();
+      ensureTwoColumns();
+      ensureEditableAttributes();
       const cols = grid.querySelectorAll('.script-column');
       if (cols.length < 2) return;
 
       const col1 = cols[0];
       const col2 = cols[1];
 
-      // Case 1: Col1 has multiple .script-unit elements
-      const units = [...col1.querySelectorAll('.script-unit')];
-      if (units.length >= 2) {
-        const half = Math.ceil(units.length / 2);
-        const toMove = units.slice(half);
-        toMove.forEach(u => col2.appendChild(u));
-        // Remove empty units from col2 if any
-        col2.querySelectorAll('.script-unit').forEach(u => {
-          if (!u.textContent.trim() && col2.children.length > 1) u.remove();
-        });
+      // 1. Gather all non-empty .script-unit elements across BOTH columns
+      const allUnits = [...grid.querySelectorAll('.script-unit')].filter(u => {
+        return u.textContent.trim().length > 0;
+      });
+
+      // CASE 1: If there are 2 or more units across the slide, redistribute 50:50 cleanly
+      if (allUnits.length >= 2) {
+        col1.innerHTML = '';
+        col2.innerHTML = '';
+
+        const half = Math.ceil(allUnits.length / 2);
+        const col1Units = allUnits.slice(0, half);
+        const col2Units = allUnits.slice(half);
+
+        col1Units.forEach(u => col1.appendChild(u));
+        col2Units.forEach(u => col2.appendChild(u));
+
+        ensureEditableAttributes();
         updateExternalTools();
         scheduleSave();
         toast('글이 좌우 2단으로 균등하게 분할되었습니다.');
         return;
       }
 
-      // Case 2: Col1 has single .script-unit with multiple lines or paragraphs
-      const bodyP = col1.querySelector('.script-body-text');
-      if (bodyP) {
-        const rawHtml = bodyP.innerHTML;
-        let parts = rawHtml.split(/<br\s*[\/]?>\s*<br\s*[\/]?>/i);
-        if (parts.length < 2) {
-          parts = rawHtml.split(/<br\s*[\/]?>/i);
-        }
-        if (parts.length >= 2) {
-          const half = Math.ceil(parts.length / 2);
-          const p1 = parts.slice(0, half).join('<br><br>');
-          const p2 = parts.slice(half).join('<br><br>');
-          bodyP.innerHTML = p1;
+      // CASE 2: There is only 1 unit (or all text is consolidated in one place)
+      let singleUnit = allUnits[0] || col1.querySelector('.script-unit') || col2.querySelector('.script-unit');
+      let bodyP = singleUnit ? singleUnit.querySelector('.script-body-text') : null;
+      let rawText = bodyP ? bodyP.innerText.trim() : (canvas.innerText.trim());
 
-          let targetUnit2 = col2.querySelector('.script-unit');
-          if (!targetUnit2) {
-            targetUnit2 = document.createElement('div');
-            targetUnit2.className = 'script-unit';
-            col2.appendChild(targetUnit2);
-          }
-          let targetP2 = targetUnit2.querySelector('.script-body-text');
-          if (!targetP2) {
-            targetP2 = document.createElement('p');
-            targetP2.className = 'script-body-text';
-            targetUnit2.appendChild(targetP2);
-          }
-          targetP2.innerHTML = p2;
+      if (!rawText) {
+        toast('분할할 시나리오 텍스트가 없습니다.');
+        return;
+      }
 
-          updateExternalTools();
-          scheduleSave();
-          toast('글이 좌우 2단으로 균등하게 분할되었습니다.');
-          return;
+      // Try splitting into chunks by priority:
+      // Priority A: Double line breaks (\n\n or <br><br>)
+      // Priority B: Single line breaks (\n or <br>)
+      // Priority C: Sentences (. or ? or ! followed by space)
+      let chunks = [];
+
+      const doubleBreakChunks = rawText.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+      if (doubleBreakChunks.length >= 2) {
+        chunks = doubleBreakChunks;
+      } else {
+        const singleBreakChunks = rawText.split('\n').map(s => s.trim()).filter(Boolean);
+        if (singleBreakChunks.length >= 2) {
+          chunks = singleBreakChunks;
+        } else {
+          const sentenceRegex = /(?<=[.?!])\s+(?=[가-힣A-Za-z0-9])/;
+          const sentenceChunks = rawText.split(sentenceRegex).map(s => s.trim()).filter(Boolean);
+          if (sentenceChunks.length >= 2) {
+            chunks = sentenceChunks;
+          }
         }
       }
 
-      toast('분할할 문단 또는 줄바꿈이 2개 이상 필요합니다.');
+      if (chunks.length >= 2) {
+        col1.innerHTML = '';
+        col2.innerHTML = '';
+
+        const half = Math.ceil(chunks.length / 2);
+        const col1Chunks = chunks.slice(0, half);
+        const col2Chunks = chunks.slice(half);
+
+        const createUnitFromChunks = (col, chunkList, startIndex) => {
+          chunkList.forEach((chk, idx) => {
+            const u = document.createElement('div');
+            u.className = 'script-unit';
+            const lines = chk.split('\n');
+            let title = '';
+            let body = chk;
+            if (lines.length > 1 && lines[0].length < 40) {
+              title = lines[0].replace(/^[\[\(]?(\d+[\.\-\d]*)[\]\)]?\s*/, '$1. ');
+              body = lines.slice(1).join('<br>');
+            } else {
+              const num = String(startIndex + idx + 1).padStart(2, '0');
+              title = `${num}. 장면 ${startIndex + idx + 1}`;
+              body = chk.replace(/\n/g, '<br>');
+            }
+            u.innerHTML = `
+              <div class="script-unit-header-row">
+                <div class="script-title-label" contenteditable="true" spellcheck="true">${title}</div>
+                <button type="button" class="script-unit-copy-btn" title="이 문단 복사">복사</button>
+              </div>
+              <p class="script-body-text" contenteditable="true" spellcheck="true">${body}</p>
+            `;
+            col.appendChild(u);
+          });
+        };
+
+        createUnitFromChunks(col1, col1Chunks, 0);
+        createUnitFromChunks(col2, col2Chunks, col1Chunks.length);
+
+        ensureEditableAttributes();
+        updateExternalTools();
+        scheduleSave();
+        toast('글이 좌우 2단으로 균등하게 분할되었습니다.');
+        return;
+      }
+
+      // Priority D: If it's one single unbroken paragraph, split at the 50% character midpoint at nearest word space
+      if (rawText.length > 20) {
+        col1.innerHTML = '';
+        col2.innerHTML = '';
+
+        const mid = Math.floor(rawText.length / 2);
+        let splitIdx = rawText.indexOf(' ', mid);
+        if (splitIdx === -1 || splitIdx > mid + 30) {
+          splitIdx = rawText.lastIndexOf(' ', mid);
+        }
+        if (splitIdx === -1) splitIdx = mid;
+
+        const part1 = rawText.slice(0, splitIdx).trim();
+        const part2 = rawText.slice(splitIdx).trim();
+
+        const u1 = document.createElement('div');
+        u1.className = 'script-unit';
+        u1.innerHTML = `
+          <div class="script-unit-header-row">
+            <div class="script-title-label" contenteditable="true" spellcheck="true">01. 1단 내용</div>
+            <button type="button" class="script-unit-copy-btn" title="이 문단 복사">복사</button>
+          </div>
+          <p class="script-body-text" contenteditable="true" spellcheck="true">${part1}</p>
+        `;
+        col1.appendChild(u1);
+
+        const u2 = document.createElement('div');
+        u2.className = 'script-unit';
+        u2.innerHTML = `
+          <div class="script-unit-header-row">
+            <div class="script-title-label" contenteditable="true" spellcheck="true">02. 2단 내용</div>
+            <button type="button" class="script-unit-copy-btn" title="이 문단 복사">복사</button>
+          </div>
+          <p class="script-body-text" contenteditable="true" spellcheck="true">${part2}</p>
+        `;
+        col2.appendChild(u2);
+
+        ensureEditableAttributes();
+        updateExternalTools();
+        scheduleSave();
+        toast('글이 좌우 2단으로 균등하게 분할되었습니다.');
+        return;
+      }
+
+      toast('분할할 내용의 길이가 너무 짧습니다.');
     }
     document.querySelector('#sidebarSlideList')?.addEventListener('click', e => {
       const delBtn = e.target.closest('.sidebar-sub-del-btn');
