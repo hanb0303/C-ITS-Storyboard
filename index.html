@@ -5116,7 +5116,7 @@
       const grid = canvas.querySelector('.script-grid-view');
       if (!grid) return;
 
-      ensureTwoColumns();
+      enforceTwoColumns();
       ensureEditableAttributes();
       const cols = grid.querySelectorAll('.script-column');
       if (cols.length < 2) return;
@@ -5124,142 +5124,102 @@
       const col1 = cols[0];
       const col2 = cols[1];
 
-      // 1. Gather all non-empty .script-unit elements across BOTH columns
-      const allUnits = [...grid.querySelectorAll('.script-unit')].filter(u => {
-        return u.textContent.trim().length > 0;
-      });
-
-      // CASE 1: If there are 2 or more units across the slide, redistribute 50:50 cleanly
-      if (allUnits.length >= 2) {
+      // 1. Collect all logical text pieces from the current slide
+      // Check if user has multiple .script-unit elements
+      const units = [...grid.querySelectorAll('.script-unit')].filter(u => u.textContent.trim().length > 0);
+      
+      // If there are multiple units but they are all stuck in column 1 (or unbalanced)
+      if (units.length >= 2) {
         col1.innerHTML = '';
         col2.innerHTML = '';
 
-        const half = Math.ceil(allUnits.length / 2);
-        const col1Units = allUnits.slice(0, half);
-        const col2Units = allUnits.slice(half);
+        const half = Math.ceil(units.length / 2);
+        const col1Units = units.slice(0, half);
+        const col2Units = units.slice(half);
 
         col1Units.forEach(u => col1.appendChild(u));
         col2Units.forEach(u => col2.appendChild(u));
 
         ensureEditableAttributes();
         updateExternalTools();
-        scheduleSave();
+        saveImmediately();
         toast('글이 좌우 2단으로 균등하게 분할되었습니다.');
         return;
       }
 
-      // CASE 2: There is only 1 unit (or all text is consolidated in one place)
-      let singleUnit = allUnits[0] || col1.querySelector('.script-unit') || col2.querySelector('.script-unit');
-      let bodyP = singleUnit ? singleUnit.querySelector('.script-body-text') : null;
-      let rawText = bodyP ? bodyP.innerText.trim() : (canvas.innerText.trim());
-
-      if (!rawText) {
-        toast('분할할 시나리오 텍스트가 없습니다.');
-        return;
-      }
-
-      // Try splitting into chunks by priority:
-      // Priority A: Double line breaks (\n\n or <br><br>)
-      // Priority B: Single line breaks (\n or <br>)
-      // Priority C: Sentences (. or ? or ! followed by space)
-      let chunks = [];
-
-      const doubleBreakChunks = rawText.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
-      if (doubleBreakChunks.length >= 2) {
-        chunks = doubleBreakChunks;
+      // 2. If there are multiple paragraphs/headings or all text is packed into 1 unit
+      // Extract all paragraphs and lines
+      let paragraphs = [];
+      const bodyElements = [...grid.querySelectorAll('.script-body-text, p')].filter(p => p.textContent.trim().length > 0);
+      
+      if (bodyElements.length >= 2) {
+        paragraphs = bodyElements.map(el => ({
+          title: el.closest('.script-unit')?.querySelector('.script-title-label')?.textContent.trim() || '',
+          body: el.innerHTML.trim()
+        }));
       } else {
-        const singleBreakChunks = rawText.split('\n').map(s => s.trim()).filter(Boolean);
-        if (singleBreakChunks.length >= 2) {
-          chunks = singleBreakChunks;
+        // Parse from raw text
+        const rawText = canvas.querySelector('.script-column')?.innerText.trim() || canvas.innerText.trim();
+        if (!rawText) {
+          toast('분할할 시나리오 텍스트가 없습니다.');
+          return;
+        }
+
+        // Try double line break first, then single line break
+        const lines = rawText.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+        const splitLines = lines.length >= 2 ? lines : rawText.split('\n').map(s => s.trim()).filter(Boolean);
+
+        if (splitLines.length >= 2) {
+          paragraphs = splitLines.map(l => ({ title: '', body: l.replace(/\n/g, '<br>') }));
         } else {
-          const sentenceRegex = /(?<=[.?!])\s+(?=[가-힣A-Za-z0-9])/;
-          const sentenceChunks = rawText.split(sentenceRegex).map(s => s.trim()).filter(Boolean);
-          if (sentenceChunks.length >= 2) {
-            chunks = sentenceChunks;
+          // If it's one single unbroken block of text, split at the 50% midpoint by nearest word space
+          const mid = Math.floor(rawText.length / 2);
+          let splitIdx = rawText.indexOf(' ', mid);
+          if (splitIdx === -1 || splitIdx > mid + 30) {
+            splitIdx = rawText.lastIndexOf(' ', mid);
           }
+          if (splitIdx === -1) splitIdx = mid;
+
+          paragraphs = [
+            { title: '', body: rawText.slice(0, splitIdx).trim() },
+            { title: '', body: rawText.slice(splitIdx).trim() }
+          ];
         }
       }
 
-      if (chunks.length >= 2) {
+      if (paragraphs.length >= 2) {
         col1.innerHTML = '';
         col2.innerHTML = '';
 
-        const half = Math.ceil(chunks.length / 2);
-        const col1Chunks = chunks.slice(0, half);
-        const col2Chunks = chunks.slice(half);
+        const half = Math.ceil(paragraphs.length / 2);
+        const col1Parts = paragraphs.slice(0, half);
+        const col2Parts = paragraphs.slice(half);
 
-        const createUnitFromChunks = (col, chunkList, startIndex) => {
-          chunkList.forEach((chk, idx) => {
+        const renderPartsToCol = (col, parts, startIndex) => {
+          parts.forEach((p, idx) => {
             const u = document.createElement('div');
             u.className = 'script-unit';
-            const lines = chk.split('\n');
-            let title = '';
-            let body = chk;
-            if (lines.length > 1 && lines[0].length < 40) {
-              title = lines[0].replace(/^[\[\(]?(\d+[\.\-\d]*)[\]\)]?\s*/, '$1. ');
-              body = lines.slice(1).join('<br>');
-            } else {
-              const num = String(startIndex + idx + 1).padStart(2, '0');
-              title = `${num}. 장면 ${startIndex + idx + 1}`;
-              body = chk.replace(/\n/g, '<br>');
-            }
+            const num = String(startIndex + idx + 1).padStart(2, '0');
+            const titleHtml = p.title ? p.title : `${num}.`;
             u.innerHTML = `
-              <div class="script-title-label" contenteditable="true" spellcheck="true">${title}</div>
-              <p class="script-body-text" contenteditable="true" spellcheck="true">${body}</p>
+              <div class="script-title-label" contenteditable="true" spellcheck="true">${titleHtml}</div>
+              <p class="script-body-text" contenteditable="true" spellcheck="true">${p.body}</p>
             `;
             col.appendChild(u);
           });
         };
 
-        createUnitFromChunks(col1, col1Chunks, 0);
-        createUnitFromChunks(col2, col2Chunks, col1Chunks.length);
+        renderPartsToCol(col1, col1Parts, 0);
+        renderPartsToCol(col2, col2Parts, col1Parts.length);
 
         ensureEditableAttributes();
         updateExternalTools();
-        scheduleSave();
+        saveImmediately();
         toast('글이 좌우 2단으로 균등하게 분할되었습니다.');
         return;
       }
 
-      // Priority D: If it's one single unbroken paragraph, split at the 50% character midpoint at nearest word space
-      if (rawText.length > 20) {
-        col1.innerHTML = '';
-        col2.innerHTML = '';
-
-        const mid = Math.floor(rawText.length / 2);
-        let splitIdx = rawText.indexOf(' ', mid);
-        if (splitIdx === -1 || splitIdx > mid + 30) {
-          splitIdx = rawText.lastIndexOf(' ', mid);
-        }
-        if (splitIdx === -1) splitIdx = mid;
-
-        const part1 = rawText.slice(0, splitIdx).trim();
-        const part2 = rawText.slice(splitIdx).trim();
-
-        const u1 = document.createElement('div');
-        u1.className = 'script-unit';
-        u1.innerHTML = `
-          <div class="script-title-label" contenteditable="true" spellcheck="true">01.</div>
-          <p class="script-body-text" contenteditable="true" spellcheck="true">${part1}</p>
-        `;
-        col1.appendChild(u1);
-
-        const u2 = document.createElement('div');
-        u2.className = 'script-unit';
-        u2.innerHTML = `
-          <div class="script-title-label" contenteditable="true" spellcheck="true">02.</div>
-          <p class="script-body-text" contenteditable="true" spellcheck="true">${part2}</p>
-        `;
-        col2.appendChild(u2);
-
-        ensureEditableAttributes();
-        updateExternalTools();
-        scheduleSave();
-        toast('글이 좌우 2단으로 균등하게 분할되었습니다.');
-        return;
-      }
-
-      toast('분할할 내용의 길이가 너무 짧습니다.');
+      toast('분할할 내용이 충분하지 않습니다.');
     }
     document.querySelector('#sidebarSlideList')?.addEventListener('click', e => {
       const delBtn = e.target.closest('.sidebar-sub-del-btn');
