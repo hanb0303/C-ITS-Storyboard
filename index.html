@@ -5245,10 +5245,10 @@
       const col1 = cols[0];
       const col2 = cols[1];
 
-      // 1. Gather all existing distinct units that have text
+      // Priority 1: Check existing units in grid
       const existingUnits = [...grid.querySelectorAll('.script-unit')].filter(u => u.textContent.trim().length > 0);
 
-      // If the slide already has 2 or more distinct units, just balance the units 50:50 between the two columns
+      // If we already have 2 or more distinct units, balance them 50:50 between the two columns
       if (existingUnits.length >= 2) {
         col1.innerHTML = '';
         col2.innerHTML = '';
@@ -5260,18 +5260,25 @@
         ensureEditableAttributes();
         updateExternalTools();
         saveImmediately();
-        toast('글이 좌우 2단으로 균등하게 분할되었습니다.');
+        toast('기존 소제목과 문단 구성을 유지하며 좌우 2단으로 균등하게 분할했습니다.');
         return;
       }
 
-      // 2. If all text is in a single unit or loose in columns, extract the clean text lines/paragraphs
+      // Priority 2: If all text is in a single unit or loose in columns, parse intelligently
       let fullRawText = '';
       if (existingUnits.length === 1) {
-        // Collect text from body or unit
         const bodyEl = existingUnits[0].querySelector('.script-body-text');
-        fullRawText = bodyEl ? bodyEl.innerText.trim() : existingUnits[0].innerText.trim();
+        const titleEl = existingUnits[0].querySelector('.script-title-label');
+        const titleText = titleEl ? titleEl.innerText.trim() : '';
+        const bodyText = bodyEl ? bodyEl.innerText.trim() : '';
+        fullRawText = titleText ? `${titleText}\n${bodyText}` : bodyText || existingUnits[0].innerText.trim();
       } else {
-        fullRawText = canvas.innerText.trim();
+        const clone = canvas.cloneNode(true);
+        clone.querySelector('.slide-header-block')?.remove();
+        clone.querySelector('.slide-header-tools')?.remove();
+        clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+        clone.querySelectorAll('p, div, h1, h2, h3, h4').forEach(b => b.after('\n'));
+        fullRawText = clone.innerText.trim();
       }
 
       if (!fullRawText) {
@@ -5279,48 +5286,128 @@
         return;
       }
 
-      // Break text into clean logical sections by double line break or single lines
-      let sections = fullRawText.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
-      if (sections.length < 2) {
-        sections = fullRawText.split('\n').map(s => s.trim()).filter(Boolean);
-      }
-      if (sections.length < 2) {
-        // If it's one single unbroken sentence/paragraph, split at the 50% midpoint by space
-        const mid = Math.floor(fullRawText.length / 2);
-        let splitIdx = fullRawText.indexOf(' ', mid);
-        if (splitIdx === -1 || splitIdx > mid + 30) {
-          splitIdx = fullRawText.lastIndexOf(' ', mid);
+      // Check if text has sections with explicit titles (e.g. "01. ...", "02. ...")
+      const lines = fullRawText.split('\n');
+      const headingRegex = /^(\d+[\.\-\)]\s*|STAGE\s*\d+|장면\s*\d+|#[#\s]*\d+)/i;
+      const parsedSections = [];
+      let curTitle = '';
+      let curBody = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) {
+          if (curBody.length > 0) curBody.push('');
+          continue;
         }
-        if (splitIdx === -1) splitIdx = mid;
-        sections = [
-          fullRawText.slice(0, splitIdx).trim(),
-          fullRawText.slice(splitIdx).trim()
-        ];
+
+        const isHeading = headingRegex.test(line) && line.length < 80;
+        if (isHeading) {
+          if (curTitle || curBody.length > 0) {
+            parsedSections.push({
+              title: curTitle,
+              body: curBody.join('\n').trim()
+            });
+            curBody = [];
+          }
+          curTitle = line;
+        } else {
+          curBody.push(line);
+        }
       }
 
-      if (sections.length >= 2) {
+      if (curTitle || curBody.length > 0) {
+        parsedSections.push({
+          title: curTitle,
+          body: curBody.join('\n').trim()
+        });
+      }
+
+      // Case A: Text had structured headings (e.g. 2, 3, 4 scenes)
+      if (parsedSections.length >= 2 && parsedSections.some(s => s.title)) {
         col1.innerHTML = '';
         col2.innerHTML = '';
 
-        const half = Math.ceil(sections.length / 2);
-        const col1Sections = sections.slice(0, half);
-        const col2Sections = sections.slice(half);
+        const half = Math.ceil(parsedSections.length / 2);
+        const col1Parts = parsedSections.slice(0, half);
+        const col2Parts = parsedSections.slice(half);
 
-        const renderSections = (col, secList, startIndex) => {
-          secList.forEach((sec, idx) => {
+        const renderStructured = (col, parts) => {
+          parts.forEach(p => {
             const u = document.createElement('div');
             u.className = 'script-unit';
-            const num = String(startIndex + idx + 1).padStart(2, '0');
             u.innerHTML = `
-              <div class="script-title-label">${num}.</div>
-              <p class="script-body-text">${sec.replace(/\n/g, '<br>')}</p>
+              ${p.title ? `<div class="script-title-label">${p.title}</div>` : ''}
+              <p class="script-body-text">${p.body.replace(/\n\s*\n/g, '<br><br>').replace(/\n/g, '<br>')}</p>
             `;
             col.appendChild(u);
           });
         };
 
-        renderSections(col1, col1Sections, 0);
-        renderSections(col2, col2Sections, col1Sections.length);
+        renderStructured(col1, col1Parts);
+        renderStructured(col2, col2Parts);
+
+        ensureEditableAttributes();
+        updateExternalTools();
+        saveImmediately();
+        toast('글이 소제목별로 좌우 2단으로 균등하게 분할되었습니다.');
+        return;
+      }
+
+      // Case B: Plain text with no structured headings (never invent fake numbers!)
+      let paragraphs = fullRawText.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+      if (paragraphs.length < 2) {
+        paragraphs = fullRawText.split('\n').map(s => s.trim()).filter(Boolean);
+      }
+
+      if (paragraphs.length >= 2) {
+        col1.innerHTML = '';
+        col2.innerHTML = '';
+
+        const half = Math.ceil(paragraphs.length / 2);
+        const col1Paras = paragraphs.slice(0, half);
+        const col2Paras = paragraphs.slice(half);
+
+        const u1 = document.createElement('div');
+        u1.className = 'script-unit';
+        u1.innerHTML = `<p class="script-body-text">${col1Paras.join('<br><br>')}</p>`;
+        col1.appendChild(u1);
+
+        const u2 = document.createElement('div');
+        u2.className = 'script-unit';
+        u2.innerHTML = `<p class="script-body-text">${col2Paras.join('<br><br>')}</p>`;
+        col2.appendChild(u2);
+
+        ensureEditableAttributes();
+        updateExternalTools();
+        saveImmediately();
+        toast('글이 좌우 2단으로 균등하게 분할되었습니다.');
+        return;
+      }
+
+      // Case C: Single unbroken sentence/paragraph - split at character midpoint by word space
+      if (fullRawText.length > 20) {
+        col1.innerHTML = '';
+        col2.innerHTML = '';
+
+        const mid = Math.floor(fullRawText.length / 2);
+        let splitIdx = fullRawText.indexOf(' ', mid);
+        if (splitIdx === -1 || splitIdx > mid + 40) {
+          splitIdx = fullRawText.lastIndexOf(' ', mid);
+        }
+        if (splitIdx === -1) splitIdx = mid;
+
+        const part1 = fullRawText.slice(0, splitIdx).trim();
+        const part2 = fullRawText.slice(splitIdx).trim();
+
+        const u1 = document.createElement('div');
+        u1.className = 'script-unit';
+        u1.innerHTML = `<p class="script-body-text">${part1.replace(/\n/g, '<br>')}</p>`;
+        col1.appendChild(u1);
+
+        const u2 = document.createElement('div');
+        u2.className = 'script-unit';
+        u2.innerHTML = `<p class="script-body-text">${part2.replace(/\n/g, '<br>')}</p>`;
+        col2.appendChild(u2);
 
         ensureEditableAttributes();
         updateExternalTools();
