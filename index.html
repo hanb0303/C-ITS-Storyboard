@@ -2424,6 +2424,7 @@
           </div>
           <button type="button" class="btn slide-revise-btn" id="externalReviseBtn">시나리오 수정</button>
           <button type="button" class="btn slide-split-btn" id="externalSplitBtn" title="1단에 모인 글을 좌우 2단으로 균등하게 배분합니다">2단 분할</button>
+          <button type="button" class="btn slide-copy-btn" id="externalCopyBtn" title="현재 시나리오 전체 내용을 텍스트로 복사합니다">시나리오 복사</button>
           <button type="button" class="btn primary slide-save-btn" id="externalSaveBtn">저장</button>
         </div>
       </div>
@@ -3903,12 +3904,17 @@
     });
 
     document.addEventListener('click', e => {
+      // 1. If text is actively selected, NEVER collapse or override selection on mouse release!
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed && sel.toString().trim().length > 0) {
+        return;
+      }
+
       const unit = e.target.closest('.script-unit');
       if (unit && unit.closest('.slide-canvas')) {
         const bodyText = unit.querySelector('.script-body-text');
         if (bodyText && (e.target === unit || e.target.classList.contains('script-title-label'))) {
           bodyText.focus();
-          const sel = window.getSelection();
           if (sel) {
             const range = document.createRange();
             range.selectNodeContents(bodyText);
@@ -3934,6 +3940,35 @@
         }
       }
     });
+
+    // Helper: Determine if cursor is at the very start of a paragraph
+    function isCursorAtParagraphStart(paragraph, range) {
+      if (!range || !range.collapsed) return false;
+      const testRange = document.createRange();
+      testRange.selectNodeContents(paragraph);
+      try {
+        testRange.setEnd(range.startContainer, range.startOffset);
+        const textBefore = testRange.toString().replace(/[\r\n\t\u200B\u00A0]/g, '');
+        return textBefore.length === 0;
+      } catch (err) {
+        return false;
+      }
+    }
+
+    // Helper: Determine if cursor is at the very end of a paragraph
+    function isCursorAtParagraphEnd(paragraph, range) {
+      if (!range || !range.collapsed) return false;
+      const testRange = document.createRange();
+      testRange.selectNodeContents(paragraph);
+      try {
+        testRange.setStart(range.endContainer, range.endOffset);
+        const textAfter = testRange.toString().replace(/[\r\n\t\u200B\u00A0]/g, '');
+        return textAfter.length === 0;
+      } catch (err) {
+        return false;
+      }
+    }
+
     function resetSlideCanvasContent(canvas) {
       if (!canvas) return;
       const header = canvas.querySelector('.slide-header-block');
@@ -4003,20 +4038,99 @@
       return otherChildren[0]?.querySelector('.script-body-text') || otherChildren[0];
     }
 
+    // Rock-solid editor keydown: Prevents jumping across paragraphs on Backspace/Delete
     document.addEventListener('keydown', e => {
+      const canvas = e.target.closest?.('.slide-canvas') ||
+                     window.getSelection()?.anchorNode?.parentElement?.closest?.('.slide-canvas');
+      if (!canvas) return;
+
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+
+      // 1. Enter inside scenario paragraph: Insert line break without breaking unit or creating rogue DOM
+      if (e.key === 'Enter' && !e.shiftKey) {
+        const activeP = (e.target.closest?.('.script-body-text') ||
+                         range.startContainer.nodeType === 1 ? range.startContainer.closest?.('.script-body-text') : range.startContainer.parentElement?.closest?.('.script-body-text'));
+        if (activeP) {
+          e.preventDefault();
+          document.execCommand('insertLineBreak');
+          return;
+        }
+      }
+
+      // 2. Backspace / Delete
       if (e.key === 'Backspace' || e.key === 'Delete') {
-        const canvas = e.target.closest?.('.slide-canvas');
-        if (canvas) {
-          const header = canvas.querySelector('.slide-header-block');
-          const sel = window.getSelection();
-          if (sel && sel.rangeCount) {
-            const range = sel.getRangeAt(0);
-            const touchesHeader = header && (range.intersectsNode(header) || (sel.containsNode && sel.containsNode(header, true)));
-            if (touchesHeader) {
+        const header = canvas.querySelector('.slide-header-block');
+
+        // Never reset canvas or delete header on backspace/delete
+        if (header && (range.intersectsNode(header) || (sel.containsNode && sel.containsNode(header, true)))) {
+          e.preventDefault();
+          return;
+        }
+
+        let activeP = range.startContainer.nodeType === 1
+          ? range.startContainer.closest('.script-body-text')
+          : range.startContainer.parentElement?.closest('.script-body-text');
+
+        if (!activeP) {
+          activeP = range.endContainer.nodeType === 1
+            ? range.endContainer.closest('.script-body-text')
+            : range.endContainer.parentElement?.closest('.script-body-text');
+        }
+
+        // A. Collapsed Cursor (Normal typing deletion)
+        if (sel.isCollapsed && activeP) {
+          if (e.key === 'Backspace') {
+            if (isCursorAtParagraphStart(activeP, range)) {
+              // Cursor is at the beginning of paragraph or paragraph is empty:
+              // Stop Backspace from merging into previous unit or jumping to another paragraph!
               e.preventDefault();
-              resetSlideCanvasContent(canvas);
+              e.stopPropagation();
+              if (!activeP.innerHTML.trim() || activeP.innerHTML === '<br>') {
+                activeP.innerHTML = '<br>';
+              }
               return;
             }
+          } else if (e.key === 'Delete') {
+            if (isCursorAtParagraphEnd(activeP, range)) {
+              // Cursor is at the end of paragraph:
+              // Stop Delete from pulling next unit into this paragraph!
+              e.preventDefault();
+              e.stopPropagation();
+              return;
+            }
+          }
+        }
+
+        // B. Non-collapsed Selection: Protect title labels and headers
+        if (!sel.isCollapsed) {
+          const labels = canvas.querySelectorAll('.slide-header-block, .script-title-label');
+          let touchesProtected = false;
+          for (const l of labels) {
+            if (range.intersectsNode(l)) {
+              touchesProtected = true;
+              break;
+            }
+          }
+
+          if (touchesProtected) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Clear only text inside selected .script-body-text elements
+            const bodyTexts = [...canvas.querySelectorAll('.script-body-text')].filter(p => range.intersectsNode(p));
+            bodyTexts.forEach(p => {
+              const pRange = document.createRange();
+              pRange.selectNodeContents(p);
+              if (range.compareBoundaryPoints(Range.START_TO_START, pRange) <= 0 &&
+                  range.compareBoundaryPoints(Range.END_TO_END, pRange) >= 0) {
+                p.innerHTML = '<br>';
+              } else {
+                try { document.execCommand('delete'); } catch (err) {}
+              }
+            });
+            scheduleSave();
+            return;
           }
         }
       }
@@ -4024,21 +4138,45 @@
 
     document.addEventListener('keyup', e => {
       if (e.key === 'Backspace' || e.key === 'Delete') {
-        const canvas = e.target.closest?.('.slide-canvas');
+        const canvas = e.target.closest?.('.slide-canvas') ||
+                       window.getSelection()?.anchorNode?.parentElement?.closest?.('.slide-canvas');
         if (canvas) {
+          // Ensure empty body texts keep a <br> placeholder
+          canvas.querySelectorAll('.script-body-text').forEach(p => {
+            if (!p.textContent.trim() && !p.querySelector('br')) {
+              p.innerHTML = '<br>';
+            }
+          });
           ensureSlideEditableBody(canvas);
+          enforceTwoColumns();
+        }
+      }
+    });
+
+    // Global copy handler: Always guarantees clean copying of selected text
+    document.addEventListener('copy', e => {
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed) {
+        const text = sel.toString();
+        if (text && text.trim().length > 0 && e.clipboardData) {
+          e.clipboardData.setData('text/plain', text);
         }
       }
     });
 
     document.addEventListener('click', e => {
+      // If user has an active text selection, NEVER collapse it!
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed && sel.toString().trim().length > 0) {
+        return;
+      }
+
       const canvas = e.target.closest?.('.slide-canvas');
       if (canvas && !e.target.closest('.slide-header-block')) {
         const bodyTarget = ensureSlideEditableBody(canvas);
         if (e.target === canvas || !canvas.querySelector('.script-body-text, .showcase-card')) {
           const p = canvas.querySelector('.script-body-text') || bodyTarget;
           if (p) {
-            const sel = window.getSelection();
             if (sel) {
               sel.removeAllRanges();
               const range = document.createRange();
@@ -4186,29 +4324,35 @@
           selection.removeAllRanges();
           selection.addRange(range);
         } else {
-          if (canvas) {
-            const header = canvas.querySelector('.slide-header-block');
-            const curRange = selection.getRangeAt(0);
-            if (header && (curRange.intersectsNode(header) || (selection.containsNode && selection.containsNode(header, true)))) {
-              resetSlideCanvasContent(canvas);
-            }
-          }
           selection.deleteFromDocument();
         }
 
         const lines = plainText.replace(/\r\n/g, '\n').split('\n');
         const fragment = document.createDocumentFragment();
+        let lastNode = null;
         lines.forEach((line, idx) => {
-          if (idx > 0) fragment.appendChild(document.createElement('br'));
-          if (line) fragment.appendChild(document.createTextNode(line));
+          if (idx > 0) {
+            const br = document.createElement('br');
+            fragment.appendChild(br);
+            lastNode = br;
+          }
+          if (line) {
+            const tn = document.createTextNode(line);
+            fragment.appendChild(tn);
+            lastNode = tn;
+          }
         });
 
         const activeRange = selection.getRangeAt(0);
         activeRange.insertNode(fragment);
 
-        activeRange.collapse(false);
-        selection.removeAllRanges();
-        selection.addRange(activeRange);
+        if (lastNode) {
+          const newRange = document.createRange();
+          newRange.setStartAfter(lastNode);
+          newRange.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+        }
 
         editableTarget.dispatchEvent(new Event('input', { bubbles: true }));
       }
@@ -4469,6 +4613,11 @@
         splitScenarioToTwoColumns();
         return;
       }
+      const copyBtn = e.target.closest('#externalCopyBtn, .slide-copy-btn');
+      if (copyBtn) {
+        copyCurrentScenarioText();
+        return;
+      }
       const saveBtn = e.target.closest('#externalSaveBtn, #externalConfirmBtn, .slide-save-btn, .slide-confirm-btn');
       if (saveBtn) {
         saveImmediately();
@@ -4477,6 +4626,65 @@
         return;
       }
     });
+
+    function copyCurrentScenarioText() {
+      const activeSlide = slideItems[currentSlide];
+      if (!activeSlide) return;
+      const canvas = activeSlide.querySelector('.slide-canvas');
+      if (!canvas) return;
+
+      const units = [...canvas.querySelectorAll('.script-unit')];
+      let fullText = '';
+      if (units.length > 0) {
+        const parts = [];
+        units.forEach(u => {
+          const title = u.querySelector('.script-title-label')?.textContent.trim() || '';
+          const body = u.querySelector('.script-body-text')?.innerText.trim() || '';
+          if (title && body) {
+            parts.push(`[${title}]\n${body}`);
+          } else if (body) {
+            parts.push(body);
+          } else if (title) {
+            parts.push(`[${title}]`);
+          }
+        });
+        fullText = parts.join('\n\n');
+      } else {
+        const clone = canvas.cloneNode(true);
+        clone.querySelector('.slide-header-block')?.remove();
+        clone.querySelector('.slide-header-tools')?.remove();
+        fullText = clone.innerText.trim();
+      }
+
+      if (!fullText) {
+        toast('복사할 시나리오 내용이 없습니다.');
+        return;
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(fullText).then(() => {
+          toast('📋 시나리오 전체 내용이 클립보드에 복사되었습니다.');
+        }).catch(() => {
+          fallbackCopyText(fullText);
+        });
+      } else {
+        fallbackCopyText(fullText);
+      }
+    }
+
+    function fallbackCopyText(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        toast('📋 시나리오 전체 내용이 클립보드에 복사되었습니다.');
+      } catch (err) {
+        toast('복사에 실패했습니다.');
+      }
+      ta.remove();
+    }
 
     function splitScenarioToTwoColumns() {
       const activeSlide = slideItems[currentSlide];
