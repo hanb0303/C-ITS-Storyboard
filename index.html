@@ -5124,21 +5124,17 @@
       const col1 = cols[0];
       const col2 = cols[1];
 
-      // 1. Collect all logical text pieces from the current slide
-      // Check if user has multiple .script-unit elements
-      const units = [...grid.querySelectorAll('.script-unit')].filter(u => u.textContent.trim().length > 0);
-      
-      // If there are multiple units but they are all stuck in column 1 (or unbalanced)
-      if (units.length >= 2) {
+      // 1. Gather all existing distinct units that have text
+      const existingUnits = [...grid.querySelectorAll('.script-unit')].filter(u => u.textContent.trim().length > 0);
+
+      // If the slide already has 2 or more distinct units, just balance the units 50:50 between the two columns
+      if (existingUnits.length >= 2) {
         col1.innerHTML = '';
         col2.innerHTML = '';
 
-        const half = Math.ceil(units.length / 2);
-        const col1Units = units.slice(0, half);
-        const col2Units = units.slice(half);
-
-        col1Units.forEach(u => col1.appendChild(u));
-        col2Units.forEach(u => col2.appendChild(u));
+        const half = Math.ceil(existingUnits.length / 2);
+        existingUnits.slice(0, half).forEach(u => col1.appendChild(u));
+        existingUnits.slice(half).forEach(u => col2.appendChild(u));
 
         ensureEditableAttributes();
         updateExternalTools();
@@ -5147,70 +5143,63 @@
         return;
       }
 
-      // 2. If there are multiple paragraphs/headings or all text is packed into 1 unit
-      // Extract all paragraphs and lines
-      let paragraphs = [];
-      const bodyElements = [...grid.querySelectorAll('.script-body-text, p')].filter(p => p.textContent.trim().length > 0);
-      
-      if (bodyElements.length >= 2) {
-        paragraphs = bodyElements.map(el => ({
-          title: el.closest('.script-unit')?.querySelector('.script-title-label')?.textContent.trim() || '',
-          body: el.innerHTML.trim()
-        }));
+      // 2. If all text is in a single unit or loose in columns, extract the clean text lines/paragraphs
+      let fullRawText = '';
+      if (existingUnits.length === 1) {
+        // Collect text from body or unit
+        const bodyEl = existingUnits[0].querySelector('.script-body-text');
+        fullRawText = bodyEl ? bodyEl.innerText.trim() : existingUnits[0].innerText.trim();
       } else {
-        // Parse from raw text
-        const rawText = canvas.querySelector('.script-column')?.innerText.trim() || canvas.innerText.trim();
-        if (!rawText) {
-          toast('분할할 시나리오 텍스트가 없습니다.');
-          return;
-        }
-
-        // Try double line break first, then single line break
-        const lines = rawText.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
-        const splitLines = lines.length >= 2 ? lines : rawText.split('\n').map(s => s.trim()).filter(Boolean);
-
-        if (splitLines.length >= 2) {
-          paragraphs = splitLines.map(l => ({ title: '', body: l.replace(/\n/g, '<br>') }));
-        } else {
-          // If it's one single unbroken block of text, split at the 50% midpoint by nearest word space
-          const mid = Math.floor(rawText.length / 2);
-          let splitIdx = rawText.indexOf(' ', mid);
-          if (splitIdx === -1 || splitIdx > mid + 30) {
-            splitIdx = rawText.lastIndexOf(' ', mid);
-          }
-          if (splitIdx === -1) splitIdx = mid;
-
-          paragraphs = [
-            { title: '', body: rawText.slice(0, splitIdx).trim() },
-            { title: '', body: rawText.slice(splitIdx).trim() }
-          ];
-        }
+        fullRawText = canvas.innerText.trim();
       }
 
-      if (paragraphs.length >= 2) {
+      if (!fullRawText) {
+        toast('분할할 시나리오 텍스트가 없습니다.');
+        return;
+      }
+
+      // Break text into clean logical sections by double line break or single lines
+      let sections = fullRawText.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+      if (sections.length < 2) {
+        sections = fullRawText.split('\n').map(s => s.trim()).filter(Boolean);
+      }
+      if (sections.length < 2) {
+        // If it's one single unbroken sentence/paragraph, split at the 50% midpoint by space
+        const mid = Math.floor(fullRawText.length / 2);
+        let splitIdx = fullRawText.indexOf(' ', mid);
+        if (splitIdx === -1 || splitIdx > mid + 30) {
+          splitIdx = fullRawText.lastIndexOf(' ', mid);
+        }
+        if (splitIdx === -1) splitIdx = mid;
+        sections = [
+          fullRawText.slice(0, splitIdx).trim(),
+          fullRawText.slice(splitIdx).trim()
+        ];
+      }
+
+      if (sections.length >= 2) {
         col1.innerHTML = '';
         col2.innerHTML = '';
 
-        const half = Math.ceil(paragraphs.length / 2);
-        const col1Parts = paragraphs.slice(0, half);
-        const col2Parts = paragraphs.slice(half);
+        const half = Math.ceil(sections.length / 2);
+        const col1Sections = sections.slice(0, half);
+        const col2Sections = sections.slice(half);
 
-        const renderPartsToCol = (col, parts, startIndex) => {
-          parts.forEach((p, idx) => {
+        const renderSections = (col, secList, startIndex) => {
+          secList.forEach((sec, idx) => {
             const u = document.createElement('div');
             u.className = 'script-unit';
             const num = String(startIndex + idx + 1).padStart(2, '0');
-            const titleHtml = p.title ? p.title : `${num}.`;
             u.innerHTML = `
-              <div class="script-title-label" contenteditable="true" spellcheck="true">${titleHtml}</div>
-              <p class="script-body-text" contenteditable="true" spellcheck="true">${p.body}</p>
+              <div class="script-title-label" contenteditable="true" spellcheck="true">${num}.</div>
+              <p class="script-body-text" contenteditable="true" spellcheck="true">${sec.replace(/\n/g, '<br>')}</p>
             `;
             col.appendChild(u);
           });
         };
 
-        renderPartsToCol(col1, col1Parts, 0);
-        renderPartsToCol(col2, col2Parts, col1Parts.length);
+        renderSections(col1, col1Sections, 0);
+        renderSections(col2, col2Sections, col1Sections.length);
 
         ensureEditableAttributes();
         updateExternalTools();
