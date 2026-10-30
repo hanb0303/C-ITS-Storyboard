@@ -2521,6 +2521,7 @@
           </div>
           <button type="button" class="btn slide-revise-btn" id="externalReviseBtn">시나리오 수정</button>
           <button type="button" class="btn slide-split-btn" id="externalSplitBtn" title="1단에 모인 글을 좌우 2단으로 균등하게 배분합니다">2단 분할</button>
+          <button type="button" class="btn slide-clear-btn" id="externalClearBtn" title="현재 슬라이드의 내용을 전체 비웁니다">내용 지우기</button>
           <button type="button" class="btn primary slide-save-btn" id="externalSaveBtn">저장</button>
         </div>
       </div>
@@ -2946,6 +2947,19 @@
             row.parentNode.insertBefore(row.firstChild, row);
           }
           row.remove();
+        });
+
+        // Clean up malformed pasted div/p structures inside .script-column and .script-unit
+        canvas.querySelectorAll('.script-column, .script-unit').forEach(container => {
+          // Flatten nested divs that are direct children or descendants
+          container.querySelectorAll('div:not(.script-unit):not(.script-title-label)').forEach(d => {
+            const p = document.createElement('p');
+            p.className = 'script-body-text';
+            p.setAttribute('contenteditable', 'true');
+            p.setAttribute('spellcheck', 'true');
+            p.innerHTML = d.innerHTML.trim() ? d.innerHTML : '<br>';
+            d.replaceWith(p);
+          });
         });
 
         // 3. Ensure any loose text or elements inside .script-column are properly wrapped in an editable unit
@@ -4356,6 +4370,28 @@
         if (activeP) {
           if (e.key === 'Backspace') {
             if (isCursorAtParagraphStart(activeP, range)) {
+              const unit = activeP.closest('.script-unit');
+              const col = activeP.closest('.script-column');
+              // If the current paragraph is empty and there are other units/paragraphs in the column, delete this empty unit
+              if (!activeP.textContent.trim()) {
+                if (col && col.querySelectorAll('.script-unit').length > 1 && unit) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const prevUnit = unit.previousElementSibling;
+                  const targetP = prevUnit?.querySelector('.script-body-text') || col.querySelector('.script-body-text');
+                  unit.remove();
+                  if (targetP) {
+                    targetP.focus();
+                    const r = document.createRange();
+                    r.selectNodeContents(targetP);
+                    r.collapse(false);
+                    sel.removeAllRanges();
+                    sel.addRange(r);
+                  }
+                  scheduleSave();
+                  return;
+                }
+              }
               e.preventDefault();
               e.stopPropagation();
               return;
@@ -4838,6 +4874,11 @@
         splitScenarioToTwoColumns();
         return;
       }
+      const clearBtn = e.target.closest('#externalClearBtn, .slide-clear-btn');
+      if (clearBtn) {
+        clearCurrentSlideScenario();
+        return;
+      }
       const saveBtn = e.target.closest('#externalSaveBtn, #externalConfirmBtn, .slide-save-btn, .slide-confirm-btn');
       if (saveBtn) {
         saveImmediately();
@@ -4846,6 +4887,44 @@
         return;
       }
     });
+
+    function clearCurrentSlideScenario() {
+      const activeSlide = slideItems[currentSlide];
+      if (!activeSlide) return;
+      const canvas = activeSlide.querySelector('.slide-canvas');
+      if (!canvas) return;
+
+      const grid = canvas.querySelector('.script-grid-view');
+      if (!grid) return;
+
+      const cols = grid.querySelectorAll('.script-column');
+      cols.forEach(c => {
+        c.innerHTML = `
+          <div class="script-unit">
+            <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
+            <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
+          </div>
+        `;
+      });
+
+      ensureEditableAttributes();
+      updateExternalTools();
+      saveImmediately();
+
+      const firstP = grid.querySelector('.script-body-text');
+      if (firstP) {
+        firstP.focus();
+        const sel = window.getSelection();
+        if (sel) {
+          sel.removeAllRanges();
+          const r = document.createRange();
+          r.selectNodeContents(firstP);
+          r.collapse(true);
+          sel.addRange(r);
+        }
+      }
+      toast('현재 슬라이드의 내용이 모두 비워졌습니다.');
+    }
 
     async function pasteScenarioFromClipboard() {
       try {
