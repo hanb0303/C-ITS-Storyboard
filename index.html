@@ -763,6 +763,14 @@
     body[data-view="presentation"] .script-grid-view::-webkit-scrollbar-track {
       background: transparent;
     }
+    body[data-view="presentation"] .script-grid-view,
+    body[data-view="presentation"] .script-column,
+    body[data-view="presentation"] .script-unit,
+    body[data-view="presentation"] .script-title-label,
+    body[data-view="presentation"] .script-body-text {
+      user-select: text !important;
+      -webkit-user-select: text !important;
+    }
     body[data-view="presentation"] .script-column {
       display: flex;
       flex-direction: column;
@@ -1002,7 +1010,11 @@
       user-select: text !important;
       -webkit-user-select: text !important;
     }
-    .script-column, .script-unit, .script-body-text {
+    .script-grid-view,
+    .script-column,
+    .script-unit,
+    .script-title-label,
+    .script-body-text {
       user-select: text !important;
       -webkit-user-select: text !important;
     }
@@ -2962,97 +2974,56 @@
           row.remove();
         });
 
-        // Clean up malformed pasted div/p structures inside .script-column and .script-unit
-        canvas.querySelectorAll('.script-column, .script-unit').forEach(container => {
-          // Flatten nested divs that are direct children or descendants
-          container.querySelectorAll('div:not(.script-unit):not(.script-title-label)').forEach(d => {
-            const p = document.createElement('p');
-            p.className = 'script-body-text';
-            p.setAttribute('contenteditable', 'true');
-            p.setAttribute('spellcheck', 'true');
-            p.innerHTML = d.innerHTML.trim() ? d.innerHTML : '<br>';
-            d.replaceWith(p);
+        // 3. Grid View (Scenario Slides: Slide 2, 3, 4, 5, and revisions)
+        const grid = canvas.querySelector('.script-grid-view');
+        if (grid) {
+          // The grid is the unified editing host: allows unbroken mouse drag across all units, titles, and both columns!
+          grid.setAttribute('contenteditable', 'true');
+          grid.setAttribute('spellcheck', 'true');
+
+          // Remove isolated contenteditable hosts from all descendants so mouse selection is never blocked
+          grid.querySelectorAll('.script-column, .script-unit, .script-title-label, .script-body-text, p, div').forEach(child => {
+            child.removeAttribute('contenteditable');
+            child.removeAttribute('spellcheck');
           });
-        });
 
-        // 3. Ensure any loose text or elements inside .script-column are properly wrapped in an editable unit
-        canvas.querySelectorAll('.script-column').forEach(col => {
-          [...col.childNodes].forEach(child => {
-            if (child.nodeType === 3) {
-              if (child.textContent.trim().length > 0) {
-                const u = document.createElement('div');
-                u.className = 'script-unit';
-                const p = document.createElement('p');
-                p.className = 'script-body-text';
-                p.setAttribute('contenteditable', 'true');
-                p.setAttribute('spellcheck', 'true');
-                p.textContent = child.textContent;
-                u.appendChild(p);
-                col.replaceChild(u, child);
-              }
-            } else if (child.nodeType === 1 && !child.classList.contains('script-unit')) {
-              child.classList.add('script-body-text');
-              child.setAttribute('contenteditable', 'true');
-              child.setAttribute('spellcheck', 'true');
-              const u = document.createElement('div');
-              u.className = 'script-unit';
-              col.replaceChild(u, child);
-              u.appendChild(child);
-            }
+          // Flatten malformed pasted divs inside columns into clean .script-body-text
+          grid.querySelectorAll('.script-column').forEach(col => {
+            col.querySelectorAll('div:not(.script-unit):not(.script-title-label)').forEach(d => {
+              const p = document.createElement('p');
+              p.className = 'script-body-text';
+              p.innerHTML = d.innerHTML.trim() ? d.innerHTML : '<br>';
+              d.replaceWith(p);
+            });
           });
-        });
 
-        // 4. Units & Body texts
-        canvas.querySelectorAll('.script-unit').forEach(unit => {
-          const titleLabel = unit.querySelector('.script-title-label');
-          if (titleLabel) {
-            titleLabel.setAttribute('contenteditable', 'true');
-            titleLabel.setAttribute('spellcheck', 'true');
-          }
-
-          // If a unit has an empty paragraph and a non-empty paragraph, remove the useless empty one
-          const bodyTexts = [...unit.querySelectorAll('.script-body-text')];
-          if (bodyTexts.length > 1) {
-            const hasRealText = bodyTexts.some(p => p.textContent.trim().length > 0);
-            if (hasRealText) {
-              bodyTexts.forEach(p => {
-                if (!p.textContent.trim()) {
-                  p.remove();
+          // Ensure every unit has a body paragraph
+          grid.querySelectorAll('.script-unit').forEach(unit => {
+            const bodies = unit.querySelectorAll('.script-body-text');
+            if (bodies.length === 0) {
+              const newP = document.createElement('p');
+              newP.className = 'script-body-text';
+              newP.innerHTML = '<br>';
+              unit.appendChild(newP);
+            } else {
+              bodies.forEach(b => {
+                if (!b.textContent.trim() && !b.querySelector('br')) {
+                  b.innerHTML = '<br>';
                 }
               });
             }
-          }
-
-          const remainingBodies = unit.querySelectorAll('.script-body-text');
-          if (remainingBodies.length === 0) {
-            const newP = document.createElement('p');
-            newP.className = 'script-body-text';
-            newP.setAttribute('contenteditable', 'true');
-            newP.setAttribute('spellcheck', 'true');
-            newP.innerHTML = '<br>';
-            unit.appendChild(newP);
-          } else {
-            remainingBodies.forEach(bodyText => {
-              bodyText.setAttribute('contenteditable', 'true');
-              bodyText.setAttribute('spellcheck', 'true');
-              if (!bodyText.textContent.trim() && !bodyText.querySelector('br')) {
-                bodyText.innerHTML = '<br>';
-              }
-            });
-          }
-        });
-
-        // 5. Any standalone script-body-text
-        canvas.querySelectorAll('.script-body-text').forEach(p => {
-          p.setAttribute('contenteditable', 'true');
-          p.setAttribute('spellcheck', 'true');
-        });
-
-        // 6. Slide 1 showcase elements
-        canvas.querySelectorAll('.showcase-title, .showcase-lead, .showcase-pill, .showcase-num').forEach(el => {
-          el.setAttribute('contenteditable', 'true');
-          el.setAttribute('spellcheck', 'true');
-        });
+          });
+        } else {
+          // Slide 1 showcase elements or standalone editable elements
+          canvas.querySelectorAll('.showcase-title, .showcase-lead, .showcase-pill, .showcase-num').forEach(el => {
+            el.setAttribute('contenteditable', 'true');
+            el.setAttribute('spellcheck', 'true');
+          });
+          canvas.querySelectorAll('.script-body-text').forEach(p => {
+            p.setAttribute('contenteditable', 'true');
+            p.setAttribute('spellcheck', 'true');
+          });
+        }
       });
     }
 
@@ -3066,14 +3037,14 @@
           grid.innerHTML = `
             <div class="script-column">
               <div class="script-unit">
-                <div class="script-title-label" contenteditable="true" spellcheck="true">01. 제목</div>
-                <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
+                <div class="script-title-label">01. 제목</div>
+                <p class="script-body-text"><br></p>
               </div>
             </div>
             <div class="script-column">
               <div class="script-unit">
-                <div class="script-title-label" contenteditable="true" spellcheck="true">02. 제목</div>
-                <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
+                <div class="script-title-label">02. 제목</div>
+                <p class="script-body-text"><br></p>
               </div>
             </div>
           `;
@@ -3082,20 +3053,20 @@
           rightCol.className = 'script-column';
           rightCol.innerHTML = `
             <div class="script-unit">
-              <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
-              <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
+              <div class="script-title-label"></div>
+              <p class="script-body-text"><br></p>
             </div>
           `;
           grid.appendChild(rightCol);
         } else {
-          // Ensure each column has at least one valid editable unit
+          // Ensure each column has at least one valid unit
           columns.forEach(col => {
             if (!col.querySelector('.script-body-text')) {
               const u = document.createElement('div');
               u.className = 'script-unit';
               u.innerHTML = `
-                <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
-                <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
+                <div class="script-title-label"></div>
+                <p class="script-body-text"><br></p>
               `;
               col.appendChild(u);
             }
@@ -5341,8 +5312,8 @@
             u.className = 'script-unit';
             const num = String(startIndex + idx + 1).padStart(2, '0');
             u.innerHTML = `
-              <div class="script-title-label" contenteditable="true" spellcheck="true">${num}.</div>
-              <p class="script-body-text" contenteditable="true" spellcheck="true">${sec.replace(/\n/g, '<br>')}</p>
+              <div class="script-title-label">${num}.</div>
+              <p class="script-body-text">${sec.replace(/\n/g, '<br>')}</p>
             `;
             col.appendChild(u);
           });
