@@ -601,7 +601,9 @@
       gap: 10px;
       transition: opacity .15s ease;
     }
-    .slide-split-btn {
+    .slide-split-btn,
+    .slide-copy-btn,
+    .slide-clear-btn {
       height: 34px;
       padding: 0 13px;
       font-size: 13px;
@@ -617,7 +619,9 @@
       transition: all .15s ease;
       box-shadow: none !important;
     }
-    .slide-split-btn:hover {
+    .slide-split-btn:hover,
+    .slide-copy-btn:hover,
+    .slide-clear-btn:hover {
       background: #f1f5f9;
       color: #0f172a;
       border-color: #94a3b8;
@@ -2527,6 +2531,7 @@
           </div>
           <button type="button" class="btn slide-revise-btn" id="externalReviseBtn">시나리오 수정</button>
           <button type="button" class="btn slide-split-btn" id="externalSplitBtn" title="1단에 모인 글을 좌우 2단으로 균등하게 배분합니다">2단 분할</button>
+          <button type="button" class="btn slide-copy-btn" id="externalCopyBtn" title="현재 슬라이드의 시나리오 전체를 줄바꿈 포함하여 한 번에 클립보드로 복사합니다">시나리오 복사</button>
           <button type="button" class="btn slide-clear-btn" id="externalClearBtn" title="현재 슬라이드의 내용을 전체 비웁니다">내용 지우기</button>
           <button type="button" class="btn primary slide-save-btn" id="externalSaveBtn">저장</button>
         </div>
@@ -2726,6 +2731,8 @@
 
   <!-- Text Formatting Floating Toolbar -->
   <div class="text-format-toolbar" id="textFormatToolbar">
+    <button type="button" class="fmt-btn" id="fmtCopyBtn" title="선택한 텍스트 복사 (Ctrl+C)">📋 복사</button>
+    <div class="fmt-divider"></div>
     <button type="button" class="fmt-btn" id="fmtBoldBtn" title="굵게 (Ctrl+B)"><b>B</b></button>
     <div class="fmt-divider"></div>
     <button type="button" class="fmt-btn primary" id="fmtTitleBtn" title="문단 제목 (블루 강조)">🔵 제목 강조</button>
@@ -4274,6 +4281,19 @@
       if (!sel || !sel.rangeCount) return;
       const range = sel.getRangeAt(0);
 
+      // 0. Ctrl+A / Cmd+A: Smart full scenario selection across columns
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
+        const grid = canvas.querySelector('.script-grid-view') || canvas.querySelector('.script-column');
+        if (grid) {
+          e.preventDefault();
+          sel.removeAllRanges();
+          const r = document.createRange();
+          r.selectNodeContents(grid);
+          sel.addRange(r);
+          return;
+        }
+      }
+
       // 1. Enter inside scenario title or paragraph
       if (e.key === 'Enter' && !e.shiftKey) {
         let activeTitle = e.target.closest?.('.script-title-label');
@@ -4426,10 +4446,28 @@
     document.addEventListener('copy', e => {
       const sel = window.getSelection();
       if (sel && !sel.isCollapsed) {
-        const text = sel.toString();
+        // Build plain text while respecting line breaks across units/paragraphs
+        let text = '';
+        if (sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          const fragment = range.cloneContents();
+          const temp = document.createElement('div');
+          temp.appendChild(fragment);
+
+          // Replace <br> and paragraph endings with line breaks
+          temp.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+          temp.querySelectorAll('p, div, h1, h2, h3, h4, .script-unit, .script-body-text, .script-title-label').forEach(block => {
+            block.after('\n');
+          });
+          text = temp.textContent.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+        }
+        if (!text) {
+          text = sel.toString();
+        }
         if (text && text.trim().length > 0 && e.clipboardData) {
           e.clipboardData.setData('text/plain', text);
           e.preventDefault();
+          toast('📋 클립보드에 복사되었습니다.');
         }
       }
     });
@@ -4627,6 +4665,7 @@
 
     // --- Floating Text Formatting Toolbar Logic ---
     const fmtToolbar = document.querySelector('#textFormatToolbar');
+    const fmtCopyBtn = document.querySelector('#fmtCopyBtn');
     const fmtBoldBtn = document.querySelector('#fmtBoldBtn');
     const fmtTitleBtn = document.querySelector('#fmtTitleBtn');
     const fmtClearBtn = document.querySelector('#fmtClearBtn');
@@ -4720,6 +4759,41 @@
       }
       return sel && sel.rangeCount ? sel.getRangeAt(0) : null;
     }
+
+    // Formatting Toolbar Action: Copy selected text
+    fmtCopyBtn?.addEventListener('click', e => {
+      e.preventDefault();
+      const range = restoreSelectionIfLost();
+      const sel = window.getSelection();
+      let text = '';
+      if (range) {
+        const fragment = range.cloneContents();
+        const temp = document.createElement('div');
+        temp.appendChild(fragment);
+        temp.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+        temp.querySelectorAll('p, div, h1, h2, h3, h4, .script-unit, .script-body-text, .script-title-label').forEach(block => {
+          block.after('\n');
+        });
+        text = temp.textContent.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+      }
+      if (!text && sel) {
+        text = sel.toString().trim();
+      }
+      if (text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => {
+            toast('📋 선택한 텍스트가 복사되었습니다.');
+            hideFormatToolbar();
+          }).catch(() => {
+            fallbackClipboardCopy(text);
+            hideFormatToolbar();
+          });
+        } else {
+          fallbackClipboardCopy(text);
+          hideFormatToolbar();
+        }
+      }
+    });
 
     // Formatting Toolbar Action: Bold
     fmtBoldBtn?.addEventListener('click', e => {
@@ -4880,6 +4954,11 @@
         splitScenarioToTwoColumns();
         return;
       }
+      const copyBtn = e.target.closest('#externalCopyBtn, .slide-copy-btn');
+      if (copyBtn) {
+        copyCurrentSlideScenario();
+        return;
+      }
       const clearBtn = e.target.closest('#externalClearBtn, .slide-clear-btn');
       if (clearBtn) {
         clearCurrentSlideScenario();
@@ -4930,6 +5009,77 @@
         }
       }
       toast('현재 슬라이드의 내용이 모두 비워졌습니다.');
+    }
+
+    function fallbackClipboardCopy(text, msg = '📋 시나리오 전체 내용이 한 번에 복사되었습니다!') {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        ta.style.top = '-9999px';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (ok) {
+          toast(msg);
+        } else {
+          toast('복사에 실패했습니다.');
+        }
+      } catch (e) {
+        toast('복사에 실패했습니다.');
+      }
+    }
+
+    function copyCurrentSlideScenario() {
+      const activeSlide = slideItems[currentSlide];
+      if (!activeSlide) return;
+      const canvas = activeSlide.querySelector('.slide-canvas');
+      if (!canvas) return;
+
+      const units = [...canvas.querySelectorAll('.script-unit')];
+      let text = '';
+      if (units.length > 0) {
+        const parts = [];
+        units.forEach(u => {
+          const title = u.querySelector('.script-title-label')?.innerText.trim() || '';
+          const body = u.querySelector('.script-body-text')?.innerText.trim() || '';
+          if (title && body) {
+            parts.push(`${title}\n${body}`);
+          } else if (body) {
+            parts.push(body);
+          } else if (title) {
+            parts.push(title);
+          }
+        });
+        text = parts.join('\n\n');
+      }
+
+      if (!text) {
+        const clone = canvas.cloneNode(true);
+        clone.querySelector('.slide-header-block')?.remove();
+        clone.querySelector('.slide-header-tools')?.remove();
+        clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+        clone.querySelectorAll('p, div, h1, h2, h3, h4').forEach(b => b.after('\n'));
+        text = clone.innerText.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+      }
+
+      if (!text) {
+        toast('복사할 시나리오 내용이 없습니다.');
+        return;
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          toast('📋 시나리오 전체 내용이 한 번에 복사되었습니다!');
+        }).catch(() => {
+          fallbackClipboardCopy(text);
+        });
+      } else {
+        fallbackClipboardCopy(text);
+      }
     }
 
     async function pasteScenarioFromClipboard() {
