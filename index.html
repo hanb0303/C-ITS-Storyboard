@@ -41,6 +41,15 @@
       color-scheme: light;
       scrollbar-gutter: stable;
     }
+    /* Globally eliminate harsh browser-default focus rectangles on contenteditable elements */
+    [contenteditable],
+    [contenteditable="true"],
+    [contenteditable]:focus,
+    [contenteditable="true"]:focus,
+    [contenteditable]:focus-visible,
+    [contenteditable="true"]:focus-visible {
+      outline: none !important;
+    }
     body {
       margin: 0;
       background: var(--bg-main);
@@ -678,19 +687,52 @@
     }
     body[data-view="presentation"] .showcase-num {
       margin-bottom: 12px;
+      outline: none !important;
+      cursor: text;
     }
     body[data-view="presentation"] .showcase-title {
       font-size: 26px;
       margin-bottom: 10px;
+      outline: none !important;
+      cursor: text;
+      border-radius: 6px;
+      padding: 2px 6px;
+      margin-left: -6px;
+      margin-right: -6px;
+      transition: background-color .15s ease;
+    }
+    body[data-view="presentation"] .showcase-title:focus {
+      outline: none !important;
+      background: rgba(37, 99, 235, 0.06);
     }
     body[data-view="presentation"] .showcase-lead {
       font-size: 16px;
       font-weight: 500;
       color: #333d4b;
+      outline: none !important;
+      cursor: text;
+      border-radius: 6px;
+      padding: 2px 6px;
+      margin-left: -6px;
+      margin-right: -6px;
+      transition: background-color .15s ease;
+    }
+    body[data-view="presentation"] .showcase-lead:focus {
+      outline: none !important;
+      background: rgba(37, 99, 235, 0.06);
     }
     body[data-view="presentation"] .showcase-pill {
       padding: 10px 14px;
       font-size: 14px;
+      outline: none !important;
+      cursor: text;
+      transition: all .15s ease;
+    }
+    body[data-view="presentation"] .showcase-pill:focus {
+      outline: none !important;
+      border-color: var(--primary);
+      background: #dbeafe;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
     }
     body[data-view="presentation"] .script-grid-view {
       flex: 1;
@@ -907,6 +949,8 @@
       color: var(--primary);
       letter-spacing: 0.05em;
       margin-bottom: 20px;
+      outline: none !important;
+      cursor: text;
     }
     .showcase-title {
       font-size: 32px;
@@ -915,6 +959,17 @@
       letter-spacing: -0.04em;
       line-height: 1.2;
       margin-bottom: 16px;
+      outline: none !important;
+      cursor: text;
+      border-radius: 6px;
+      padding: 2px 6px;
+      margin-left: -6px;
+      margin-right: -6px;
+      transition: background-color .15s ease;
+    }
+    .showcase-title:focus {
+      outline: none !important;
+      background: rgba(37, 99, 235, 0.06);
     }
     .showcase-lead {
       font-size: 19px;
@@ -923,6 +978,17 @@
       line-height: 1.45;
       margin: 0;
       word-break: keep-all;
+      outline: none !important;
+      cursor: text;
+      border-radius: 6px;
+      padding: 2px 6px;
+      margin-left: -6px;
+      margin-right: -6px;
+      transition: background-color .15s ease;
+    }
+    .showcase-lead:focus {
+      outline: none !important;
+      background: rgba(37, 99, 235, 0.06);
     }
     .showcase-cases {
       margin-top: auto;
@@ -943,6 +1009,15 @@
       align-items: center;
       justify-content: center;
       text-align: center;
+      outline: none !important;
+      cursor: text;
+      transition: all .15s ease;
+    }
+    .showcase-pill:focus {
+      outline: none !important;
+      border-color: var(--primary);
+      background: #dbeafe;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
     }
 
     /* SLIDE 2 & REVISION: Crisp, Large-Text 2-Column Script (Auto-Flowing) */
@@ -2998,7 +3073,7 @@
         });
 
         // 4. Slide 1 showcase elements
-        canvas.querySelectorAll('.showcase-title, .showcase-lead, .showcase-pill').forEach(el => {
+        canvas.querySelectorAll('.showcase-title, .showcase-lead, .showcase-pill, .showcase-num').forEach(el => {
           el.setAttribute('contenteditable', 'true');
           el.setAttribute('spellcheck', 'true');
         });
