@@ -730,6 +730,38 @@
       flex-direction: column;
       gap: 4px;
       margin-bottom: 0;
+      position: relative;
+    }
+    body[data-view="presentation"] .script-unit-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    body[data-view="presentation"] .script-unit-copy-btn {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .15s ease, background .15s ease, color .15s ease;
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 1px 7px;
+      cursor: pointer;
+      line-height: 1.3;
+      user-select: none;
+    }
+    body[data-view="presentation"] .script-unit:hover .script-unit-copy-btn {
+      opacity: 0.95;
+      pointer-events: auto;
+    }
+    body[data-view="presentation"] .script-unit-copy-btn:hover {
+      opacity: 1;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--primary-border);
     }
     body[data-view="presentation"] .script-title-label {
       font-size: 16.5px;
@@ -738,6 +770,15 @@
       line-height: 1.35;
       letter-spacing: -0.025em;
       margin: 0;
+      outline: none;
+      cursor: text;
+      border-radius: 4px;
+      padding: 1px 4px;
+      margin-left: -4px;
+      transition: background .15s ease;
+    }
+    body[data-view="presentation"] .script-title-label:focus {
+      background: rgba(37, 99, 235, 0.08);
     }
     body[data-view="presentation"] .script-body-text {
       font-size: 14.5px;
@@ -751,13 +792,26 @@
       min-height: 28px;
       outline: none;
       cursor: text;
+      border-radius: 6px;
+      padding: 4px 8px;
+      margin: -4px -8px;
+      transition: background .15s ease, box-shadow .15s ease;
     }
-    body[data-view="presentation"] .script-column:nth-child(1) .script-body-text:empty::before {
+    body[data-view="presentation"] .script-body-text:hover {
+      background: rgba(241, 245, 249, 0.45);
+    }
+    body[data-view="presentation"] .script-body-text:focus {
+      background: #ffffff;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+    body[data-view="presentation"] .script-column:nth-child(1) .script-body-text:empty::before,
+    body[data-view="presentation"] .script-column:nth-child(1) .script-body-text:has(> br:only-child)::before {
       content: '1단(왼쪽) 내용을 입력하세요...';
       color: #94a3b8;
       pointer-events: none;
     }
-    body[data-view="presentation"] .script-column:nth-child(2) .script-body-text:empty::before {
+    body[data-view="presentation"] .script-column:nth-child(2) .script-body-text:empty::before,
+    body[data-view="presentation"] .script-column:nth-child(2) .script-body-text:has(> br:only-child)::before {
       content: '2단(오른쪽) 내용을 입력하세요 (클릭하여 작성)...';
       color: #94a3b8;
       pointer-events: none;
@@ -936,6 +990,38 @@
       flex-direction: column;
       gap: 4px;
       margin-bottom: 0;
+      position: relative;
+    }
+    .script-unit-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .script-unit-copy-btn {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .15s ease, background .15s ease, color .15s ease;
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 1px 7px;
+      cursor: pointer;
+      line-height: 1.3;
+      user-select: none;
+    }
+    .script-unit:hover .script-unit-copy-btn {
+      opacity: 0.95;
+      pointer-events: auto;
+    }
+    .script-unit-copy-btn:hover {
+      opacity: 1;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--primary-border);
     }
     .script-title-label {
       font-size: 16.5px;
@@ -944,6 +1030,15 @@
       line-height: 1.35;
       letter-spacing: -0.025em;
       margin: 0;
+      outline: none;
+      cursor: text;
+      border-radius: 4px;
+      padding: 1px 4px;
+      margin-left: -4px;
+      transition: background .15s ease;
+    }
+    .script-title-label:focus {
+      background: rgba(37, 99, 235, 0.08);
     }
     .script-body-text {
       font-size: 14.5px;
@@ -957,13 +1052,26 @@
       min-height: 28px;
       outline: none;
       cursor: text;
+      border-radius: 6px;
+      padding: 4px 8px;
+      margin: -4px -8px;
+      transition: background .15s ease, box-shadow .15s ease;
     }
-    .script-column:nth-child(1) .script-body-text:empty::before {
+    .script-body-text:hover {
+      background: rgba(241, 245, 249, 0.45);
+    }
+    .script-body-text:focus {
+      background: #ffffff;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+    .script-column:nth-child(1) .script-body-text:empty::before,
+    .script-column:nth-child(1) .script-body-text:has(> br:only-child)::before {
       content: '1단(왼쪽) 내용을 입력하세요...';
       color: #94a3b8;
       pointer-events: none;
     }
-    .script-column:nth-child(2) .script-body-text:empty::before {
+    .script-column:nth-child(2) .script-body-text:empty::before,
+    .script-column:nth-child(2) .script-body-text:has(> br:only-child)::before {
       content: '2단(오른쪽) 내용을 입력하세요 (클릭하여 작성)...';
       color: #94a3b8;
       pointer-events: none;
@@ -2425,6 +2533,7 @@
           <button type="button" class="btn slide-revise-btn" id="externalReviseBtn">시나리오 수정</button>
           <button type="button" class="btn slide-split-btn" id="externalSplitBtn" title="1단에 모인 글을 좌우 2단으로 균등하게 배분합니다">2단 분할</button>
           <button type="button" class="btn slide-copy-btn" id="externalCopyBtn" title="현재 시나리오 전체 내용을 텍스트로 복사합니다">시나리오 복사</button>
+          <button type="button" class="btn slide-paste-btn" id="externalPasteBtn" title="클립보드의 대본을 시나리오에 붙여넣습니다">시나리오 붙여넣기</button>
           <button type="button" class="btn primary slide-save-btn" id="externalSaveBtn">저장</button>
         </div>
       </div>
@@ -2832,6 +2941,68 @@
         }
       });
       enforceTwoColumns();
+      ensureEditableAttributes();
+    }
+
+    function ensureEditableAttributes() {
+      refreshSlideReferences();
+      slideCanvases.forEach(canvas => {
+        // 1. Remove contenteditable from outer canvas container
+        if (canvas.hasAttribute('contenteditable')) {
+          canvas.removeAttribute('contenteditable');
+        }
+
+        // 2. Units & Body texts
+        canvas.querySelectorAll('.script-unit').forEach(unit => {
+          let headerRow = unit.querySelector('.script-unit-header-row');
+          let titleLabel = unit.querySelector('.script-title-label');
+
+          if (titleLabel && !headerRow) {
+            headerRow = document.createElement('div');
+            headerRow.className = 'script-unit-header-row';
+            unit.insertBefore(headerRow, titleLabel);
+            headerRow.appendChild(titleLabel);
+          }
+
+          if (headerRow && !headerRow.querySelector('.script-unit-copy-btn')) {
+            const copyBtn = document.createElement('button');
+            copyBtn.type = 'button';
+            copyBtn.className = 'script-unit-copy-btn';
+            copyBtn.title = '이 문단 내용 복사';
+            copyBtn.textContent = '복사';
+            headerRow.appendChild(copyBtn);
+          }
+
+          if (titleLabel) {
+            titleLabel.setAttribute('contenteditable', 'true');
+            titleLabel.setAttribute('spellcheck', 'true');
+          }
+
+          const bodyText = unit.querySelector('.script-body-text');
+          if (bodyText) {
+            bodyText.setAttribute('contenteditable', 'true');
+            bodyText.setAttribute('spellcheck', 'true');
+            if (!bodyText.textContent.trim() && !bodyText.querySelector('br')) {
+              bodyText.innerHTML = '<br>';
+            }
+          }
+        });
+
+        // 3. For any other script-body-text
+        canvas.querySelectorAll('.script-body-text').forEach(p => {
+          p.setAttribute('contenteditable', 'true');
+          p.setAttribute('spellcheck', 'true');
+          if (!p.textContent.trim() && !p.querySelector('br')) {
+            p.innerHTML = '<br>';
+          }
+        });
+
+        // 4. Slide 1 showcase elements
+        canvas.querySelectorAll('.showcase-title, .showcase-lead, .showcase-pill').forEach(el => {
+          el.setAttribute('contenteditable', 'true');
+          el.setAttribute('spellcheck', 'true');
+        });
+      });
     }
 
     function enforceTwoColumns() {
@@ -2844,12 +3015,20 @@
           grid.innerHTML = `
             <div class="script-column">
               <div class="script-unit">
-                <p class="script-body-text"><br></p>
+                <div class="script-unit-header-row">
+                  <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
+                  <button type="button" class="script-unit-copy-btn" title="이 문단 내용 복사">복사</button>
+                </div>
+                <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
               </div>
             </div>
             <div class="script-column">
               <div class="script-unit">
-                <p class="script-body-text"><br></p>
+                <div class="script-unit-header-row">
+                  <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
+                  <button type="button" class="script-unit-copy-btn" title="이 문단 내용 복사">복사</button>
+                </div>
+                <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
               </div>
             </div>
           `;
@@ -2858,7 +3037,11 @@
           rightCol.className = 'script-column';
           rightCol.innerHTML = `
             <div class="script-unit">
-              <p class="script-body-text"><br></p>
+              <div class="script-unit-header-row">
+                <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
+                <button type="button" class="script-unit-copy-btn" title="이 문단 내용 복사">복사</button>
+              </div>
+              <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
             </div>
           `;
           grid.appendChild(rightCol);
@@ -2868,12 +3051,19 @@
             if (!col.querySelector('.script-body-text')) {
               const u = document.createElement('div');
               u.className = 'script-unit';
-              u.innerHTML = '<p class="script-body-text"><br></p>';
+              u.innerHTML = `
+                <div class="script-unit-header-row">
+                  <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
+                  <button type="button" class="script-unit-copy-btn" title="이 문단 내용 복사">복사</button>
+                </div>
+                <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
+              `;
               col.appendChild(u);
             }
           });
         }
       });
+      ensureEditableAttributes();
     }
 
     const initialScenes = [
@@ -3904,39 +4094,64 @@
     });
 
     document.addEventListener('click', e => {
-      // 1. If text is actively selected, NEVER collapse or override selection on mouse release!
+      // 1. If text is actively selected, NEVER collapse or override selection!
       const sel = window.getSelection();
       if (sel && !sel.isCollapsed && sel.toString().trim().length > 0) {
         return;
       }
 
-      const unit = e.target.closest('.script-unit');
-      if (unit && unit.closest('.slide-canvas')) {
-        const bodyText = unit.querySelector('.script-body-text');
-        if (bodyText && (e.target === unit || e.target.classList.contains('script-title-label'))) {
-          bodyText.focus();
-          if (sel) {
-            const range = document.createRange();
-            range.selectNodeContents(bodyText);
-            range.collapse(false);
-            sel.removeAllRanges();
-            sel.addRange(range);
+      // 2. Click on unit copy button
+      const unitCopyBtn = e.target.closest('.script-unit-copy-btn');
+      if (unitCopyBtn) {
+        e.stopPropagation();
+        e.preventDefault();
+        const unit = unitCopyBtn.closest('.script-unit');
+        if (unit) {
+          const title = unit.querySelector('.script-title-label')?.textContent.trim() || '';
+          const body = unit.querySelector('.script-body-text')?.innerText.trim() || '';
+          const fullUnitText = title && body ? `[${title}]\n${body}` : (body || title);
+          if (fullUnitText) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(fullUnitText).then(() => {
+                toast(`📋 ${title ? `"${title}" ` : ''}문단 내용이 복사되었습니다.`);
+              }).catch(() => fallbackCopyText(fullUnitText));
+            } else {
+              fallbackCopyText(fullUnitText);
+            }
+          } else {
+            toast('복사할 문단 내용이 없습니다.');
           }
         }
+        return;
       }
 
+      // 3. Click on .script-column outside any unit -> focus the paragraph in that column
       const col = e.target.closest('.script-column');
       if (col && col.closest('.slide-canvas') && !e.target.closest('.script-unit')) {
-        let bodyText = col.querySelector('.script-body-text');
+        ensureEditableAttributes();
+        let bodyText = col.querySelector('.script-body-text:empty') ||
+                       col.querySelector('.script-body-text:last-of-type') ||
+                       col.querySelector('.script-body-text');
         if (!bodyText) {
           const u = document.createElement('div');
           u.className = 'script-unit';
-          u.innerHTML = '<p class="script-body-text"><br></p>';
+          u.innerHTML = `
+            <div class="script-unit-header-row">
+              <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
+              <button type="button" class="script-unit-copy-btn" title="이 문단 내용 복사">복사</button>
+            </div>
+            <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
+          `;
           col.appendChild(u);
           bodyText = u.querySelector('.script-body-text');
         }
         if (bodyText) {
           bodyText.focus();
+          const range = document.createRange();
+          range.selectNodeContents(bodyText);
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
         }
       }
     });
@@ -3981,16 +4196,25 @@
       grid.innerHTML = `
         <div class="script-column">
           <div class="script-unit">
-            <p class="script-body-text"><br></p>
+            <div class="script-unit-header-row">
+              <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
+              <button type="button" class="script-unit-copy-btn" title="이 문단 내용 복사">복사</button>
+            </div>
+            <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
           </div>
         </div>
         <div class="script-column">
           <div class="script-unit">
-            <p class="script-body-text"><br></p>
+            <div class="script-unit-header-row">
+              <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
+              <button type="button" class="script-unit-copy-btn" title="이 문단 내용 복사">복사</button>
+            </div>
+            <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
           </div>
         </div>
       `;
       canvas.appendChild(grid);
+      ensureEditableAttributes();
 
       const p = grid.querySelector('.script-body-text');
       const sel = window.getSelection();
@@ -4023,22 +4247,32 @@
         grid.innerHTML = `
           <div class="script-column">
             <div class="script-unit">
-              <p class="script-body-text"><br></p>
+              <div class="script-unit-header-row">
+                <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
+                <button type="button" class="script-unit-copy-btn" title="이 문단 내용 복사">복사</button>
+              </div>
+              <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
             </div>
           </div>
           <div class="script-column">
             <div class="script-unit">
-              <p class="script-body-text"><br></p>
+              <div class="script-unit-header-row">
+                <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
+                <button type="button" class="script-unit-copy-btn" title="이 문단 내용 복사">복사</button>
+              </div>
+              <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
             </div>
           </div>
         `;
         canvas.appendChild(grid);
+        ensureEditableAttributes();
         return grid.querySelector('.script-body-text');
       }
+      ensureEditableAttributes();
       return otherChildren[0]?.querySelector('.script-body-text') || otherChildren[0];
     }
 
-    // Rock-solid editor keydown: Prevents jumping across paragraphs on Backspace/Delete
+    // Editor keydown: Prevents jumping across paragraphs on Backspace/Delete and manages line breaks
     document.addEventListener('keydown', e => {
       const canvas = e.target.closest?.('.slide-canvas') ||
                      window.getSelection()?.anchorNode?.parentElement?.closest?.('.slide-canvas');
@@ -4050,8 +4284,12 @@
 
       // 1. Enter inside scenario paragraph: Insert line break without breaking unit or creating rogue DOM
       if (e.key === 'Enter' && !e.shiftKey) {
-        const activeP = (e.target.closest?.('.script-body-text') ||
-                         range.startContainer.nodeType === 1 ? range.startContainer.closest?.('.script-body-text') : range.startContainer.parentElement?.closest?.('.script-body-text'));
+        let activeP = e.target.closest?.('.script-body-text');
+        if (!activeP && range.startContainer) {
+          activeP = range.startContainer.nodeType === 1
+            ? range.startContainer.closest?.('.script-body-text')
+            : range.startContainer.parentElement?.closest?.('.script-body-text');
+        }
         if (activeP) {
           e.preventDefault();
           document.execCommand('insertLineBreak');
@@ -4079,12 +4317,10 @@
             : range.endContainer.parentElement?.closest('.script-body-text');
         }
 
-        // A. Collapsed Cursor (Normal typing deletion)
+        // Collapsed Cursor: Prevent jumping across paragraphs
         if (sel.isCollapsed && activeP) {
           if (e.key === 'Backspace') {
             if (isCursorAtParagraphStart(activeP, range)) {
-              // Cursor is at the beginning of paragraph or paragraph is empty:
-              // Stop Backspace from merging into previous unit or jumping to another paragraph!
               e.preventDefault();
               e.stopPropagation();
               if (!activeP.innerHTML.trim() || activeP.innerHTML === '<br>') {
@@ -4094,43 +4330,10 @@
             }
           } else if (e.key === 'Delete') {
             if (isCursorAtParagraphEnd(activeP, range)) {
-              // Cursor is at the end of paragraph:
-              // Stop Delete from pulling next unit into this paragraph!
               e.preventDefault();
               e.stopPropagation();
               return;
             }
-          }
-        }
-
-        // B. Non-collapsed Selection: Protect title labels and headers
-        if (!sel.isCollapsed) {
-          const labels = canvas.querySelectorAll('.slide-header-block, .script-title-label');
-          let touchesProtected = false;
-          for (const l of labels) {
-            if (range.intersectsNode(l)) {
-              touchesProtected = true;
-              break;
-            }
-          }
-
-          if (touchesProtected) {
-            e.preventDefault();
-            e.stopPropagation();
-            // Clear only text inside selected .script-body-text elements
-            const bodyTexts = [...canvas.querySelectorAll('.script-body-text')].filter(p => range.intersectsNode(p));
-            bodyTexts.forEach(p => {
-              const pRange = document.createRange();
-              pRange.selectNodeContents(p);
-              if (range.compareBoundaryPoints(Range.START_TO_START, pRange) <= 0 &&
-                  range.compareBoundaryPoints(Range.END_TO_END, pRange) >= 0) {
-                p.innerHTML = '<br>';
-              } else {
-                try { document.execCommand('delete'); } catch (err) {}
-              }
-            });
-            scheduleSave();
-            return;
           }
         }
       }
@@ -4141,14 +4344,12 @@
         const canvas = e.target.closest?.('.slide-canvas') ||
                        window.getSelection()?.anchorNode?.parentElement?.closest?.('.slide-canvas');
         if (canvas) {
-          // Ensure empty body texts keep a <br> placeholder
           canvas.querySelectorAll('.script-body-text').forEach(p => {
             if (!p.textContent.trim() && !p.querySelector('br')) {
               p.innerHTML = '<br>';
             }
           });
-          ensureSlideEditableBody(canvas);
-          enforceTwoColumns();
+          ensureEditableAttributes();
         }
       }
     });
@@ -4160,6 +4361,7 @@
         const text = sel.toString();
         if (text && text.trim().length > 0 && e.clipboardData) {
           e.clipboardData.setData('text/plain', text);
+          e.preventDefault();
         }
       }
     });
@@ -4172,7 +4374,7 @@
       }
 
       const canvas = e.target.closest?.('.slide-canvas');
-      if (canvas && !e.target.closest('.slide-header-block')) {
+      if (canvas && !e.target.closest('.slide-header-block, .script-unit')) {
         const bodyTarget = ensureSlideEditableBody(canvas);
         if (e.target === canvas || !canvas.querySelector('.script-body-text, .showcase-card')) {
           const p = canvas.querySelector('.script-body-text') || bodyTarget;
@@ -4277,6 +4479,8 @@
         newScene.querySelector('.motion')?.focus();
       }, 120);
     });
+
+    // Bulletproof Paste handler: cleanly inserts plainText without breaking DOM or leaking to columns
     document.addEventListener('paste', e => {
       // 0. If in styleframes view and pasting image
       if (document.body.dataset.view === 'styleframes') {
@@ -4301,60 +4505,54 @@
         }
       }
 
-      // 2. If pasting text into an editable field (motion, narration, or slide canvas)
-      const target = e.target;
-      const editableTarget = target.closest?.('.editable, .slide-canvas, [contenteditable="true"]');
-      if (editableTarget && !target.classList.contains('image-zone')) {
+      // 2. If pasting text into an editable field (motion, narration, or scenario script)
+      const plainText = (e.clipboardData || window.clipboardData)?.getData('text/plain');
+      if (!plainText) return;
+
+      const activeEl = document.activeElement;
+      let targetEditable = activeEl?.closest?.('.editable, [contenteditable="true"], .script-body-text, .script-title-label');
+
+      // If user is viewing presentation/scenario but clicked outside or nothing was active yet:
+      const activeSlide = slideItems[currentSlide];
+      const canvas = activeSlide?.querySelector('.slide-canvas');
+      if (!targetEditable && document.body.dataset.view === 'presentation' && canvas) {
+        ensureEditableAttributes();
+        targetEditable = canvas.querySelector('.script-column:nth-child(2) .script-body-text:empty') ||
+                         canvas.querySelector('.script-body-text');
+        if (targetEditable) {
+          targetEditable.focus();
+        }
+      }
+
+      if (targetEditable && !targetEditable.classList.contains('image-zone')) {
         e.preventDefault();
-        // Extract plain text only (stripping font-size, font-family, background, colors, etc.)
-        const plainText = (e.clipboardData || window.clipboardData).getData('text/plain');
-        if (!plainText) return;
 
-        const canvas = editableTarget.closest('.slide-canvas');
-        if (canvas) {
-          ensureSlideEditableBody(canvas);
-        }
+        // Try modern native execCommand('insertText') for perfect undo history and clean DOM
+        let success = false;
+        try {
+          success = document.execCommand('insertText', false, plainText);
+        } catch (err) {}
 
-        const selection = window.getSelection();
-        if (!selection || !selection.rangeCount) {
-          const range = document.createRange();
-          const targetNode = canvas ? (canvas.querySelector('.script-body-text') || canvas) : editableTarget;
-          range.selectNodeContents(targetNode);
-          range.collapse(false);
-          selection.removeAllRanges();
-          selection.addRange(range);
-        } else {
-          selection.deleteFromDocument();
-        }
-
-        const lines = plainText.replace(/\r\n/g, '\n').split('\n');
-        const fragment = document.createDocumentFragment();
-        let lastNode = null;
-        lines.forEach((line, idx) => {
-          if (idx > 0) {
-            const br = document.createElement('br');
-            fragment.appendChild(br);
-            lastNode = br;
+        // Fallback: Range insertion strictly confined to targetEditable
+        if (!success) {
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount) {
+            const range = sel.getRangeAt(0);
+            range.deleteContents();
+            const textNode = document.createTextNode(plainText);
+            range.insertNode(textNode);
+            const newRange = document.createRange();
+            newRange.setStartAfter(textNode);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+          } else {
+            targetEditable.innerText = plainText;
           }
-          if (line) {
-            const tn = document.createTextNode(line);
-            fragment.appendChild(tn);
-            lastNode = tn;
-          }
-        });
-
-        const activeRange = selection.getRangeAt(0);
-        activeRange.insertNode(fragment);
-
-        if (lastNode) {
-          const newRange = document.createRange();
-          newRange.setStartAfter(lastNode);
-          newRange.collapse(true);
-          selection.removeAllRanges();
-          selection.addRange(newRange);
         }
 
-        editableTarget.dispatchEvent(new Event('input', { bubbles: true }));
+        targetEditable.dispatchEvent(new Event('input', { bubbles: true }));
+        scheduleSave();
       }
     });
 
@@ -4618,6 +4816,11 @@
         copyCurrentScenarioText();
         return;
       }
+      const pasteBtn = e.target.closest('#externalPasteBtn, .slide-paste-btn');
+      if (pasteBtn) {
+        pasteScenarioFromClipboard();
+        return;
+      }
       const saveBtn = e.target.closest('#externalSaveBtn, #externalConfirmBtn, .slide-save-btn, .slide-confirm-btn');
       if (saveBtn) {
         saveImmediately();
@@ -4626,6 +4829,126 @@
         return;
       }
     });
+
+    async function pasteScenarioFromClipboard() {
+      try {
+        if (!navigator.clipboard || !navigator.clipboard.readText) {
+          toast('클립보드 접근이 제한되어 있습니다. Ctrl+V 키를 직접 눌러주세요.');
+          return;
+        }
+        const text = await navigator.clipboard.readText();
+        if (!text || !text.trim()) {
+          toast('클립보드에 붙여넣을 텍스트가 없습니다.');
+          return;
+        }
+        applyPastedTextToScenario(text);
+      } catch (err) {
+        toast('클립보드 읽기에 실패했습니다. Ctrl+V 키를 직접 사용해 주세요.');
+      }
+    }
+
+    function applyPastedTextToScenario(rawText) {
+      const activeSlide = slideItems[currentSlide];
+      if (!activeSlide) return;
+      const canvas = activeSlide.querySelector('.slide-canvas');
+      if (!canvas) return;
+
+      ensureTwoColumns();
+      ensureEditableAttributes();
+
+      // Check if user has focused a specific paragraph
+      const activeP = document.activeElement?.closest?.('.script-body-text');
+      const sel = window.getSelection();
+
+      if (activeP && canvas.contains(activeP)) {
+        activeP.focus();
+        let success = false;
+        try {
+          success = document.execCommand('insertText', false, rawText);
+        } catch (e) {}
+
+        if (!success) {
+          if (sel && sel.rangeCount) {
+            const range = sel.getRangeAt(0);
+            range.deleteContents();
+            const tn = document.createTextNode(rawText);
+            range.insertNode(tn);
+            const newRange = document.createRange();
+            newRange.setStartAfter(tn);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+          } else {
+            activeP.innerText = rawText;
+          }
+        }
+        activeP.dispatchEvent(new Event('input', { bubbles: true }));
+        scheduleSave();
+        toast('선택한 문단에 텍스트가 붙여넣어졌습니다.');
+        return;
+      }
+
+      // If no paragraph is actively focused, intelligently distribute multi-paragraph text across 2 columns
+      const normalized = rawText.replace(/\r\n/g, '\n');
+      let paragraphs = normalized.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+      if (paragraphs.length < 2) {
+        paragraphs = normalized.split('\n').map(p => p.trim()).filter(Boolean);
+      }
+
+      const grid = canvas.querySelector('.script-grid-view');
+      const cols = grid ? grid.querySelectorAll('.script-column') : [];
+
+      if (cols.length >= 2 && paragraphs.length >= 2) {
+        const half = Math.ceil(paragraphs.length / 2);
+        const col1Parts = paragraphs.slice(0, half);
+        const col2Parts = paragraphs.slice(half);
+
+        const renderColumnUnits = (col, parts, startIndex) => {
+          col.innerHTML = '';
+          parts.forEach((part, pIdx) => {
+            const unit = document.createElement('div');
+            unit.className = 'script-unit';
+            const lines = part.split('\n');
+            let titleText = '';
+            let bodyText = part;
+            if (lines.length > 1 && lines[0].length < 40) {
+              titleText = lines[0].replace(/^[\[\(]?(\d+[\.\-\d]*)[\]\)]?\s*/, '$1. ');
+              bodyText = lines.slice(1).join('<br>');
+            } else {
+              const num = String(startIndex + pIdx + 1).padStart(2, '0');
+              titleText = `${num}. 장면 ${pIdx + 1}`;
+              bodyText = part.replace(/\n/g, '<br>');
+            }
+
+            unit.innerHTML = `
+              <div class="script-unit-header-row">
+                <div class="script-title-label" contenteditable="true" spellcheck="true">${titleText}</div>
+                <button type="button" class="script-unit-copy-btn" title="이 문단 내용 복사">복사</button>
+              </div>
+              <p class="script-body-text" contenteditable="true" spellcheck="true">${bodyText}</p>
+            `;
+            col.appendChild(unit);
+          });
+        };
+
+        renderColumnUnits(cols[0], col1Parts, 0);
+        renderColumnUnits(cols[1], col2Parts, col1Parts.length);
+
+        ensureEditableAttributes();
+        updateExternalTools();
+        scheduleSave();
+        toast('📋 시나리오가 좌우 2단으로 자동 정돈되어 붙여넣어졌습니다.');
+      } else {
+        const firstP = canvas.querySelector('.script-body-text');
+        if (firstP) {
+          firstP.innerHTML = rawText.replace(/\n/g, '<br>');
+          ensureEditableAttributes();
+          updateExternalTools();
+          scheduleSave();
+          toast('시나리오 본문에 붙여넣어졌습니다.');
+        }
+      }
+    }
 
     function copyCurrentScenarioText() {
       const activeSlide = slideItems[currentSlide];
