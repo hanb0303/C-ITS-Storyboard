@@ -2948,7 +2948,34 @@
           row.remove();
         });
 
-        // 3. Units & Body texts
+        // 3. Ensure any loose text or elements inside .script-column are properly wrapped in an editable unit
+        canvas.querySelectorAll('.script-column').forEach(col => {
+          [...col.childNodes].forEach(child => {
+            if (child.nodeType === 3) {
+              if (child.textContent.trim().length > 0) {
+                const u = document.createElement('div');
+                u.className = 'script-unit';
+                const p = document.createElement('p');
+                p.className = 'script-body-text';
+                p.setAttribute('contenteditable', 'true');
+                p.setAttribute('spellcheck', 'true');
+                p.textContent = child.textContent;
+                u.appendChild(p);
+                col.replaceChild(u, child);
+              }
+            } else if (child.nodeType === 1 && !child.classList.contains('script-unit')) {
+              child.classList.add('script-body-text');
+              child.setAttribute('contenteditable', 'true');
+              child.setAttribute('spellcheck', 'true');
+              const u = document.createElement('div');
+              u.className = 'script-unit';
+              col.replaceChild(u, child);
+              u.appendChild(child);
+            }
+          });
+        });
+
+        // 4. Units & Body texts
         canvas.querySelectorAll('.script-unit').forEach(unit => {
           const titleLabel = unit.querySelector('.script-title-label');
           if (titleLabel) {
@@ -2988,13 +3015,13 @@
           }
         });
 
-        // 4. Any standalone script-body-text
+        // 5. Any standalone script-body-text
         canvas.querySelectorAll('.script-body-text').forEach(p => {
           p.setAttribute('contenteditable', 'true');
           p.setAttribute('spellcheck', 'true');
         });
 
-        // 5. Slide 1 showcase elements
+        // 6. Slide 1 showcase elements
         canvas.querySelectorAll('.showcase-title, .showcase-lead, .showcase-pill, .showcase-num').forEach(el => {
           el.setAttribute('contenteditable', 'true');
           el.setAttribute('spellcheck', 'true');
@@ -4085,9 +4112,9 @@
         return;
       }
 
-      // 2. Click on .script-column outside any unit -> focus the paragraph in that column
+      // 2. Click on empty .script-column background -> focus the paragraph in that column
       const col = e.target.closest('.script-column');
-      if (col && col.closest('.slide-canvas') && !e.target.closest('.script-unit')) {
+      if (col && col.closest('.slide-canvas') && e.target === col) {
         ensureEditableAttributes();
         let bodyText = col.querySelector('.script-body-text:empty') ||
                        col.querySelector('.script-body-text:last-of-type') ||
@@ -4267,21 +4294,53 @@
       if (e.key === 'Backspace' || e.key === 'Delete') {
         const header = canvas.querySelector('.slide-header-block');
 
-        // Never reset canvas or delete header on backspace/delete
-        if (header && (range.intersectsNode(header) || (sel.containsNode && sel.containsNode(header, true)))) {
-          e.preventDefault();
+        // A. If user has text selected:
+        if (!sel.isCollapsed) {
+          // If the selection spans across the slide and touches the header (e.g. Ctrl+A)
+          if (header && (range.intersectsNode(header) || (sel.containsNode && sel.containsNode(header, true)))) {
+            e.preventDefault();
+            // Clear all scenario content in columns back to clean empty units, keeping header
+            const grid = canvas.querySelector('.script-grid-view');
+            if (grid) {
+              const cols = grid.querySelectorAll('.script-column');
+              cols.forEach(c => {
+                c.innerHTML = `
+                  <div class="script-unit">
+                    <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
+                    <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
+                  </div>
+                `;
+              });
+              ensureEditableAttributes();
+              const firstP = grid.querySelector('.script-body-text');
+              if (firstP) {
+                firstP.focus();
+                const r = document.createRange();
+                r.selectNodeContents(firstP);
+                r.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(r);
+              }
+            }
+            scheduleSave();
+            return;
+          }
+
+          // Otherwise, ANY selected text should be deleted naturally by the browser!
           return;
         }
 
+        // B. Collapsed cursor:
         let activeTitle = range.startContainer.nodeType === 1
           ? range.startContainer.closest?.('.script-title-label')
           : range.startContainer.parentElement?.closest?.('.script-title-label');
-        if (sel.isCollapsed && activeTitle) {
+        if (activeTitle) {
           if (e.key === 'Backspace' && isCursorAtParagraphStart(activeTitle, range)) {
             e.preventDefault();
             e.stopPropagation();
             return;
           }
+          return;
         }
 
         let activeP = range.startContainer.nodeType === 1
@@ -4294,19 +4353,9 @@
             : range.endContainer.parentElement?.closest('.script-body-text');
         }
 
-        // Collapsed Cursor: Prevent jumping across paragraphs
-        if (sel.isCollapsed && activeP) {
+        if (activeP) {
           if (e.key === 'Backspace') {
             if (isCursorAtParagraphStart(activeP, range)) {
-              e.preventDefault();
-              e.stopPropagation();
-              if (!activeP.innerHTML.trim() || activeP.innerHTML === '<br>') {
-                activeP.innerHTML = '<br>';
-              }
-              return;
-            }
-          } else if (e.key === 'Delete') {
-            if (isCursorAtParagraphEnd(activeP, range)) {
               e.preventDefault();
               e.stopPropagation();
               return;
@@ -4529,6 +4578,7 @@
         }
 
         targetEditable.dispatchEvent(new Event('input', { bubbles: true }));
+        ensureEditableAttributes();
         scheduleSave();
       }
     });
