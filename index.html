@@ -1729,7 +1729,7 @@
     }
 
     /* ========================================================
-       APPLE & TOSS MINIMAL FLAT DESIGN SYSTEM (NO SHADOWS)
+       C-ITS BLUE ACCENT & MINIMAL FLAT DESIGN SYSTEM (NO SHADOWS)
        ======================================================== */
     body[data-view="dashboard"] .app-layout {
       display: none !important;
@@ -1745,29 +1745,27 @@
       display: none;
       flex-direction: column;
       min-height: 100vh;
-      background: #fbfbfd;
-      color: #1d1d1f;
-      font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'SF Pro Text', sans-serif;
       -webkit-font-smoothing: antialiased;
       box-shadow: none !important;
     }
 
-    /* Minimalist Header */
+    /* Header */
     .dashboard-header {
       position: sticky;
       top: 0;
       z-index: 50;
-      background: rgba(251, 251, 253, 0.92);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid #e5e5ea;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
       padding: 0 32px;
       height: 64px;
       box-shadow: none !important;
     }
 
     .dashboard-header-inner {
-      max-width: 1200px;
+      max-width: 1240px;
       margin: 0 auto;
       height: 100%;
       display: flex;
@@ -1788,7 +1786,7 @@
       width: 34px;
       height: 34px;
       border-radius: 8px;
-      background: #1d1d1f;
+      background: #2563eb;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1796,52 +1794,39 @@
       box-shadow: none !important;
     }
 
-    .dashboard-brand-info {
-      display: flex;
-      flex-direction: column;
-    }
-
     .dashboard-brand-name {
-      font-size: 16px;
-      font-weight: 700;
-      color: #1d1d1f;
+      font-size: 17px;
+      font-weight: 800;
+      color: #0f172a;
       letter-spacing: -0.02em;
       margin: 0;
-      line-height: 1.2;
-    }
-
-    .dashboard-brand-sub {
-      font-size: 11px;
-      color: #86868b;
-      font-weight: 500;
-      letter-spacing: -0.01em;
+      line-height: 1;
     }
 
     .dashboard-header-center {
       flex: 1;
-      max-width: 400px;
+      max-width: 420px;
     }
 
     .dashboard-search-box {
       display: flex;
       align-items: center;
       gap: 8px;
-      background: #f2f2f7;
-      border: 1px solid transparent;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
       border-radius: 8px;
       padding: 8px 12px;
-      transition: all 0.15s ease;
+      transition: border-color 0.15s ease;
       box-shadow: none !important;
     }
 
     .dashboard-search-box:focus-within {
-      background: #ffffff;
-      border-color: #86868b;
+      border-color: #2563eb;
       box-shadow: none !important;
     }
 
     .dashboard-search-box svg {
-      color: #86868b;
+      color: #94a3b8;
       flex-shrink: 0;
     }
 
@@ -1849,7 +1834,7 @@
       background: transparent;
       border: none;
       outline: none;
-      color: #1d1d1f;
+      color: #0f172a;
       font-size: 13.5px;
       font-family: inherit;
       width: 100%;
@@ -1857,7 +1842,7 @@
     }
 
     .dashboard-search-box input::placeholder {
-      color: #86868b;
+      color: #94a3b8;
     }
 
     .dashboard-new-btn {
@@ -1866,30 +1851,30 @@
       gap: 6px;
       padding: 8px 16px !important;
       font-size: 13.5px !important;
-      font-weight: 600 !important;
+      font-weight: 700 !important;
       border-radius: 8px !important;
-      background: #1d1d1f !important;
+      background: #2563eb !important;
       color: #ffffff !important;
-      border: 1px solid #1d1d1f !important;
+      border: 1px solid #2563eb !important;
       box-shadow: none !important;
-      transition: all 0.15s ease !important;
+      transition: background-color 0.15s ease, border-color 0.15s ease !important;
       cursor: pointer;
     }
 
     .dashboard-new-btn:hover {
-      background: #000000 !important;
-      border-color: #000000 !important;
+      background: #1d4ed8 !important;
+      border-color: #1d4ed8 !important;
       transform: none !important;
       box-shadow: none !important;
     }
 
     .dashboard-main {
       flex: 1;
-      padding: 40px 32px 80px;
+      padding: 36px 32px 80px;
     }
 
     .dashboard-container {
-      max-width: 1200px;
+      max-width: 1240px;
       margin: 0 auto;
     }
 
@@ -1899,19 +1884,19 @@
       justify-content: space-between;
       margin-bottom: 20px;
       padding-bottom: 12px;
-      border-bottom: 1px solid #e5e5ea;
+      border-bottom: 1px solid #e2e8f0;
     }
 
     .dashboard-section-title-wrap {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
     .dashboard-section-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #1d1d1f;
+      font-size: 19px;
+      font-weight: 800;
+      color: #0f172a;
       margin: 0;
       letter-spacing: -0.02em;
     }
@@ -1919,24 +1904,25 @@
     .dashboard-project-count {
       display: inline-block;
       font-size: 12px;
-      font-weight: 600;
-      color: #86868b;
-      background: #f2f2f7;
+      font-weight: 700;
+      color: #2563eb;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
       border-radius: 6px;
-      padding: 2px 7px;
+      padding: 2px 8px;
     }
 
     .dashboard-projects-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 18px;
     }
 
-    /* Minimalist Flat Card (NO SHADOWS, NO THICK BORDERS) */
+    /* Flat Card (C-ITS Accent, Zero Shadows) */
     .project-card {
       position: relative;
       background: #ffffff;
-      border: 1px solid #e5e5ea;
+      border: 1px solid #e2e8f0;
       border-radius: 12px;
       padding: 20px 22px;
       display: flex;
@@ -1944,45 +1930,45 @@
       justify-content: space-between;
       cursor: pointer;
       box-shadow: none !important;
-      transition: border-color 0.15s ease, background-color 0.15s ease;
+      transition: border-color 0.15s ease;
     }
 
     .project-card:hover {
-      border-color: #1d1d1f;
+      border-color: #2563eb;
       background: #ffffff;
       transform: none !important;
       box-shadow: none !important;
     }
 
-    /* Zero left colored border */
     .project-card.is-default {
-      border-left: 1px solid #e5e5ea;
+      border-left: 1px solid #e2e8f0;
     }
     .project-card.is-default:hover {
-      border-color: #1d1d1f;
+      border-color: #2563eb;
     }
 
     .project-card-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     .project-card-badge {
       display: inline-block;
       font-size: 11px;
-      font-weight: 600;
-      color: #515154;
-      background: #f2f2f7;
-      padding: 3px 7px;
+      font-weight: 700;
+      color: #475569;
+      background: #f1f5f9;
+      padding: 3px 8px;
       border-radius: 5px;
       letter-spacing: -0.01em;
     }
 
     .project-card.is-default .project-card-badge {
-      color: #1d1d1f;
-      background: #e5e5ea;
+      color: #2563eb;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
       font-weight: 700;
     }
 
@@ -1996,7 +1982,7 @@
       border-radius: 6px;
       background: transparent;
       border: none;
-      color: #86868b;
+      color: #94a3b8;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2006,8 +1992,8 @@
     }
 
     .project-card-menu-btn:hover {
-      background: #f2f2f7;
-      color: #1d1d1f;
+      background: #f1f5f9;
+      color: #0f172a;
     }
 
     .project-card-body {
@@ -2017,8 +2003,8 @@
 
     .project-card-title {
       font-size: 16px;
-      font-weight: 600;
-      color: #1d1d1f;
+      font-weight: 700;
+      color: #0f172a;
       line-height: 1.4;
       margin: 0 0 10px;
       letter-spacing: -0.02em;
@@ -2034,31 +2020,31 @@
     .stat-pill {
       font-size: 11.5px;
       font-weight: 500;
-      color: #636366;
-      background: #f2f2f7;
+      color: #475569;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
       padding: 3px 7px;
       border-radius: 5px;
-      border: none;
     }
 
     .project-card-footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-top: 1px solid #f2f2f7;
+      border-top: 1px solid #f1f5f9;
       padding-top: 12px;
     }
 
     .project-card-date {
       font-size: 12px;
-      color: #86868b;
+      color: #94a3b8;
       font-weight: 400;
     }
 
     .project-card-open-hint {
       font-size: 12.5px;
-      font-weight: 600;
-      color: #1d1d1f;
+      font-weight: 700;
+      color: #2563eb;
       display: inline-flex;
       align-items: center;
       gap: 3px;
@@ -2069,13 +2055,13 @@
       gap: 6px;
     }
 
-    /* Minimalist Dropdown (Flat, No Shadows) */
+    /* Dropdown */
     .project-card-dropdown {
       position: absolute;
       top: 32px;
       right: 0;
       background: #ffffff;
-      border: 1px solid #d1d1d6;
+      border: 1px solid #e2e8f0;
       border-radius: 10px;
       box-shadow: none !important;
       padding: 4px;
@@ -2092,8 +2078,8 @@
       gap: 8px;
       padding: 7px 10px;
       font-size: 12.5px;
-      font-weight: 500;
-      color: #1d1d1f;
+      font-weight: 600;
+      color: #334155;
       background: transparent;
       border: none;
       border-radius: 6px;
@@ -2105,22 +2091,24 @@
     }
 
     .project-card-dropdown-item:hover {
-      background: #f2f2f7;
+      background: #eff6ff;
+      color: #2563eb;
     }
 
     .project-card-dropdown-item.danger {
-      color: #ff3b30;
+      color: #ef4444;
     }
 
     .project-card-dropdown-item.danger:hover {
-      background: #ffe5e5;
+      background: #fef2f2;
+      color: #dc2626;
     }
 
-    /* Minimalist Flat Modals (Zero Shadows) */
+    /* Modals */
     .studio-modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.32);
+      background: rgba(15, 23, 42, 0.4);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       z-index: 9999;
@@ -2132,8 +2120,8 @@
 
     .studio-modal-card {
       background: #ffffff;
-      border: 1px solid #d1d1d6;
-      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
       box-shadow: none !important;
       width: 100%;
       max-width: 440px;
@@ -2142,7 +2130,7 @@
 
     .studio-modal-header {
       padding: 18px 22px;
-      border-bottom: 1px solid #f2f2f7;
+      border-bottom: 1px solid #f1f5f9;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -2150,16 +2138,16 @@
 
     .studio-modal-title {
       font-size: 16px;
-      font-weight: 700;
-      color: #1d1d1f;
+      font-weight: 800;
+      color: #0f172a;
       letter-spacing: -0.02em;
       margin: 0;
     }
 
     .studio-modal-close-btn {
-      background: #f2f2f7;
+      background: #f1f5f9;
       border: none;
-      color: #636366;
+      color: #64748b;
       font-size: 14px;
       cursor: pointer;
       line-height: 1;
@@ -2174,8 +2162,8 @@
     }
 
     .studio-modal-close-btn:hover {
-      color: #1d1d1f;
-      background: #e5e5ea;
+      color: #0f172a;
+      background: #e2e8f0;
     }
 
     .studio-modal-body {
@@ -2187,32 +2175,32 @@
 
     .studio-modal-label {
       font-size: 13px;
-      font-weight: 600;
-      color: #1d1d1f;
+      font-weight: 700;
+      color: #334155;
     }
 
     .studio-modal-input {
-      background: #f2f2f7;
-      border: 1px solid transparent;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
       border-radius: 8px;
       padding: 10px 12px;
-      color: #1d1d1f;
+      color: #0f172a;
       font-size: 14px;
       font-family: inherit;
       outline: none;
-      transition: all 0.15s ease;
+      transition: border-color 0.15s ease;
       box-shadow: none !important;
     }
 
     .studio-modal-input:focus {
-      border-color: #86868b;
+      border-color: #2563eb;
       background: #ffffff;
       box-shadow: none !important;
     }
 
     .studio-modal-template-info {
-      background: #f2f2f7;
-      border: 1px solid #e5e5ea;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
       border-radius: 8px;
       padding: 10px 12px;
       display: flex;
@@ -2223,72 +2211,73 @@
     .template-badge {
       font-size: 11px;
       font-weight: 700;
-      color: #1d1d1f;
+      color: #2563eb;
     }
 
     .template-desc {
       font-size: 12px;
-      color: #636366;
+      color: #1e40af;
       line-height: 1.45;
     }
 
     .studio-modal-footer {
       padding: 14px 22px;
-      background: #fbfbfd;
-      border-top: 1px solid #f2f2f7;
+      background: #f8fafc;
+      border-top: 1px solid #f1f5f9;
       display: flex;
       align-items: center;
       justify-content: flex-end;
       gap: 8px;
     }
 
-    /* Flat Buttons */
+    /* Buttons */
     .tds-btn-secondary {
-      background: #f2f2f7;
-      color: #48484a;
+      background: #f1f5f9;
+      color: #475569;
       font-weight: 600;
       font-size: 13px;
       border-radius: 8px;
       padding: 8px 16px;
-      border: none;
+      border: 1px solid #e2e8f0;
       cursor: pointer;
       box-shadow: none !important;
       transition: background 0.12s ease;
     }
 
     .tds-btn-secondary:hover {
-      background: #e5e5ea;
-      color: #1d1d1f;
+      background: #e2e8f0;
+      color: #0f172a;
     }
 
     .tds-btn-primary {
-      background: #1d1d1f;
+      background: #2563eb;
       color: #ffffff;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 13px;
       border-radius: 8px;
       padding: 8px 18px;
-      border: none;
+      border: 1px solid #2563eb;
       cursor: pointer;
       box-shadow: none !important;
-      transition: background 0.12s ease;
+      transition: background-color 0.12s ease;
     }
 
     .tds-btn-primary:hover {
-      background: #000000;
+      background: #1d4ed8;
+      border-color: #1d4ed8;
     }
 
-    /* Back to Studio Home Button in Editor Sidebar (Solid Black Text) */
+    /* Back to Studio Home Button in Editor Sidebar (Solid Text & Blue Point Hover) */
     .sidebar-dashboard-btn {
       display: flex;
       align-items: center;
       gap: 8px;
       width: 100%;
       padding: 9px 12px;
-      background: #f2f4f6;
-      border: 1px solid #e5e8eb;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
       border-radius: 8px;
-      color: #191f28 !important;
+      color: #0f172a !important;
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
@@ -2299,20 +2288,21 @@
     }
 
     .sidebar-dashboard-btn:hover {
-      background: #e5e8eb;
-      border-color: #d1d5db;
-      color: #000000 !important;
+      background: #eff6ff;
+      border-color: #bfdbfe;
+      color: #2563eb !important;
     }
 
     .sidebar-dashboard-btn svg {
-      color: #191f28;
-      stroke: #191f28;
+      color: #0f172a;
+      stroke: #0f172a;
       flex-shrink: 0;
+      transition: stroke 0.15s ease;
     }
 
     .sidebar-dashboard-btn:hover svg {
-      color: #000000;
-      stroke: #000000;
+      color: #2563eb;
+      stroke: #2563eb;
     }
 
     .dashboard-empty-state {
@@ -2322,7 +2312,7 @@
       align-items: center;
       justify-content: center;
       padding: 60px 20px;
-      color: #86868b;
+      color: #94a3b8;
       text-align: center;
     }
   </style>
@@ -2335,15 +2325,12 @@
       <div class="dashboard-header-inner">
         <div class="dashboard-brand" id="dashboardBrandLogo">
           <div class="dashboard-brand-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="2" y="2" width="20" height="20" rx="3"></rect>
               <path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"></path>
             </svg>
           </div>
-          <div class="dashboard-brand-info">
-            <span class="dashboard-brand-name">스토리보드 스튜디오</span>
-            <span class="dashboard-brand-sub">Storyboard Studio · 영상 기획 & 비주얼 연출</span>
-          </div>
+          <span class="dashboard-brand-name">스토리보드 스튜디오</span>
         </div>
 
         <div class="dashboard-header-center">
