@@ -2267,9 +2267,11 @@
       border-color: #1d4ed8;
     }
 
-    /* Back to Studio Home Link (Pure Text, No Button Box) */
+    /* Back to Studio Home Link (Pure Text + Brand Icon, No Button Box) */
     .sidebar-dashboard-btn {
-      display: inline-block;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 7px !important;
       background: transparent !important;
       border: none !important;
       padding: 4px 2px !important;
@@ -2290,6 +2292,13 @@
       background: transparent !important;
       border: none !important;
       color: #2563eb !important;
+    }
+
+    .sidebar-dashboard-btn svg {
+      flex-shrink: 0;
+      color: inherit;
+      stroke: currentColor;
+      transition: stroke 0.15s ease, color 0.15s ease;
     }
 
     .dashboard-empty-state {
@@ -2402,8 +2411,14 @@
     <!-- LEFT SIDEBAR (TDS Style) -->
     <aside class="app-sidebar" id="appSidebar">
       
-      <!-- Back to Studio Home (Pure Text Link) -->
-      <button type="button" class="sidebar-dashboard-btn" id="sidebarDashboardBtn" onclick="showDashboard()" title="스토리보드 스튜디오 홈으로 이동">스튜디오 홈</button>
+      <!-- Back to Studio Home (Pure Text Link with Main Page Icon) -->
+      <button type="button" class="sidebar-dashboard-btn" id="sidebarDashboardBtn" onclick="showDashboard()" title="스토리보드 스튜디오 홈으로 이동">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="3"></rect>
+          <path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"></path>
+        </svg>
+        <span>스튜디오 홈</span>
+      </button>
 
       <div class="sidebar-header">
         <h2 class="sidebar-brand-title">C-ITS 기획</h2>
