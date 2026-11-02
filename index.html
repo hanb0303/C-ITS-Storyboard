@@ -2268,7 +2268,7 @@
       border-color: #1d4ed8;
     }
 
-    /* Studio Workspace Header (Figma / Linear Style) */
+    /* Studio Workspace Header (Centered) */
     .sidebar-workspace-header {
       padding: 0 0 12px;
       margin-bottom: 14px;
@@ -2279,8 +2279,9 @@
       width: 100%;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 6px 8px;
+      justify-content: center;
+      gap: 8px;
+      padding: 7px 10px;
       border-radius: 8px;
       background: transparent;
       border: none;
@@ -2292,12 +2293,6 @@
 
     .sidebar-workspace-btn:hover {
       background: #f1f5f9;
-    }
-
-    .workspace-brand-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
 
     .workspace-icon-box {
@@ -2323,19 +2318,6 @@
       color: #0f172a;
       letter-spacing: -0.02em;
       line-height: 1;
-    }
-
-    .workspace-chevron {
-      color: #94a3b8;
-      stroke: #94a3b8;
-      flex-shrink: 0;
-      transition: transform 0.15s ease, color 0.15s ease, stroke 0.15s ease;
-    }
-
-    .sidebar-workspace-btn:hover .workspace-chevron {
-      color: #2563eb;
-      stroke: #2563eb;
-      transform: translateX(-2px);
     }
 
     .dashboard-empty-state {
@@ -2448,21 +2430,16 @@
     <!-- LEFT SIDEBAR (TDS Style) -->
     <aside class="app-sidebar" id="appSidebar">
       
-      <!-- Studio Workspace Header (Figma / Linear Style) -->
+      <!-- Studio Workspace Header (Centered) -->
       <div class="sidebar-workspace-header">
         <button type="button" class="sidebar-workspace-btn" id="sidebarDashboardBtn" onclick="showDashboard()" title="스토리보드 스튜디오 홈으로 이동">
-          <div class="workspace-brand-left">
-            <div class="workspace-icon-box">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="3"></rect>
-                <path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"></path>
-              </svg>
-            </div>
-            <span class="workspace-title">스토리보드 스튜디오</span>
+          <div class="workspace-icon-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="3"></rect>
+              <path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"></path>
+            </svg>
           </div>
-          <svg class="workspace-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
+          <span class="workspace-title">스토리보드 스튜디오</span>
         </button>
       </div>
 
