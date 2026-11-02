@@ -602,6 +602,7 @@
       transition: opacity .15s ease;
     }
     .slide-split-btn,
+    .slide-merge-btn,
     .slide-copy-btn,
     .slide-clear-btn {
       height: 34px;
@@ -620,6 +621,7 @@
       box-shadow: none !important;
     }
     .slide-split-btn:hover,
+    .slide-merge-btn:hover,
     .slide-copy-btn:hover,
     .slide-clear-btn:hover {
       background: #f1f5f9;
@@ -774,10 +776,11 @@
     body[data-view="presentation"] .script-column {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
       min-width: 0;
       min-height: 380px;
       cursor: text;
+      text-align: left;
     }
     body[data-view="presentation"] .script-unit {
       display: flex;
@@ -785,31 +788,29 @@
       gap: 4px;
       margin-bottom: 0;
       position: relative;
+      text-align: left;
     }
     body[data-view="presentation"] .script-title-label {
-      font-size: 16.5px;
-      font-weight: 800;
-      color: var(--primary);
-      line-height: 1.35;
-      letter-spacing: -0.025em;
-      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e293b;
+      line-height: 1.6;
+      letter-spacing: -0.015em;
+      margin: 0 0 4px 0;
       outline: none;
       cursor: text;
-      border-radius: 4px;
-      padding: 1px 4px;
-      margin-left: -4px;
-      transition: background .15s ease;
+      text-align: left;
     }
     body[data-view="presentation"] .script-title-label:focus {
       background: transparent;
     }
     body[data-view="presentation"] .script-body-text {
-      font-size: 14.5px;
+      font-size: 15px;
       font-weight: 400;
-      color: #333d4b;
-      line-height: 1.6;
+      color: #1e293b;
+      line-height: 1.65;
       letter-spacing: -0.015em;
-      margin: 0;
+      margin: 0 0 10px 0;
       word-break: keep-all;
       overflow-wrap: break-word;
       min-height: 28px;
@@ -817,7 +818,7 @@
       cursor: text;
       border-radius: 0;
       padding: 0;
-      margin: 0;
+      text-align: left;
       background: transparent !important;
       box-shadow: none !important;
       transition: none;
@@ -1031,10 +1032,11 @@
     .script-column {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
       min-width: 0;
       min-height: 380px;
       cursor: text;
+      text-align: left;
     }
     .script-unit {
       display: flex;
@@ -1042,31 +1044,29 @@
       gap: 4px;
       margin-bottom: 0;
       position: relative;
+      text-align: left;
     }
     .script-title-label {
-      font-size: 16.5px;
-      font-weight: 800;
-      color: var(--primary);
-      line-height: 1.35;
-      letter-spacing: -0.025em;
-      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e293b;
+      line-height: 1.6;
+      letter-spacing: -0.015em;
+      margin: 0 0 4px 0;
       outline: none;
       cursor: text;
-      border-radius: 4px;
-      padding: 1px 4px;
-      margin-left: -4px;
-      transition: background .15s ease;
+      text-align: left;
     }
     .script-title-label:focus {
       background: transparent;
     }
     .script-body-text {
-      font-size: 14.5px;
+      font-size: 15px;
       font-weight: 400;
-      color: #333d4b;
-      line-height: 1.6;
+      color: #1e293b;
+      line-height: 1.65;
       letter-spacing: -0.015em;
-      margin: 0;
+      margin: 0 0 10px 0;
       word-break: keep-all;
       overflow-wrap: break-word;
       min-height: 28px;
@@ -1074,7 +1074,7 @@
       cursor: text;
       border-radius: 0;
       padding: 0;
-      margin: 0;
+      text-align: left;
       background: transparent !important;
       box-shadow: none !important;
       transition: none;
@@ -1700,9 +1700,9 @@
     .slide-canvas .title-highlight,
     .editable span.title-highlight,
     .script-body-text span.title-highlight {
-      color: #2563eb !important;
-      font-weight: 800 !important;
-      font-size: 1.05em;
+      color: #1e293b !important;
+      font-weight: 700 !important;
+      font-size: 1em;
       line-height: inherit;
     }
     .editable b, .editable strong,
@@ -2543,7 +2543,8 @@
           </div>
           <button type="button" class="btn slide-revise-btn" id="externalReviseBtn">시나리오 수정</button>
           <button type="button" class="btn slide-split-btn" id="externalSplitBtn" title="1단에 모인 글을 좌우 2단으로 균등하게 배분합니다">2단 분할</button>
-          <button type="button" class="btn slide-copy-btn" id="externalCopyBtn" title="현재 슬라이드의 시나리오 전체를 줄바꿈 포함하여 한 번에 클립보드로 복사합니다">시나리오 복사</button>
+          <button type="button" class="btn slide-merge-btn" id="externalMergeBtn" title="2단의 글을 1단으로 합칩니다">1단 합치기</button>
+          <button type="button" class="btn slide-copy-btn" id="externalCopyBtn" title="현재 슬라이드의 시나리오 전체를 본문 서체(왼쪽 정렬)로 복사합니다">시나리오 복사</button>
           <button type="button" class="btn slide-clear-btn" id="externalClearBtn" title="현재 슬라이드의 내용을 전체 비웁니다">내용 지우기</button>
           <button type="button" class="btn primary slide-save-btn" id="externalSaveBtn">저장</button>
         </div>
@@ -2747,9 +2748,7 @@
     <div class="fmt-divider"></div>
     <button type="button" class="fmt-btn" id="fmtBoldBtn" title="굵게 (Ctrl+B)"><b>B</b></button>
     <div class="fmt-divider"></div>
-    <button type="button" class="fmt-btn primary" id="fmtTitleBtn" title="문단 제목 (블루 강조)">🔵 제목 강조</button>
-    <div class="fmt-divider"></div>
-    <button type="button" class="fmt-btn" id="fmtClearBtn" title="서식 지우기">✕ 일반 텍스트</button>
+    <button type="button" class="fmt-btn" id="fmtClearBtn" title="서식 지우기">✕ 서식 지우기</button>
   </div>
 
   <template id="sceneTemplate">
@@ -2977,7 +2976,7 @@
         // 3. Grid View (Scenario Slides: Slide 2, 3, 4, 5, and revisions)
         const grid = canvas.querySelector('.script-grid-view');
         if (grid) {
-          // The grid is the unified editing host: allows unbroken mouse drag across all units, titles, and both columns!
+          // The grid is the unified editing host: allows unbroken mouse drag across all text and both columns!
           grid.setAttribute('contenteditable', 'true');
           grid.setAttribute('spellcheck', 'true');
 
@@ -2987,30 +2986,41 @@
             child.removeAttribute('spellcheck');
           });
 
-          // Flatten malformed pasted divs inside columns into clean .script-body-text
+          // Convert any legacy .script-title-label to standard body text (NO blue formatting)
+          grid.querySelectorAll('.script-title-label').forEach(label => {
+            const p = document.createElement('p');
+            p.className = 'script-body-text';
+            p.innerHTML = label.innerHTML.trim() ? `<b>${label.innerHTML.trim()}</b>` : '';
+            label.replaceWith(p);
+          });
+
+          // Unwrap any .title-highlight spans into standard bold (NO blue color)
+          grid.querySelectorAll('.title-highlight').forEach(th => {
+            const b = document.createElement('b');
+            b.innerHTML = th.innerHTML;
+            th.replaceWith(b);
+          });
+
+          // Flatten any legacy .script-unit wrappers so columns hold direct, free-flowing paragraphs
           grid.querySelectorAll('.script-column').forEach(col => {
-            col.querySelectorAll('div:not(.script-unit):not(.script-title-label)').forEach(d => {
+            col.querySelectorAll('.script-unit').forEach(u => {
+              while (u.firstChild) {
+                col.insertBefore(u.firstChild, u);
+              }
+              u.remove();
+            });
+            col.querySelectorAll('div').forEach(d => {
               const p = document.createElement('p');
               p.className = 'script-body-text';
               p.innerHTML = d.innerHTML.trim() ? d.innerHTML : '<br>';
               d.replaceWith(p);
             });
-          });
-
-          // Ensure every unit has a body paragraph
-          grid.querySelectorAll('.script-unit').forEach(unit => {
-            const bodies = unit.querySelectorAll('.script-body-text');
-            if (bodies.length === 0) {
-              const newP = document.createElement('p');
-              newP.className = 'script-body-text';
-              newP.innerHTML = '<br>';
-              unit.appendChild(newP);
-            } else {
-              bodies.forEach(b => {
-                if (!b.textContent.trim() && !b.querySelector('br')) {
-                  b.innerHTML = '<br>';
-                }
-              });
+            // Ensure each column has at least one body paragraph
+            if (!col.querySelector('.script-body-text')) {
+              const p = document.createElement('p');
+              p.className = 'script-body-text';
+              p.innerHTML = '<br>';
+              col.appendChild(p);
             }
           });
         } else {
@@ -3036,39 +3046,25 @@
         if (columns.length === 0) {
           grid.innerHTML = `
             <div class="script-column">
-              <div class="script-unit">
-                <div class="script-title-label">01. 제목</div>
-                <p class="script-body-text"><br></p>
-              </div>
+              <p class="script-body-text"><br></p>
             </div>
             <div class="script-column">
-              <div class="script-unit">
-                <div class="script-title-label">02. 제목</div>
-                <p class="script-body-text"><br></p>
-              </div>
+              <p class="script-body-text"><br></p>
             </div>
           `;
         } else if (columns.length === 1) {
           const rightCol = document.createElement('div');
           rightCol.className = 'script-column';
-          rightCol.innerHTML = `
-            <div class="script-unit">
-              <div class="script-title-label"></div>
-              <p class="script-body-text"><br></p>
-            </div>
-          `;
+          rightCol.innerHTML = '<p class="script-body-text"><br></p>';
           grid.appendChild(rightCol);
         } else {
-          // Ensure each column has at least one valid unit
+          // Ensure each column has at least one valid paragraph
           columns.forEach(col => {
             if (!col.querySelector('.script-body-text')) {
-              const u = document.createElement('div');
-              u.className = 'script-unit';
-              u.innerHTML = `
-                <div class="script-title-label"></div>
-                <p class="script-body-text"><br></p>
-              `;
-              col.appendChild(u);
+              const p = document.createElement('p');
+              p.className = 'script-body-text';
+              p.innerHTML = '<br>';
+              col.appendChild(p);
             }
           });
         }
@@ -4177,16 +4173,10 @@
       grid.className = 'script-grid-view';
       grid.innerHTML = `
         <div class="script-column">
-          <div class="script-unit">
-            <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
-            <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
-          </div>
+          <p class="script-body-text"><br></p>
         </div>
         <div class="script-column">
-          <div class="script-unit">
-            <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
-            <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
-          </div>
+          <p class="script-body-text"><br></p>
         </div>
       `;
       canvas.appendChild(grid);
@@ -4222,16 +4212,10 @@
         grid.className = 'script-grid-view';
         grid.innerHTML = `
           <div class="script-column">
-            <div class="script-unit">
-              <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
-              <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
-            </div>
+            <p class="script-body-text"><br></p>
           </div>
           <div class="script-column">
-            <div class="script-unit">
-              <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
-              <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
-            </div>
+            <p class="script-body-text"><br></p>
           </div>
         `;
         canvas.appendChild(grid);
@@ -4301,7 +4285,7 @@
         }
       }
 
-      // 2. Backspace / Delete
+      // 2. Backspace / Delete: Natural paragraph deletion & merging without breaking header
       if (e.key === 'Backspace' || e.key === 'Delete') {
         const header = canvas.querySelector('.slide-header-block');
 
@@ -4310,17 +4294,12 @@
           // If the selection spans across the slide and touches the header (e.g. Ctrl+A)
           if (header && (range.intersectsNode(header) || (sel.containsNode && sel.containsNode(header, true)))) {
             e.preventDefault();
-            // Clear all scenario content in columns back to clean empty units, keeping header
+            // Clear all scenario content in columns back to clean empty paragraphs, keeping header intact
             const grid = canvas.querySelector('.script-grid-view');
             if (grid) {
               const cols = grid.querySelectorAll('.script-column');
               cols.forEach(c => {
-                c.innerHTML = `
-                  <div class="script-unit">
-                    <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
-                    <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
-                  </div>
-                `;
+                c.innerHTML = '<p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>';
               });
               ensureEditableAttributes();
               const firstP = grid.querySelector('.script-body-text');
@@ -4336,24 +4315,11 @@
             scheduleSave();
             return;
           }
-
-          // Otherwise, ANY selected text should be deleted naturally by the browser!
+          // Otherwise, ANY selected text is deleted naturally by the browser!
           return;
         }
 
         // B. Collapsed cursor:
-        let activeTitle = range.startContainer.nodeType === 1
-          ? range.startContainer.closest?.('.script-title-label')
-          : range.startContainer.parentElement?.closest?.('.script-title-label');
-        if (activeTitle) {
-          if (e.key === 'Backspace' && isCursorAtParagraphStart(activeTitle, range)) {
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-          }
-          return;
-        }
-
         let activeP = range.startContainer.nodeType === 1
           ? range.startContainer.closest('.script-body-text')
           : range.startContainer.parentElement?.closest('.script-body-text');
@@ -4367,31 +4333,63 @@
         if (activeP) {
           if (e.key === 'Backspace') {
             if (isCursorAtParagraphStart(activeP, range)) {
-              const unit = activeP.closest('.script-unit');
-              const col = activeP.closest('.script-column');
-              // If the current paragraph is empty and there are other units/paragraphs in the column, delete this empty unit
-              if (!activeP.textContent.trim()) {
-                if (col && col.querySelectorAll('.script-unit').length > 1 && unit) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const prevUnit = unit.previousElementSibling;
-                  const targetP = prevUnit?.querySelector('.script-body-text') || col.querySelector('.script-body-text');
-                  unit.remove();
-                  if (targetP) {
-                    targetP.focus();
-                    const r = document.createRange();
-                    r.selectNodeContents(targetP);
-                    r.collapse(false);
-                    sel.removeAllRanges();
-                    sel.addRange(r);
-                  }
+              const prevP = activeP.previousElementSibling;
+              // If there is a previous paragraph in the same column:
+              if (prevP && prevP.classList.contains('script-body-text')) {
+                e.preventDefault();
+                // If current activeP is empty, just remove it and move cursor to end of prevP
+                if (!activeP.textContent.trim()) {
+                  activeP.remove();
+                  prevP.focus();
+                  const r = document.createRange();
+                  r.selectNodeContents(prevP);
+                  r.collapse(false);
+                  sel.removeAllRanges();
+                  sel.addRange(r);
                   scheduleSave();
                   return;
                 }
+                // If activeP has text, merge its contents into prevP
+                const mergeBookmark = document.createTextNode('');
+                prevP.appendChild(mergeBookmark);
+                while (activeP.firstChild) {
+                  prevP.appendChild(activeP.firstChild);
+                }
+                activeP.remove();
+                const newRange = document.createRange();
+                newRange.setStartBefore(mergeBookmark);
+                newRange.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(newRange);
+                mergeBookmark.remove();
+                scheduleSave();
+                return;
+              } else {
+                // It is the very first paragraph in the column - protect header
+                e.preventDefault();
+                return;
               }
-              e.preventDefault();
-              e.stopPropagation();
-              return;
+            }
+          } else if (e.key === 'Delete') {
+            if (isCursorAtParagraphEnd(activeP, range)) {
+              const nextP = activeP.nextElementSibling;
+              if (nextP && nextP.classList.contains('script-body-text')) {
+                e.preventDefault();
+                const mergeBookmark = document.createTextNode('');
+                activeP.appendChild(mergeBookmark);
+                while (nextP.firstChild) {
+                  activeP.appendChild(nextP.firstChild);
+                }
+                nextP.remove();
+                const newRange = document.createRange();
+                newRange.setStartBefore(mergeBookmark);
+                newRange.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(newRange);
+                mergeBookmark.remove();
+                scheduleSave();
+                return;
+              }
             }
           }
         }
@@ -4413,11 +4411,93 @@
       }
     });
 
-    // Global copy handler: Always guarantees clean copying of selected text
+    // Clean Clipboard Utilities: Enforces clean left-aligned standard Pretendard body font (#1e293b)
+    function copyCleanTextToClipboard(cleanText, successMsg = '📋 본문 서체(왼쪽 정렬)로 복사되었습니다.') {
+      if (!cleanText) return;
+      const htmlParagraphs = cleanText
+        .split(/\n\s*\n/)
+        .map(para => {
+          const linesHtml = para.split('\n').map(l => l.trim()).filter(Boolean).join('<br>');
+          return `<p style="margin: 0 0 12px 0; font-family: Pretendard, -apple-system, sans-serif; font-size: 15px; color: #1e293b; font-weight: 400; line-height: 1.65; text-align: left;">${linesHtml}</p>`;
+        })
+        .join('');
+      const cleanHtml = `<div style="font-family: Pretendard, -apple-system, sans-serif; font-size: 15px; color: #1e293b; font-weight: 400; line-height: 1.65; text-align: left;">${htmlParagraphs}</div>`;
+
+      if (navigator.clipboard && window.ClipboardItem && navigator.clipboard.write) {
+        const plainBlob = new Blob([cleanText], { type: 'text/plain' });
+        const htmlBlob = new Blob([cleanHtml], { type: 'text/html' });
+        navigator.clipboard.write([
+          new ClipboardItem({
+            'text/plain': plainBlob,
+            'text/html': htmlBlob
+          })
+        ]).then(() => {
+          toast(successMsg);
+        }).catch(() => {
+          fallbackClipboardCopyClean(cleanText, cleanHtml, successMsg);
+        });
+      } else {
+        fallbackClipboardCopyClean(cleanText, cleanHtml, successMsg);
+      }
+    }
+
+    function fallbackClipboardCopyClean(plainText, htmlText, successMsg) {
+      const listener = e => {
+        e.clipboardData.setData('text/plain', plainText);
+        if (htmlText) e.clipboardData.setData('text/html', htmlText);
+        e.preventDefault();
+      };
+      document.addEventListener('copy', listener, { once: true });
+      try {
+        const ok = document.execCommand('copy');
+        if (ok) {
+          toast(successMsg);
+        } else {
+          toast('복사에 실패했습니다.');
+        }
+      } catch (err) {
+        toast('복사에 실패했습니다.');
+      }
+    }
+
+    // Helper to sanitize any scenario text into pure, line-trimmed, left-aligned text
+    function sanitizeScenarioText(rawText) {
+      if (!rawText) return '';
+      const lines = rawText
+        .split('\n')
+        .map(l => l.trim())
+        .filter((l, idx, arr) => {
+          if (!l) {
+            return idx > 0 && arr[idx - 1] !== '';
+          }
+          return true;
+        });
+      return lines.join('\n').trim();
+    }
+
+    function setClipboardClean(e, cleanText) {
+      if (!cleanText || !e.clipboardData) return;
+      // 1. Pure left-aligned plain text with zero indentation spaces
+      e.clipboardData.setData('text/plain', cleanText);
+
+      // 2. Pure left-aligned standard body HTML (NO blue color, standard Pretendard font)
+      const htmlParagraphs = cleanText
+        .split(/\n\s*\n/)
+        .map(para => {
+          const linesHtml = para.split('\n').map(l => l.trim()).filter(Boolean).join('<br>');
+          return `<p style="margin: 0 0 12px 0; font-family: Pretendard, -apple-system, sans-serif; font-size: 15px; color: #1e293b; font-weight: 400; line-height: 1.6; text-align: left;">${linesHtml}</p>`;
+        })
+        .join('');
+
+      const cleanHtml = `<div style="font-family: Pretendard, -apple-system, sans-serif; font-size: 15px; color: #1e293b; font-weight: 400; line-height: 1.6; text-align: left;">${htmlParagraphs}</div>`;
+      e.clipboardData.setData('text/html', cleanHtml);
+      e.preventDefault();
+    }
+
+    // Global copy handler: Always guarantees clean left-aligned standard body text copying
     document.addEventListener('copy', e => {
       const sel = window.getSelection();
       if (sel && !sel.isCollapsed) {
-        // Build plain text while respecting line breaks across units/paragraphs
         let text = '';
         if (sel.rangeCount > 0) {
           const range = sel.getRangeAt(0);
@@ -4425,20 +4505,18 @@
           const temp = document.createElement('div');
           temp.appendChild(fragment);
 
-          // Replace <br> and paragraph endings with line breaks
           temp.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
-          temp.querySelectorAll('p, div, h1, h2, h3, h4, .script-unit, .script-body-text, .script-title-label').forEach(block => {
+          temp.querySelectorAll('p, div, h1, h2, h3, h4, .script-unit, .script-body-text, .script-column').forEach(block => {
             block.after('\n');
           });
-          text = temp.textContent.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+          text = sanitizeScenarioText(temp.textContent || temp.innerText);
         }
         if (!text) {
-          text = sel.toString();
+          text = sanitizeScenarioText(sel.toString());
         }
-        if (text && text.trim().length > 0 && e.clipboardData) {
-          e.clipboardData.setData('text/plain', text);
-          e.preventDefault();
-          toast('📋 클립보드에 복사되었습니다.');
+        if (text && text.trim().length > 0) {
+          setClipboardClean(e, text);
+          toast('📋 본문 서체(왼쪽 정렬)로 복사되었습니다.');
         }
       }
     });
@@ -4638,7 +4716,6 @@
     const fmtToolbar = document.querySelector('#textFormatToolbar');
     const fmtCopyBtn = document.querySelector('#fmtCopyBtn');
     const fmtBoldBtn = document.querySelector('#fmtBoldBtn');
-    const fmtTitleBtn = document.querySelector('#fmtTitleBtn');
     const fmtClearBtn = document.querySelector('#fmtClearBtn');
     let lastSavedSelectionRange = null;
 
@@ -4731,7 +4808,7 @@
       return sel && sel.rangeCount ? sel.getRangeAt(0) : null;
     }
 
-    // Formatting Toolbar Action: Copy selected text
+    // Formatting Toolbar Action: Copy selected text cleanly
     fmtCopyBtn?.addEventListener('click', e => {
       e.preventDefault();
       const range = restoreSelectionIfLost();
@@ -4742,27 +4819,17 @@
         const temp = document.createElement('div');
         temp.appendChild(fragment);
         temp.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
-        temp.querySelectorAll('p, div, h1, h2, h3, h4, .script-unit, .script-body-text, .script-title-label').forEach(block => {
+        temp.querySelectorAll('p, div, h1, h2, h3, h4, .script-body-text, .script-column').forEach(block => {
           block.after('\n');
         });
-        text = temp.textContent.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
+        text = sanitizeScenarioText(temp.textContent || temp.innerText);
       }
       if (!text && sel) {
-        text = sel.toString().trim();
+        text = sanitizeScenarioText(sel.toString());
       }
       if (text) {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(text).then(() => {
-            toast('📋 선택한 텍스트가 복사되었습니다.');
-            hideFormatToolbar();
-          }).catch(() => {
-            fallbackClipboardCopy(text);
-            hideFormatToolbar();
-          });
-        } else {
-          fallbackClipboardCopy(text);
-          hideFormatToolbar();
-        }
+        copyCleanTextToClipboard(text, '📋 본문 서체(왼쪽 정렬)로 복사되었습니다.');
+        hideFormatToolbar();
       }
     });
 
@@ -4771,56 +4838,6 @@
       e.preventDefault();
       restoreSelectionIfLost();
       document.execCommand('bold', false, null);
-      scheduleSave();
-      hideFormatToolbar();
-    });
-
-    // Formatting Toolbar Action: Blue Title Highlight
-    fmtTitleBtn?.addEventListener('click', e => {
-      e.preventDefault();
-      const range = restoreSelectionIfLost();
-      if (!range) return;
-      const sel = window.getSelection();
-
-      let container = range.commonAncestorContainer;
-      if (container.nodeType !== 1) container = container.parentElement;
-
-      // Check if already highlighted in .title-highlight
-      const existingHighlight = container?.closest('.title-highlight');
-      if (existingHighlight) {
-        // Toggle off (unwrap)
-        const parent = existingHighlight.parentNode;
-        while (existingHighlight.firstChild) {
-          parent.insertBefore(existingHighlight.firstChild, existingHighlight);
-        }
-        existingHighlight.remove();
-        scheduleSave();
-        hideFormatToolbar();
-        return;
-      }
-
-      // Check if inside .script-title-label (already title)
-      if (container?.closest('.script-title-label')) {
-        hideFormatToolbar();
-        return;
-      }
-
-      // Wrap in .title-highlight
-      try {
-        const span = document.createElement('span');
-        span.className = 'title-highlight';
-        const selectedContent = range.extractContents();
-        span.appendChild(selectedContent);
-        range.insertNode(span);
-
-        sel.removeAllRanges();
-        const newRange = document.createRange();
-        newRange.selectNodeContents(span);
-        sel.addRange(newRange);
-      } catch (err) {
-        document.execCommand('insertHTML', false, `<span class="title-highlight">${sel.toString()}</span>`);
-      }
-
       scheduleSave();
       hideFormatToolbar();
     });
@@ -4925,6 +4942,11 @@
         splitScenarioToTwoColumns();
         return;
       }
+      const mergeBtn = e.target.closest('#externalMergeBtn, .slide-merge-btn');
+      if (mergeBtn) {
+        mergeScenarioToOneColumn();
+        return;
+      }
       const copyBtn = e.target.closest('#externalCopyBtn, .slide-copy-btn');
       if (copyBtn) {
         copyCurrentSlideScenario();
@@ -4955,12 +4977,7 @@
 
       const cols = grid.querySelectorAll('.script-column');
       cols.forEach(c => {
-        c.innerHTML = `
-          <div class="script-unit">
-            <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
-            <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
-          </div>
-        `;
+        c.innerHTML = '<p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>';
       });
 
       ensureEditableAttributes();
@@ -4982,253 +4999,85 @@
       toast('현재 슬라이드의 내용이 모두 비워졌습니다.');
     }
 
-    function fallbackClipboardCopy(text, msg = '📋 시나리오 전체 내용이 한 번에 복사되었습니다!') {
-      try {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.left = '-9999px';
-        ta.style.top = '-9999px';
-        document.body.appendChild(ta);
-        ta.focus();
-        ta.select();
-        const ok = document.execCommand('copy');
-        document.body.removeChild(ta);
-        if (ok) {
-          toast(msg);
-        } else {
-          toast('복사에 실패했습니다.');
-        }
-      } catch (e) {
-        toast('복사에 실패했습니다.');
-      }
-    }
-
     function copyCurrentSlideScenario() {
       const activeSlide = slideItems[currentSlide];
       if (!activeSlide) return;
       const canvas = activeSlide.querySelector('.slide-canvas');
       if (!canvas) return;
 
-      const units = [...canvas.querySelectorAll('.script-unit')];
-      let text = '';
-      if (units.length > 0) {
-        const parts = [];
-        units.forEach(u => {
-          const title = u.querySelector('.script-title-label')?.innerText.trim() || '';
-          const body = u.querySelector('.script-body-text')?.innerText.trim() || '';
-          if (title && body) {
-            parts.push(`${title}\n${body}`);
-          } else if (body) {
-            parts.push(body);
-          } else if (title) {
-            parts.push(title);
-          }
-        });
-        text = parts.join('\n\n');
-      }
-
-      if (!text) {
-        const clone = canvas.cloneNode(true);
-        clone.querySelector('.slide-header-block')?.remove();
-        clone.querySelector('.slide-header-tools')?.remove();
-        clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
-        clone.querySelectorAll('p, div, h1, h2, h3, h4').forEach(b => b.after('\n'));
-        text = clone.innerText.replace(/\n\s*\n\s*\n/g, '\n\n').trim();
-      }
+      const grid = canvas.querySelector('.script-grid-view') || canvas;
+      const clone = grid.cloneNode(true);
+      clone.querySelectorAll('.slide-header-block, .slide-header-tools').forEach(el => el.remove());
+      clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+      clone.querySelectorAll('p, div, h1, h2, h3, h4, .script-unit, .script-body-text, .script-column').forEach(b => b.after('\n'));
+      const text = sanitizeScenarioText(clone.textContent || clone.innerText);
 
       if (!text) {
         toast('복사할 시나리오 내용이 없습니다.');
         return;
       }
 
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => {
-          toast('📋 시나리오 전체 내용이 한 번에 복사되었습니다!');
-        }).catch(() => {
-          fallbackClipboardCopy(text);
-        });
-      } else {
-        fallbackClipboardCopy(text);
-      }
-    }
-
-    async function pasteScenarioFromClipboard() {
-      try {
-        if (!navigator.clipboard || !navigator.clipboard.readText) {
-          toast('클립보드 접근이 제한되어 있습니다. Ctrl+V 키를 직접 눌러주세요.');
-          return;
-        }
-        const text = await navigator.clipboard.readText();
-        if (!text || !text.trim()) {
-          toast('클립보드에 붙여넣을 텍스트가 없습니다.');
-          return;
-        }
-        applyPastedTextToScenario(text);
-      } catch (err) {
-        toast('클립보드 읽기에 실패했습니다. Ctrl+V 키를 직접 사용해 주세요.');
-      }
-    }
-
-    function applyPastedTextToScenario(rawText) {
-      const activeSlide = slideItems[currentSlide];
-      if (!activeSlide) return;
-      const canvas = activeSlide.querySelector('.slide-canvas');
-      if (!canvas) return;
-
-      ensureTwoColumns();
-      ensureEditableAttributes();
-
-      // Check if user has focused a specific paragraph
-      const activeP = document.activeElement?.closest?.('.script-body-text');
-      const sel = window.getSelection();
-
-      if (activeP && canvas.contains(activeP)) {
-        activeP.focus();
-        let success = false;
-        try {
-          success = document.execCommand('insertText', false, rawText);
-        } catch (e) {}
-
-        if (!success) {
-          if (sel && sel.rangeCount) {
-            const range = sel.getRangeAt(0);
-            range.deleteContents();
-            const tn = document.createTextNode(rawText);
-            range.insertNode(tn);
-            const newRange = document.createRange();
-            newRange.setStartAfter(tn);
-            newRange.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(newRange);
-          } else {
-            activeP.innerText = rawText;
-          }
-        }
-        activeP.dispatchEvent(new Event('input', { bubbles: true }));
-        scheduleSave();
-        toast('선택한 문단에 텍스트가 붙여넣어졌습니다.');
-        return;
-      }
-
-      // If no paragraph is actively focused, intelligently distribute multi-paragraph text across 2 columns
-      const normalized = rawText.replace(/\r\n/g, '\n');
-      let paragraphs = normalized.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
-      if (paragraphs.length < 2) {
-        paragraphs = normalized.split('\n').map(p => p.trim()).filter(Boolean);
-      }
-
-      const grid = canvas.querySelector('.script-grid-view');
-      const cols = grid ? grid.querySelectorAll('.script-column') : [];
-
-      if (cols.length >= 2 && paragraphs.length >= 2) {
-        const half = Math.ceil(paragraphs.length / 2);
-        const col1Parts = paragraphs.slice(0, half);
-        const col2Parts = paragraphs.slice(half);
-
-        const renderColumnUnits = (col, parts, startIndex) => {
-          col.innerHTML = '';
-          parts.forEach((part, pIdx) => {
-            const unit = document.createElement('div');
-            unit.className = 'script-unit';
-            const lines = part.split('\n');
-            let titleText = '';
-            let bodyText = part;
-            if (lines.length > 1 && lines[0].length < 40) {
-              titleText = lines[0].replace(/^[\[\(]?(\d+[\.\-\d]*)[\]\)]?\s*/, '$1. ');
-              bodyText = lines.slice(1).join('<br>');
-            } else {
-              const num = String(startIndex + pIdx + 1).padStart(2, '0');
-              titleText = `${num}. 장면 ${pIdx + 1}`;
-              bodyText = part.replace(/\n/g, '<br>');
-            }
-
-            unit.innerHTML = `
-              <div class="script-title-label" contenteditable="true" spellcheck="true">${titleText}</div>
-              <p class="script-body-text" contenteditable="true" spellcheck="true">${bodyText}</p>
-            `;
-            col.appendChild(unit);
-          });
-        };
-
-        renderColumnUnits(cols[0], col1Parts, 0);
-        renderColumnUnits(cols[1], col2Parts, col1Parts.length);
-
-        ensureEditableAttributes();
-        updateExternalTools();
-        scheduleSave();
-        toast('📋 시나리오가 좌우 2단으로 자동 정돈되어 붙여넣어졌습니다.');
-      } else {
-        const firstP = canvas.querySelector('.script-body-text');
-        if (firstP) {
-          firstP.innerHTML = rawText.replace(/\n/g, '<br>');
-          ensureEditableAttributes();
-          updateExternalTools();
-          scheduleSave();
-          toast('시나리오 본문에 붙여넣어졌습니다.');
-        }
-      }
+      copyCleanTextToClipboard(text, '📋 현재 슬라이드의 시나리오가 본문 서체(왼쪽 정렬)로 복사되었습니다.');
     }
 
     function copyCurrentScenarioText() {
+      copyCurrentSlideScenario();
+    }
+
+    // 1단 합치기: 2단(오른쪽)의 글을 1단(왼쪽)으로 깔끔하게 통합하여 하나의 글처럼 이어붙입니다.
+    function mergeScenarioToOneColumn() {
       const activeSlide = slideItems[currentSlide];
       if (!activeSlide) return;
       const canvas = activeSlide.querySelector('.slide-canvas');
       if (!canvas) return;
+      const grid = canvas.querySelector('.script-grid-view');
+      if (!grid) return;
 
-      const units = [...canvas.querySelectorAll('.script-unit')];
-      let fullText = '';
-      if (units.length > 0) {
-        const parts = [];
-        units.forEach(u => {
-          const title = u.querySelector('.script-title-label')?.textContent.trim() || '';
-          const body = u.querySelector('.script-body-text')?.innerText.trim() || '';
-          if (title && body) {
-            parts.push(`[${title}]\n${body}`);
-          } else if (body) {
-            parts.push(body);
-          } else if (title) {
-            parts.push(`[${title}]`);
-          }
-        });
-        fullText = parts.join('\n\n');
-      } else {
-        const clone = canvas.cloneNode(true);
-        clone.querySelector('.slide-header-block')?.remove();
-        clone.querySelector('.slide-header-tools')?.remove();
-        fullText = clone.innerText.trim();
-      }
+      enforceTwoColumns();
+      ensureEditableAttributes();
+      const cols = grid.querySelectorAll('.script-column');
+      if (cols.length < 2) return;
 
-      if (!fullText) {
-        toast('복사할 시나리오 내용이 없습니다.');
+      const col1 = cols[0];
+      const col2 = cols[1];
+
+      const extractColText = col => {
+        const clone = col.cloneNode(true);
+        clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+        clone.querySelectorAll('p, div, .script-unit, .script-body-text').forEach(b => b.after('\n'));
+        return sanitizeScenarioText(clone.textContent || clone.innerText);
+      };
+
+      const text1 = extractColText(col1);
+      const text2 = extractColText(col2);
+
+      if (!text2) {
+        toast('2단에 합칠 내용이 없습니다.');
         return;
       }
 
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(fullText).then(() => {
-          toast('📋 시나리오 전체 내용이 클립보드에 복사되었습니다.');
-        }).catch(() => {
-          fallbackCopyText(fullText);
-        });
-      } else {
-        fallbackCopyText(fullText);
-      }
+      const combined = text1 ? (text1 + '\n\n' + text2) : text2;
+      const paragraphs = combined.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+
+      col1.innerHTML = '';
+      paragraphs.forEach(p => {
+        const pEl = document.createElement('p');
+        pEl.className = 'script-body-text';
+        pEl.setAttribute('contenteditable', 'true');
+        pEl.setAttribute('spellcheck', 'true');
+        pEl.innerHTML = p.replace(/\n/g, '<br>');
+        col1.appendChild(pEl);
+      });
+
+      col2.innerHTML = '<p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>';
+
+      ensureEditableAttributes();
+      updateExternalTools();
+      saveImmediately();
+      toast('2단 내용이 1단으로 깔끔하게 합쳐졌습니다.');
     }
 
-    function fallbackCopyText(text) {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand('copy');
-        toast('📋 시나리오 전체 내용이 클립보드에 복사되었습니다.');
-      } catch (err) {
-        toast('복사에 실패했습니다.');
-      }
-      ta.remove();
-    }
-
+    // 2단 분할: 제목 서식이나 인위적인 번호 생성 없이, 작성된 본문 문단을 좌우 2단으로 50:50 균등 배분합니다.
     function splitScenarioToTwoColumns() {
       const activeSlide = slideItems[currentSlide];
       if (!activeSlide) return;
@@ -5245,118 +5094,38 @@
       const col1 = cols[0];
       const col2 = cols[1];
 
-      // Priority 1: Check existing units in grid
-      const existingUnits = [...grid.querySelectorAll('.script-unit')].filter(u => u.textContent.trim().length > 0);
+      // Extract all current text from grid
+      const clone = grid.cloneNode(true);
+      clone.querySelectorAll('.slide-header-block, .slide-header-tools').forEach(el => el.remove());
+      clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+      clone.querySelectorAll('p, div, h1, h2, h3, h4, .script-unit, .script-body-text').forEach(b => b.after('\n'));
+      const rawText = sanitizeScenarioText(clone.textContent || clone.innerText);
 
-      // If we already have 2 or more distinct units, balance them 50:50 between the two columns
-      if (existingUnits.length >= 2) {
-        col1.innerHTML = '';
-        col2.innerHTML = '';
-
-        const half = Math.ceil(existingUnits.length / 2);
-        existingUnits.slice(0, half).forEach(u => col1.appendChild(u));
-        existingUnits.slice(half).forEach(u => col2.appendChild(u));
-
-        ensureEditableAttributes();
-        updateExternalTools();
-        saveImmediately();
-        toast('기존 소제목과 문단 구성을 유지하며 좌우 2단으로 균등하게 분할했습니다.');
-        return;
-      }
-
-      // Priority 2: If all text is in a single unit or loose in columns, parse intelligently
-      let fullRawText = '';
-      if (existingUnits.length === 1) {
-        const bodyEl = existingUnits[0].querySelector('.script-body-text');
-        const titleEl = existingUnits[0].querySelector('.script-title-label');
-        const titleText = titleEl ? titleEl.innerText.trim() : '';
-        const bodyText = bodyEl ? bodyEl.innerText.trim() : '';
-        fullRawText = titleText ? `${titleText}\n${bodyText}` : bodyText || existingUnits[0].innerText.trim();
-      } else {
-        const clone = canvas.cloneNode(true);
-        clone.querySelector('.slide-header-block')?.remove();
-        clone.querySelector('.slide-header-tools')?.remove();
-        clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
-        clone.querySelectorAll('p, div, h1, h2, h3, h4').forEach(b => b.after('\n'));
-        fullRawText = clone.innerText.trim();
-      }
-
-      if (!fullRawText) {
+      if (!rawText) {
         toast('분할할 시나리오 텍스트가 없습니다.');
         return;
       }
 
-      // Check if text has sections with explicit titles (e.g. "01. ...", "02. ...")
-      const lines = fullRawText.split('\n');
-      const headingRegex = /^(\d+[\.\-\)]\s*|STAGE\s*\d+|장면\s*\d+|#[#\s]*\d+)/i;
-      const parsedSections = [];
-      let curTitle = '';
-      let curBody = [];
-
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) {
-          if (curBody.length > 0) curBody.push('');
-          continue;
-        }
-
-        const isHeading = headingRegex.test(line) && line.length < 80;
-        if (isHeading) {
-          if (curTitle || curBody.length > 0) {
-            parsedSections.push({
-              title: curTitle,
-              body: curBody.join('\n').trim()
-            });
-            curBody = [];
-          }
-          curTitle = line;
-        } else {
-          curBody.push(line);
-        }
-      }
-
-      if (curTitle || curBody.length > 0) {
-        parsedSections.push({
-          title: curTitle,
-          body: curBody.join('\n').trim()
-        });
-      }
-
-      // Case A: Text had structured headings (e.g. 2, 3, 4 scenes)
-      if (parsedSections.length >= 2 && parsedSections.some(s => s.title)) {
-        col1.innerHTML = '';
-        col2.innerHTML = '';
-
-        const half = Math.ceil(parsedSections.length / 2);
-        const col1Parts = parsedSections.slice(0, half);
-        const col2Parts = parsedSections.slice(half);
-
-        const renderStructured = (col, parts) => {
-          parts.forEach(p => {
-            const u = document.createElement('div');
-            u.className = 'script-unit';
-            u.innerHTML = `
-              ${p.title ? `<div class="script-title-label">${p.title}</div>` : ''}
-              <p class="script-body-text">${p.body.replace(/\n\s*\n/g, '<br><br>').replace(/\n/g, '<br>')}</p>
-            `;
-            col.appendChild(u);
-          });
-        };
-
-        renderStructured(col1, col1Parts);
-        renderStructured(col2, col2Parts);
-
-        ensureEditableAttributes();
-        updateExternalTools();
-        saveImmediately();
-        toast('글이 소제목별로 좌우 2단으로 균등하게 분할되었습니다.');
-        return;
-      }
-
-      // Case B: Plain text with no structured headings (never invent fake numbers!)
-      let paragraphs = fullRawText.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+      // Split into distinct paragraphs (by double newline or single newline)
+      let paragraphs = rawText.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
       if (paragraphs.length < 2) {
-        paragraphs = fullRawText.split('\n').map(s => s.trim()).filter(Boolean);
+        paragraphs = rawText.split('\n').map(p => p.trim()).filter(Boolean);
+      }
+
+      // If still only 1 paragraph, split by sentences or midpoint word
+      if (paragraphs.length < 2) {
+        const sentenceMatch = rawText.match(/[^.!?]+[.!?]+(?:\s+|$)/g);
+        if (sentenceMatch && sentenceMatch.length >= 2) {
+          paragraphs = sentenceMatch.map(s => s.trim()).filter(Boolean);
+        } else if (rawText.length > 20) {
+          const mid = Math.floor(rawText.length / 2);
+          let splitIdx = rawText.indexOf(' ', mid);
+          if (splitIdx === -1 || splitIdx > mid + 30) {
+            splitIdx = rawText.lastIndexOf(' ', mid);
+          }
+          if (splitIdx === -1) splitIdx = mid;
+          paragraphs = [rawText.slice(0, splitIdx).trim(), rawText.slice(splitIdx).trim()];
+        }
       }
 
       if (paragraphs.length >= 2) {
@@ -5367,57 +5136,34 @@
         const col1Paras = paragraphs.slice(0, half);
         const col2Paras = paragraphs.slice(half);
 
-        const u1 = document.createElement('div');
-        u1.className = 'script-unit';
-        u1.innerHTML = `<p class="script-body-text">${col1Paras.join('<br><br>')}</p>`;
-        col1.appendChild(u1);
+        col1Paras.forEach(p => {
+          const pEl = document.createElement('p');
+          pEl.className = 'script-body-text';
+          pEl.setAttribute('contenteditable', 'true');
+          pEl.setAttribute('spellcheck', 'true');
+          pEl.innerHTML = p.replace(/\n/g, '<br>');
+          col1.appendChild(pEl);
+        });
 
-        const u2 = document.createElement('div');
-        u2.className = 'script-unit';
-        u2.innerHTML = `<p class="script-body-text">${col2Paras.join('<br><br>')}</p>`;
-        col2.appendChild(u2);
-
-        ensureEditableAttributes();
-        updateExternalTools();
-        saveImmediately();
-        toast('글이 좌우 2단으로 균등하게 분할되었습니다.');
-        return;
-      }
-
-      // Case C: Single unbroken sentence/paragraph - split at character midpoint by word space
-      if (fullRawText.length > 20) {
-        col1.innerHTML = '';
-        col2.innerHTML = '';
-
-        const mid = Math.floor(fullRawText.length / 2);
-        let splitIdx = fullRawText.indexOf(' ', mid);
-        if (splitIdx === -1 || splitIdx > mid + 40) {
-          splitIdx = fullRawText.lastIndexOf(' ', mid);
-        }
-        if (splitIdx === -1) splitIdx = mid;
-
-        const part1 = fullRawText.slice(0, splitIdx).trim();
-        const part2 = fullRawText.slice(splitIdx).trim();
-
-        const u1 = document.createElement('div');
-        u1.className = 'script-unit';
-        u1.innerHTML = `<p class="script-body-text">${part1.replace(/\n/g, '<br>')}</p>`;
-        col1.appendChild(u1);
-
-        const u2 = document.createElement('div');
-        u2.className = 'script-unit';
-        u2.innerHTML = `<p class="script-body-text">${part2.replace(/\n/g, '<br>')}</p>`;
-        col2.appendChild(u2);
+        col2Paras.forEach(p => {
+          const pEl = document.createElement('p');
+          pEl.className = 'script-body-text';
+          pEl.setAttribute('contenteditable', 'true');
+          pEl.setAttribute('spellcheck', 'true');
+          pEl.innerHTML = p.replace(/\n/g, '<br>');
+          col2.appendChild(pEl);
+        });
 
         ensureEditableAttributes();
         updateExternalTools();
         saveImmediately();
-        toast('글이 좌우 2단으로 균등하게 분할되었습니다.');
+        toast('본문이 좌우 2단으로 균등하게 분할되었습니다.');
         return;
       }
 
-      toast('분할할 내용이 충분하지 않습니다.');
+      toast('문단을 나눌 수 있는 내용이 부족합니다.');
     }
+
     document.querySelector('#sidebarSlideList')?.addEventListener('click', e => {
       const delBtn = e.target.closest('.sidebar-sub-del-btn');
       if (delBtn) {
