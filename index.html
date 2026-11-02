@@ -3822,6 +3822,8 @@
       if (data.title && title && document.activeElement !== title) {
         title.innerText = data.title;
       }
+      document.querySelectorAll('.revision-slide').forEach(s => s.remove());
+      document.querySelectorAll('#sidebarRevisionList .sidebar-sub-item-row').forEach(r => r.remove());
       if (data.revisionNums && Array.isArray(data.revisionNums)) {
         data.revisionNums.forEach(num => {
           if (!document.querySelector(`#slideRevision_${num}`)) {
@@ -3835,7 +3837,7 @@
           return;
         }
         let saved = data.slides?.[index];
-        if (saved) {
+        if (saved !== undefined && saved !== null) {
           saved = saved.replace(/\uFFFD+/g, '').replace(/시물/g, '시설물');
           slide.innerHTML = saved;
           slide.querySelectorAll('.script-unit.ending').forEach(el => el.classList.remove('ending'));
@@ -4256,56 +4258,118 @@
       }
     }
 
+    function getBlankProjectData(projectTitle) {
+      const titleClean = (projectTitle || '').trim() || '새 스토리보드 프로젝트';
+
+      const slide1Html = `
+        <div class="slide-header-block" contenteditable="false" spellcheck="false">
+          <h3 class="slide-title" contenteditable="false" spellcheck="false">${titleClean}</h3>
+        </div>
+        <div class="flow-showcase">
+          <div class="showcase-card">
+            <span class="showcase-num">STAGE 01</span>
+            <strong class="showcase-title">단계 01</strong>
+            <p class="showcase-lead">기획 배경 및 개요를 입력하세요.</p>
+          </div>
+          <div class="showcase-card">
+            <span class="showcase-num">STAGE 02</span>
+            <strong class="showcase-title">단계 02</strong>
+            <p class="showcase-lead">주요 전개 흐름을 입력하세요.</p>
+          </div>
+          <div class="showcase-card hero">
+            <span class="showcase-num">STAGE 03 · CORE</span>
+            <strong class="showcase-title">단계 03</strong>
+            <p class="showcase-lead">핵심 연출 및 시연 내용을 입력하세요.</p>
+            <div class="showcase-cases">
+              <div class="showcase-pill">핵심 포인트 1</div>
+              <div class="showcase-pill">핵심 포인트 2</div>
+            </div>
+          </div>
+          <div class="showcase-card">
+            <span class="showcase-num">STAGE 04</span>
+            <strong class="showcase-title">단계 04</strong>
+            <p class="showcase-lead">마무리 및 기대 효과를 입력하세요.</p>
+          </div>
+        </div>
+      `.trim();
+
+      const slide2Html = `
+        <div class="slide-header-block" contenteditable="false" spellcheck="false">
+          <h3 class="slide-title" contenteditable="false" spellcheck="false">시나리오 <span class="blue">초안</span></h3>
+        </div>
+        <div class="script-grid-view">
+          <div class="script-column">
+            <div class="script-unit">
+              <div class="script-title-label">01. 오프닝</div>
+              <p class="script-body-text">이곳에 시나리오와 나레이션을 입력하세요.</p>
+            </div>
+            <div class="script-unit">
+              <div class="script-title-label">02. 전개</div>
+              <p class="script-body-text">이곳에 시나리오와 나레이션을 입력하세요.</p>
+            </div>
+          </div>
+          <div class="script-column">
+            <div class="script-unit">
+              <div class="script-title-label">03. 본문</div>
+              <p class="script-body-text">이곳에 시나리오와 나레이션을 입력하세요.</p>
+            </div>
+            <div class="script-unit">
+              <div class="script-title-label">04. 엔딩</div>
+              <p class="script-body-text">이곳에 시나리오와 나레이션을 입력하세요.</p>
+            </div>
+          </div>
+        </div>
+      `.trim();
+
+      return {
+        title: titleClean,
+        slideTemplateVersion: SLIDE_TEMPLATE_VERSION,
+        slides: [slide1Html, slide2Html],
+        revisionNums: [],
+        scenes: [
+          { image: '', motion: '', narration: '' }
+        ],
+        styleframes: [
+          { id: 'sf_1', title: '스타일프레임 01', desc: '', image: '', order: 0 }
+        ]
+      };
+    }
+
     async function createNewProject(projectTitle) {
       const titleClean = (projectTitle || '').trim() || '새 스토리보드 프로젝트';
       const newId = 'proj_' + Date.now();
 
-      // Read current base template data
-      const currentData = getData();
-      const currentSf = styleframes && styleframes.length ? JSON.parse(JSON.stringify(styleframes)) : [];
-
-      const newMeta = {
-        title: titleClean,
-        slideTemplateVersion: SLIDE_TEMPLATE_VERSION,
-        slides: currentData.slides || [],
-        revisionNums: currentData.revisionNums || []
-      };
-
-      const newScenes = (currentData.scenes || []).map(sc => ({ ...sc }));
-      const newStyleframes = currentSf.map((sf, idx) => ({
-        id: `sf_${idx + 1}`,
-        title: sf.title || '',
-        desc: sf.desc || '',
-        image: (sf.image && sf.image.length < 500000) ? sf.image : '',
-        order: idx
-      }));
+      // Start with completely blank slate
+      const blank = getBlankProjectData(titleClean);
 
       // 1. Immediately cache to localStorage
       try {
         localStorage.setItem(`cits_proj_${newId}`, JSON.stringify({
           id: newId,
-          title: titleClean,
-          slides: newMeta.slides,
-          revisionNums: newMeta.revisionNums,
-          scenes: newScenes,
-          styleframes: newStyleframes
+          ...blank
         }));
       } catch(e) {
         console.warn('LocalStorage save warning:', e);
       }
 
-      // 2. INSTANT VIEW TRANSITION: presentation mode
+      // 2. Load the blank project into memory and DOM
+      loadData(blank);
+      styleframes = blank.styleframes;
+      renderStyleframeCurrent();
+      renderCardsView();
+
+      // 3. INSTANT VIEW TRANSITION: presentation mode
       currentProjectId = newId;
       updateProjectUrl(newId);
       if (title) title.innerText = titleClean;
       document.title = `${titleClean} - 스토리보드 스튜디오`;
       document.body.setAttribute('data-view', 'presentation');
       showPresentation(0);
-      toast(`🎉 '${titleClean}' 프로젝트가 생성되었습니다!`);
+      toast(`🎉 새 프로젝트 '${titleClean}'이 생성되었습니다!`);
 
-      // 3. Sync to Cloud in background (failsafe)
+      // 4. Sync to Cloud in background (failsafe)
       if (db) {
-        saveCustomProjectData(newId, newMeta, newScenes, newStyleframes).then(() => {
+        saveCustomProjectData(newId, blank, blank.scenes, blank.styleframes).then(() => {
           setSyncStatus('synced', '동기화됨');
         }).catch((err) => {
           console.warn('Initial project cloud sync warning:', err);
@@ -4746,14 +4810,18 @@
       if (!data) return;
       if (data.title && title) title.innerText = data.title;
 
+      // Clear existing revision slides from previous project
+      document.querySelectorAll('.revision-slide').forEach(s => s.remove());
+      document.querySelectorAll('#sidebarRevisionList .sidebar-sub-item-row').forEach(r => r.remove());
+
       if (data.revisionNums && Array.isArray(data.revisionNums) && data.revisionNums.length) {
         data.revisionNums.forEach(num => {
           if (!document.querySelector(`#slideRevision_${num}`)) {
             createRevisionSlideSilently(num);
           }
         });
-      } else {
-        const revCount = data.revisionCount || (data.hasRevision ? 1 : 0);
+      } else if (data.revisionCount || data.hasRevision) {
+        const revCount = data.revisionCount || 1;
         for (let i = 1; i <= Math.min(5, revCount); i++) {
           if (!document.querySelector(`#slideRevision_${i}`)) {
             createRevisionSlideSilently(i);
@@ -4766,35 +4834,9 @@
 
       refreshSlideReferences();
       slideCanvases.forEach((slide, index) => {
-        const saved = data.slides?.[index]?.replace(
-          '영상에 담을 <span class="blue">핵심 내용</span>',
-          '영상의 <span class="blue">주요 구성</span>'
-        ).replace(
-          '장면은 <span class="blue">설명보다 체험 중심</span>으로<br>빠르게 이어집니다',
-          '영상은 <span class="blue">다섯 장면</span>으로<br>전개됩니다'
-        ).replace(
-          '영상은 <span class="blue">다섯 장면</span>으로<br>전개됩니다',
-          '<span class="blue">영상 구성</span> 및 장면 흐름'
-        ).replace(
-          '영상의 <span class="blue">주요 구성</span>',
-          '구성별 <span class="blue">핵심 메시지</span>'
-        ).replace(
-          '확정 <span class="blue">시나리오 원문</span>',
-          '시나리오 <span class="blue">초안</span>'
-        ).replace(
-          '확정 시나리오 원문',
-          '시나리오 초안'
-        ).replace(/03-①\./g, '03-1.')
-         .replace(/03-②\./g, '03-2.')
-         .replace(/03-③\./g, '03-3.')
-         .replace(/03-④\./g, '03-4.')
-         .replace(/03-①/g, '03-1')
-         .replace(/03-②/g, '03-2')
-         .replace(/03-③/g, '03-3')
-         .replace(/03-④/g, '03-4');
-        let cleanedSaved = saved ? saved.replace(/\uFFFD+/g, '').replace(/시물/g, '시설물') : '';
-        const useSaved = data.slideTemplateVersion === SLIDE_TEMPLATE_VERSION && cleanedSaved.replace(/<[^>]*>|&nbsp;/g, '').trim();
-        if (useSaved) {
+        const saved = data.slides?.[index];
+        if (saved !== undefined && saved !== null) {
+          let cleanedSaved = saved ? saved.replace(/\uFFFD+/g, '').replace(/시물/g, '시설물') : '';
           slide.innerHTML = cleanedSaved;
         } else if (defaultSlideContent[index]) {
           slide.innerHTML = defaultSlideContent[index];
