@@ -3786,7 +3786,7 @@
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           }, { merge: true }).catch(() => {});
         } else if (currentProjectId) {
-          // Custom Project: save whole project payload
+          // Custom Project: save via robust subcollection handler
           const sceneList = sceneElements.map((sceneEl, idx) => ({
             order: idx,
             motion: getEditableText(sceneEl.querySelector('.motion')),
@@ -3802,28 +3802,7 @@
             order: idx
           }));
 
-          const payload = {
-            id: currentProjectId,
-            meta: currentMeta,
-            scenes: sceneList,
-            styleframes: sfList,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          };
-
-          await db.collection('projects_data').doc(currentProjectId).set(payload);
-
-          db.collection('sb_projects_meta').doc(currentProjectId).set({
-            id: currentProjectId,
-            title: currentMeta.title,
-            slideCount: currentMeta.slides.length || 6,
-            sceneCount: sceneElements.length || 0,
-            styleframeCount: sfList.length || 0,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true }).catch(() => {});
-
-          try {
-            localStorage.setItem(`cits_proj_${currentProjectId}`, JSON.stringify(payload));
-          } catch(e) {}
+          await saveCustomProjectData(currentProjectId, currentMeta, sceneList, sfList);
         }
         setSyncStatus('synced', '동기화됨');
       } catch (err) {
@@ -4142,27 +4121,50 @@
           const localKey = `cits_proj_${projectId}`;
           try {
             const localData = JSON.parse(localStorage.getItem(localKey));
-            if (localData?.scenes) {
-              loadData(localData);
-              if (localData.styleframes) {
+            if (localData) {
+              loadData({
+                title: localData.title || localData.meta?.title,
+                slideTemplateVersion: localData.slideTemplateVersion || localData.meta?.slideTemplateVersion || SLIDE_TEMPLATE_VERSION,
+                slides: localData.slides || localData.meta?.slides,
+                revisionNums: localData.revisionNums || localData.meta?.revisionNums,
+                scenes: localData.scenes
+              });
+              if (localData.styleframes && localData.styleframes.length) {
                 styleframes = localData.styleframes;
                 renderStyleframeCurrent();
                 renderCardsView();
               }
             }
-          } catch(e) {}
+          } catch(e) {
+            console.warn('Local project load warning:', e);
+          }
 
           if (db) {
             const projDoc = await db.collection('projects_data').doc(projectId).get();
+            let pdata = null;
             if (projDoc.exists) {
-              const pdata = projDoc.data();
-              if (pdata.meta) applyRemoteMeta(pdata.meta);
-              if (pdata.scenes) applyRemoteScenes(pdata.scenes);
-              if (pdata.styleframes) {
-                styleframes = pdata.styleframes;
-                renderStyleframeCurrent();
-                renderCardsView();
-              }
+              pdata = projDoc.data();
+              applyRemoteMeta(pdata.meta || pdata);
+            }
+
+            // Load scenes from subcollection
+            const scenesSnap = await db.collection('projects_data').doc(projectId).collection('scenes').orderBy('order').get();
+            if (!scenesSnap.empty) {
+              applyRemoteScenes(scenesSnap.docs.map(d => d.data()));
+            } else if (pdata && pdata.scenes) {
+              applyRemoteScenes(pdata.scenes);
+            }
+
+            // Load styleframes from subcollection
+            const sfSnap = await db.collection('projects_data').doc(projectId).collection('styleframes').orderBy('order').get();
+            if (!sfSnap.empty) {
+              styleframes = sfSnap.docs.map(d => d.data());
+              renderStyleframeCurrent();
+              renderCardsView();
+            } else if (pdata && pdata.styleframes) {
+              styleframes = pdata.styleframes;
+              renderStyleframeCurrent();
+              renderCardsView();
             }
           }
         }
@@ -4173,6 +4175,84 @@
       } catch (err) {
         console.error('Project data load error:', err);
         setSyncStatus('error', '로드 실패');
+      }
+    }
+
+    async function saveCustomProjectData(projectId, meta, scenes, sfList) {
+      if (!projectId) return;
+
+      // 1. Immediate Local Storage cache
+      try {
+        const payload = {
+          id: projectId,
+          title: meta.title,
+          slideTemplateVersion: meta.slideTemplateVersion || SLIDE_TEMPLATE_VERSION,
+          slides: meta.slides || [],
+          revisionNums: meta.revisionNums || [],
+          scenes: scenes || [],
+          styleframes: sfList || []
+        };
+        localStorage.setItem(`cits_proj_${projectId}`, JSON.stringify(payload));
+      } catch(e) {
+        console.warn('Local storage write warning:', e);
+      }
+
+      if (!db) return;
+
+      // 2. sb_projects_meta header
+      await db.collection('sb_projects_meta').doc(projectId).set({
+        id: projectId,
+        title: meta.title || '새 프로젝트',
+        slideCount: (meta.slides || []).length || 6,
+        sceneCount: (scenes || []).length || 10,
+        styleframeCount: (sfList || []).length || 9,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      // 3. projects_data/{projectId} meta document
+      await db.collection('projects_data').doc(projectId).set({
+        id: projectId,
+        title: meta.title || '새 프로젝트',
+        slideTemplateVersion: meta.slideTemplateVersion || SLIDE_TEMPLATE_VERSION,
+        slides: meta.slides || [],
+        revisionNums: meta.revisionNums || [],
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      // 4. Batch write scenes subcollection
+      if (scenes && scenes.length) {
+        const scenesCol = db.collection('projects_data').doc(projectId).collection('scenes');
+        const batch = db.batch();
+        scenes.forEach((sc, idx) => {
+          const docId = `scene_${String(idx).padStart(2, '0')}`;
+          batch.set(scenesCol.doc(docId), {
+            id: docId,
+            order: idx,
+            motion: sc.motion || '',
+            narration: sc.narration || '',
+            image: sc.image || '',
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        });
+        await batch.commit();
+      }
+
+      // 5. Batch write styleframes subcollection
+      if (sfList && sfList.length) {
+        const sfCol = db.collection('projects_data').doc(projectId).collection('styleframes');
+        const sfBatch = db.batch();
+        sfList.forEach((sf, idx) => {
+          const docId = sf.id || `sf_${String(idx + 1).padStart(2, '0')}`;
+          sfBatch.set(sfCol.doc(docId), {
+            id: docId,
+            order: idx,
+            title: sf.title || '',
+            desc: sf.desc || '',
+            image: (sf.image && sf.image.length < 500000) ? sf.image : '',
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        });
+        await sfBatch.commit();
       }
     }
 
@@ -4188,8 +4268,7 @@
         title: titleClean,
         slideTemplateVersion: SLIDE_TEMPLATE_VERSION,
         slides: currentData.slides || [],
-        revisionNums: currentData.revisionNums || [],
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        revisionNums: currentData.revisionNums || []
       };
 
       const newScenes = (currentData.scenes || []).map(sc => ({ ...sc }));
@@ -4201,95 +4280,95 @@
         order: idx
       }));
 
-      // 1. Save metadata to sb_projects_meta
-      const metaDoc = {
-        id: newId,
-        title: titleClean,
-        slideCount: newMeta.slides.length || 6,
-        sceneCount: newScenes.length || 10,
-        styleframeCount: newStyleframes.length || 9,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-
-      // 2. Save full project payload
-      const projectPayload = {
-        id: newId,
-        meta: newMeta,
-        scenes: newScenes,
-        styleframes: newStyleframes
-      };
-
+      // 1. Immediately cache to localStorage
       try {
-        localStorage.setItem(`cits_proj_${newId}`, JSON.stringify(projectPayload));
-      } catch(e) {}
-
-      if (db) {
-        await db.collection('sb_projects_meta').doc(newId).set(metaDoc);
-        await db.collection('projects_data').doc(newId).set(projectPayload);
+        localStorage.setItem(`cits_proj_${newId}`, JSON.stringify({
+          id: newId,
+          title: titleClean,
+          slides: newMeta.slides,
+          revisionNums: newMeta.revisionNums,
+          scenes: newScenes,
+          styleframes: newStyleframes
+        }));
+      } catch(e) {
+        console.warn('LocalStorage save warning:', e);
       }
 
+      // 2. INSTANT VIEW TRANSITION: presentation mode
+      currentProjectId = newId;
+      updateProjectUrl(newId);
+      if (title) title.innerText = titleClean;
+      document.title = `${titleClean} - 스토리보드 스튜디오`;
+      document.body.setAttribute('data-view', 'presentation');
+      showPresentation(0);
       toast(`🎉 '${titleClean}' 프로젝트가 생성되었습니다!`);
-      await openProject(newId, 'presentation');
+
+      // 3. Sync to Cloud in background (failsafe)
+      if (db) {
+        saveCustomProjectData(newId, newMeta, newScenes, newStyleframes).then(() => {
+          setSyncStatus('synced', '동기화됨');
+        }).catch((err) => {
+          console.warn('Initial project cloud sync warning:', err);
+          setSyncStatus('synced', '로컬 저장됨');
+        });
+      }
     }
 
     async function duplicateProject(projectId) {
       try {
         toast('프로젝트 복제 진행 중');
-        let sourceData = null;
+        let sourceMeta = {};
+        let sourceScenes = [];
+        let sourceSf = [];
         let sourceTitle = '프로젝트';
 
         if (projectId === DEFAULT_PROJECT_ID) {
-          sourceData = getData();
+          const sourceData = getData();
           sourceTitle = sourceData.title || '[전사] 강릉 모빌리티 C-ITS 영상';
+          sourceMeta = {
+            title: sourceTitle,
+            slides: sourceData.slides || [],
+            revisionNums: sourceData.revisionNums || []
+          };
+          sourceScenes = sourceData.scenes || [];
+          sourceSf = styleframes || [];
         } else {
-          const doc = await db.collection('projects_data').doc(projectId).get();
-          if (doc.exists) {
-            sourceData = doc.data();
-            sourceTitle = sourceData.meta?.title || '프로젝트';
+          const doc = await db?.collection('projects_data').doc(projectId).get();
+          if (doc && doc.exists) {
+            const pdata = doc.data();
+            sourceTitle = pdata.meta?.title || pdata.title || '프로젝트';
+            sourceMeta = {
+              title: sourceTitle,
+              slides: pdata.meta?.slides || pdata.slides || [],
+              revisionNums: pdata.meta?.revisionNums || pdata.revisionNums || []
+            };
+            const scSnap = await db.collection('projects_data').doc(projectId).collection('scenes').orderBy('order').get();
+            sourceScenes = !scSnap.empty ? scSnap.docs.map(d => d.data()) : (pdata.scenes || []);
+            const sfSnap = await db.collection('projects_data').doc(projectId).collection('styleframes').orderBy('order').get();
+            sourceSf = !sfSnap.empty ? sfSnap.docs.map(d => d.data()) : (pdata.styleframes || []);
+          } else {
+            try {
+              const localData = JSON.parse(localStorage.getItem(`cits_proj_${projectId}`));
+              if (localData) {
+                sourceTitle = localData.title || '프로젝트';
+                sourceMeta = { title: sourceTitle, slides: localData.slides || [], revisionNums: localData.revisionNums || [] };
+                sourceScenes = localData.scenes || [];
+                sourceSf = localData.styleframes || [];
+              }
+            } catch(e) {}
           }
         }
 
         const newId = 'proj_' + Date.now();
         const newTitle = `${sourceTitle} (복사본)`;
-
         const newMeta = {
           title: newTitle,
           slideTemplateVersion: SLIDE_TEMPLATE_VERSION,
-          slides: sourceData.meta?.slides || sourceData.slides || [],
-          revisionNums: sourceData.meta?.revisionNums || sourceData.revisionNums || [],
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          slides: sourceMeta.slides || [],
+          revisionNums: sourceMeta.revisionNums || []
         };
 
-        const newScenes = sourceData.scenes || [];
-        const newSf = sourceData.styleframes || [];
-
-        const metaDoc = {
-          id: newId,
-          title: newTitle,
-          slideCount: newMeta.slides.length || 6,
-          sceneCount: newScenes.length || 10,
-          styleframeCount: newSf.length || 9,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        const projectPayload = {
-          id: newId,
-          meta: newMeta,
-          scenes: newScenes,
-          styleframes: newSf
-        };
-
-        try {
-          localStorage.setItem(`cits_proj_${newId}`, JSON.stringify(projectPayload));
-        } catch(e) {}
-
-        if (db) {
-          await db.collection('sb_projects_meta').doc(newId).set(metaDoc);
-          await db.collection('projects_data').doc(newId).set(projectPayload);
-        }
-
+        await saveCustomProjectData(newId, newMeta, sourceScenes, sourceSf);
         toast(`📋 '${newTitle}' 생성 완료!`);
         await loadProjectsList();
       } catch (err) {
@@ -4316,6 +4395,7 @@
             }, { merge: true });
           } else {
             await db.collection('projects_data').doc(projectId).set({
+              title: cleanTitle,
               'meta.title': cleanTitle,
               updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
@@ -4432,23 +4512,26 @@
       });
 
       newProjSubmitBtn?.addEventListener('click', async () => {
-        const val = newProjInput?.value?.trim();
-        if (!val) {
-          alert('프로젝트 제목을 입력해 주세요.');
-          newProjInput?.focus();
-          return;
-        }
+        const val = newProjInput?.value?.trim() || '새 스토리보드 프로젝트';
         closeNewProjectModal();
-        await createNewProject(val);
+        try {
+          await createNewProject(val);
+        } catch (err) {
+          console.error('Project create error:', err);
+          toast('프로젝트 생성 중 오류가 발생했습니다.');
+        }
       });
 
       newProjInput?.addEventListener('keydown', async e => {
         if (e.key === 'Enter') {
           e.preventDefault();
-          const val = newProjInput?.value?.trim();
-          if (val) {
-            closeNewProjectModal();
+          const val = newProjInput?.value?.trim() || '새 스토리보드 프로젝트';
+          closeNewProjectModal();
+          try {
             await createNewProject(val);
+          } catch (err) {
+            console.error('Project create error:', err);
+            toast('프로젝트 생성 중 오류가 발생했습니다.');
           }
         } else if (e.key === 'Escape') {
           closeNewProjectModal();
@@ -6392,10 +6475,16 @@
             image: (sf.image && sf.image.length < 500000) ? sf.image : '',
             order: idx
           }));
-          db.collection('projects_data').doc(currentProjectId).set({
-            styleframes: sfList,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true }).catch(() => {});
+          const sfCol = db.collection('projects_data').doc(currentProjectId).collection('styleframes');
+          const sfBatch = db.batch();
+          sfList.forEach((sf, idx) => {
+            const docId = sf.id || `sf_${String(idx + 1).padStart(2, '0')}`;
+            sfBatch.set(sfCol.doc(docId), {
+              ...sf,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          });
+          await sfBatch.commit();
           db.collection('sb_projects_meta').doc(currentProjectId).set({
             styleframeCount: styleframes.length,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
