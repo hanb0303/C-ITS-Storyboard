@@ -774,29 +774,28 @@
       -webkit-user-select: text !important;
     }
     body[data-view="presentation"] .script-column {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      display: block !important;
       min-width: 0;
       min-height: 380px;
       cursor: text;
       text-align: left;
+      line-height: 1.75 !important;
     }
     body[data-view="presentation"] .script-unit {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+      display: block !important;
       margin-bottom: 0;
       position: relative;
       text-align: left;
+      line-height: 1.75 !important;
     }
     body[data-view="presentation"] .script-title-label {
       font-size: 15px;
       font-weight: 700;
       color: #1e293b;
-      line-height: 1.6;
+      line-height: 1.75 !important;
       letter-spacing: -0.015em;
-      margin: 0 0 4px 0;
+      margin: 0 !important;
+      padding: 0 !important;
       outline: none;
       cursor: text;
       text-align: left;
@@ -804,20 +803,22 @@
     body[data-view="presentation"] .script-title-label:focus {
       background: transparent;
     }
-    body[data-view="presentation"] .script-body-text {
+    body[data-view="presentation"] .script-body-text,
+    body[data-view="presentation"] .script-column p,
+    body[data-view="presentation"] .script-column div {
       font-size: 15px;
       font-weight: 400;
       color: #1e293b;
-      line-height: 1.65;
+      line-height: 1.75 !important;
       letter-spacing: -0.015em;
-      margin: 0 0 10px 0;
+      margin: 0 !important;
+      padding: 0 !important;
       word-break: keep-all;
       overflow-wrap: break-word;
-      min-height: 28px;
+      min-height: 1.75em;
       outline: none !important;
       cursor: text;
       border-radius: 0;
-      padding: 0;
       text-align: left;
       background: transparent !important;
       box-shadow: none !important;
@@ -833,13 +834,17 @@
     }
     body[data-view="presentation"] .script-body-text p,
     body[data-view="presentation"] .script-body-text div {
-      margin: 0;
-      line-height: inherit;
+      margin: 0 !important;
+      padding: 0 !important;
+      line-height: 1.75 !important;
     }
     body[data-view="presentation"] .script-body-text p + p,
     body[data-view="presentation"] .script-body-text div + div,
-    body[data-view="presentation"] .slide-canvas p + p {
-      margin-top: 12px;
+    body[data-view="presentation"] .script-column p + p,
+    body[data-view="presentation"] .script-column div + div,
+    body[data-view="presentation"] .script-grid-view p + p {
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
     }
     body[data-view="presentation"] .script-unit.ending .script-title-label {
       color: var(--primary);
@@ -1030,29 +1035,28 @@
       background: transparent;
     }
     .script-column {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      display: block !important;
       min-width: 0;
       min-height: 380px;
       cursor: text;
       text-align: left;
+      line-height: 1.75 !important;
     }
     .script-unit {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+      display: block !important;
       margin-bottom: 0;
       position: relative;
       text-align: left;
+      line-height: 1.75 !important;
     }
     .script-title-label {
       font-size: 15px;
       font-weight: 700;
       color: #1e293b;
-      line-height: 1.6;
+      line-height: 1.75 !important;
       letter-spacing: -0.015em;
-      margin: 0 0 4px 0;
+      margin: 0 !important;
+      padding: 0 !important;
       outline: none;
       cursor: text;
       text-align: left;
@@ -1060,20 +1064,22 @@
     .script-title-label:focus {
       background: transparent;
     }
-    .script-body-text {
+    .script-body-text,
+    .script-column p,
+    .script-column div {
       font-size: 15px;
       font-weight: 400;
       color: #1e293b;
-      line-height: 1.65;
+      line-height: 1.75 !important;
       letter-spacing: -0.015em;
-      margin: 0 0 10px 0;
+      margin: 0 !important;
+      padding: 0 !important;
       word-break: keep-all;
       overflow-wrap: break-word;
-      min-height: 28px;
+      min-height: 1.75em;
       outline: none !important;
       cursor: text;
       border-radius: 0;
-      padding: 0;
       text-align: left;
       background: transparent !important;
       box-shadow: none !important;
@@ -1089,13 +1095,17 @@
     }
     .script-body-text p,
     .script-body-text div {
-      margin: 0;
-      line-height: inherit;
+      margin: 0 !important;
+      padding: 0 !important;
+      line-height: 1.75 !important;
     }
     .script-body-text p + p,
     .script-body-text div + div,
-    .slide-canvas p + p {
-      margin-top: 12px;
+    .script-column p + p,
+    .script-column div + div,
+    .script-grid-view p + p {
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
     }
     .script-unit.ending .script-title-label {
       color: var(--primary);
@@ -4415,13 +4425,16 @@
     function copyCleanTextToClipboard(cleanText, successMsg = '📋 본문 서체(왼쪽 정렬)로 복사되었습니다.') {
       if (!cleanText) return;
       const htmlParagraphs = cleanText
-        .split(/\n\s*\n/)
-        .map(para => {
-          const linesHtml = para.split('\n').map(l => l.trim()).filter(Boolean).join('<br>');
-          return `<p style="margin: 0 0 12px 0; font-family: Pretendard, -apple-system, sans-serif; font-size: 15px; color: #1e293b; font-weight: 400; line-height: 1.65; text-align: left;">${linesHtml}</p>`;
+        .split('\n')
+        .map(line => {
+          const trimmed = line.trim();
+          if (!trimmed) {
+            return '<p style="margin: 0; padding: 0; font-family: Pretendard, -apple-system, sans-serif; font-size: 15px; color: #1e293b; font-weight: 400; line-height: 1.75; text-align: left;"><br></p>';
+          }
+          return `<p style="margin: 0; padding: 0; font-family: Pretendard, -apple-system, sans-serif; font-size: 15px; color: #1e293b; font-weight: 400; line-height: 1.75; text-align: left;">${trimmed}</p>`;
         })
         .join('');
-      const cleanHtml = `<div style="font-family: Pretendard, -apple-system, sans-serif; font-size: 15px; color: #1e293b; font-weight: 400; line-height: 1.65; text-align: left;">${htmlParagraphs}</div>`;
+      const cleanHtml = `<div style="font-family: Pretendard, -apple-system, sans-serif; font-size: 15px; color: #1e293b; font-weight: 400; line-height: 1.75; text-align: left;">${htmlParagraphs}</div>`;
 
       if (navigator.clipboard && window.ClipboardItem && navigator.clipboard.write) {
         const plainBlob = new Blob([cleanText], { type: 'text/plain' });
@@ -4480,16 +4493,19 @@
       // 1. Pure left-aligned plain text with zero indentation spaces
       e.clipboardData.setData('text/plain', cleanText);
 
-      // 2. Pure left-aligned standard body HTML (NO blue color, standard Pretendard font)
+      // 2. Pure left-aligned standard body HTML (NO blue color, uniform 1.75 line-height, margin: 0)
       const htmlParagraphs = cleanText
-        .split(/\n\s*\n/)
-        .map(para => {
-          const linesHtml = para.split('\n').map(l => l.trim()).filter(Boolean).join('<br>');
-          return `<p style="margin: 0 0 12px 0; font-family: Pretendard, -apple-system, sans-serif; font-size: 15px; color: #1e293b; font-weight: 400; line-height: 1.6; text-align: left;">${linesHtml}</p>`;
+        .split('\n')
+        .map(line => {
+          const trimmed = line.trim();
+          if (!trimmed) {
+            return '<p style="margin: 0; padding: 0; font-family: Pretendard, -apple-system, sans-serif; font-size: 15px; color: #1e293b; font-weight: 400; line-height: 1.75; text-align: left;"><br></p>';
+          }
+          return `<p style="margin: 0; padding: 0; font-family: Pretendard, -apple-system, sans-serif; font-size: 15px; color: #1e293b; font-weight: 400; line-height: 1.75; text-align: left;">${trimmed}</p>`;
         })
         .join('');
 
-      const cleanHtml = `<div style="font-family: Pretendard, -apple-system, sans-serif; font-size: 15px; color: #1e293b; font-weight: 400; line-height: 1.6; text-align: left;">${htmlParagraphs}</div>`;
+      const cleanHtml = `<div style="font-family: Pretendard, -apple-system, sans-serif; font-size: 15px; color: #1e293b; font-weight: 400; line-height: 1.75; text-align: left;">${htmlParagraphs}</div>`;
       e.clipboardData.setData('text/html', cleanHtml);
       e.preventDefault();
     }
