@@ -3690,8 +3690,11 @@
 
     function saveToLocalStorage() {
       const fullData = getData();
+      const storageKey = (currentProjectId && currentProjectId !== DEFAULT_PROJECT_ID)
+        ? `cits_proj_${currentProjectId}`
+        : STORAGE_KEY;
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(fullData));
+        localStorage.setItem(storageKey, JSON.stringify(fullData));
       } catch (e) {
         console.warn('localStorage quota exceeded, saving text-only fallback:', e);
         try {
@@ -3702,7 +3705,7 @@
               image: '' // Images are safely persisted in Google Cloud Firestore
             }))
           };
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(fallbackData));
+          localStorage.setItem(storageKey, JSON.stringify(fallbackData));
         } catch (err2) {
           console.warn('localStorage fallback failed:', err2);
         }
@@ -4744,6 +4747,7 @@
       if (!db) return;
 
       db.collection('cits_storyboard_meta').doc('current').onSnapshot((doc) => {
+        if (currentProjectId !== DEFAULT_PROJECT_ID) return;
         if (!doc.exists) {
           saveToFirestore();
           return;
@@ -4764,6 +4768,7 @@
       });
 
       db.collection('cits_storyboard_scenes').orderBy('order').onSnapshot((snapshot) => {
+        if (currentProjectId !== DEFAULT_PROJECT_ID) return;
         if (snapshot.empty) {
           saveToFirestore();
           return;
@@ -6428,22 +6433,22 @@
     let sfDragSourceIndex = null;
 
     async function saveStyleframesLocally() {
-      // 1. Primary High-Capacity Store: IndexedDB (Never loses images or text)
+      const idbKey = (currentProjectId && currentProjectId !== DEFAULT_PROJECT_ID) ? `styleframes_${currentProjectId}` : 'styleframes_current';
+      const sfKey = (currentProjectId && currentProjectId !== DEFAULT_PROJECT_ID) ? `cits_sf_${currentProjectId}` : SF_STORAGE_KEY;
       try {
-        await idbSet('styleframes_current', styleframes);
+        await idbSet(idbKey, styleframes);
       } catch (errIdb) {
         console.warn('IDB save error:', errIdb);
       }
 
-      // 2. Secondary Cache: LocalStorage (Metadata & text-only to preserve strict 5MB quota)
       try {
         const textOnly = styleframes.map(sf => ({
           id: sf.id,
           title: sf.title || '',
           desc: sf.desc || '',
-          image: '' // High-res images safely preserved in IndexedDB & Cloud Firestore
+          image: ''
         }));
-        localStorage.setItem(SF_STORAGE_KEY, JSON.stringify(textOnly));
+        localStorage.setItem(sfKey, JSON.stringify(textOnly));
       } catch (e) {
         console.warn('localStorage saveStyleframesLocally error:', e);
       }
@@ -6458,53 +6463,53 @@
       try {
         isSavingStyleframes = true;
         pendingSfSave = false;
-        const col = db.collection('cits_styleframes');
-        const batch = db.batch();
 
-        batch.set(db.collection('cits_styleframes_meta').doc('current'), {
-          count: styleframes.length,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        if (currentProjectId === DEFAULT_PROJECT_ID) {
+          const col = db.collection('cits_styleframes');
+          const batch = db.batch();
 
-        for (let i = 0; i < styleframes.length; i++) {
-          const sf = styleframes[i];
-          const docRef = col.doc(`frame_${String(i).padStart(2, '0')}`);
-          let imgSrc = sf.image || '';
-          if (imgSrc.length > 500000) {
-            try {
-              imgSrc = await compressImage(imgSrc, 1600, 0.78);
-              sf.image = imgSrc;
-            } catch (errCompress) {}
-          }
-          batch.set(docRef, {
-            order: i,
-            id: sf.id || `sf_${i + 1}`,
-            title: sf.title || '',
-            desc: sf.desc || '',
-            image: imgSrc,
+          batch.set(db.collection('cits_styleframes_meta').doc('current'), {
+            count: styleframes.length,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
-        }
 
-        // Clean up extraneous documents if frames were removed
-        try {
-          const existingSnap = await col.get();
-          existingSnap.forEach(d => {
-            const orderNum = d.data().order;
-            const docNum = parseInt(d.id.replace('frame_', ''), 10);
-            if ((!isNaN(orderNum) && orderNum >= styleframes.length) ||
-                (!isNaN(docNum) && docNum >= styleframes.length)) {
-              batch.delete(d.ref);
+          for (let i = 0; i < styleframes.length; i++) {
+            const sf = styleframes[i];
+            const docRef = col.doc(`frame_${String(i).padStart(2, '0')}`);
+            let imgSrc = sf.image || '';
+            if (imgSrc.length > 500000) {
+              try {
+                imgSrc = await compressImage(imgSrc, 1600, 0.78);
+                sf.image = imgSrc;
+              } catch (errCompress) {}
             }
-          });
-        } catch (eClean) {
-          console.warn('Styleframes clean extraneous docs error:', eClean);
-        }
+            batch.set(docRef, {
+              order: i,
+              id: sf.id || `sf_${i + 1}`,
+              title: sf.title || '',
+              desc: sf.desc || '',
+              image: imgSrc,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          }
 
-        await batch.commit();
+          // Clean up extraneous documents if frames were removed
+          try {
+            const existingSnap = await col.get();
+            existingSnap.forEach(d => {
+              const orderNum = d.data().order;
+              const docNum = parseInt(d.id.replace('frame_', ''), 10);
+              if ((!isNaN(orderNum) && orderNum >= styleframes.length) ||
+                  (!isNaN(docNum) && docNum >= styleframes.length)) {
+                batch.delete(d.ref);
+              }
+            });
+          } catch (eClean) {
+            console.warn('Styleframes clean extraneous docs error:', eClean);
+          }
 
-        // Update sb_projects_meta styleframeCount
-        if (currentProjectId === DEFAULT_PROJECT_ID) {
+          await batch.commit();
+
           db.collection('sb_projects_meta').doc(DEFAULT_PROJECT_ID).set({
             styleframeCount: styleframes.length,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -6631,6 +6636,7 @@
     function initStyleframeFirestoreSync() {
       if (!db) return;
       db.collection('cits_styleframes').orderBy('order').onSnapshot(snapshot => {
+        if (currentProjectId !== DEFAULT_PROJECT_ID) return;
         if (snapshot.empty) {
           saveStyleframesToFirestore();
           return;
