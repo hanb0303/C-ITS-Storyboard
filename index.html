@@ -1720,7 +1720,8 @@
     .script-body-text b, .script-body-text strong {
       font-weight: 700 !important;
     }
-    .script-body-text:empty::before {
+    .script-body-text:empty::before,
+    .script-column .script-body-text:only-child:has(> br:only-child):not(:focus)::before {
       content: '시나리오 텍스트를 입력하세요...';
       color: #94a3b8;
       pointer-events: none;
@@ -4088,29 +4089,36 @@
     });
     window.addEventListener('beforeunload', saveImmediately);
 
-    // Scenario script unit navigation (Tab / Shift+Tab) & easy click focus
+    // Scenario script column navigation (Tab / Shift+Tab)
     document.addEventListener('keydown', e => {
       if (e.key === 'Tab') {
         const sel = window.getSelection();
         const activeNode = sel?.anchorNode;
-        const activeUnit = activeNode?.parentElement?.closest?.('.script-unit') || document.activeElement?.closest?.('.script-unit');
-        if (activeUnit) {
-          const canvas = activeUnit.closest('.slide-canvas');
-          if (canvas) {
-            const allUnits = [...canvas.querySelectorAll('.script-unit')];
-            const currentIdx = allUnits.indexOf(activeUnit);
-            const nextIdx = e.shiftKey ? currentIdx - 1 : currentIdx + 1;
-            if (nextIdx >= 0 && nextIdx < allUnits.length) {
+        const activeCol = activeNode?.parentElement?.closest?.('.script-column') || document.activeElement?.closest?.('.script-column');
+        if (activeCol) {
+          const grid = activeCol.closest('.script-grid-view');
+          if (grid) {
+            const cols = [...grid.querySelectorAll('.script-column')];
+            if (cols.length >= 2) {
               e.preventDefault();
-              const targetP = allUnits[nextIdx].querySelector('.script-body-text');
-              if (targetP) {
-                targetP.focus();
-                const newRange = document.createRange();
-                newRange.selectNodeContents(targetP);
-                newRange.collapse(false);
-                sel.removeAllRanges();
-                sel.addRange(newRange);
+              const currentIdx = cols.indexOf(activeCol);
+              const nextIdx = e.shiftKey ? (currentIdx === 0 ? cols.length - 1 : currentIdx - 1) : (currentIdx + 1) % cols.length;
+              const targetCol = cols[nextIdx];
+              let targetP = targetCol.querySelector('.script-body-text:last-of-type') || targetCol.querySelector('.script-body-text');
+              if (!targetP) {
+                targetP = document.createElement('p');
+                targetP.className = 'script-body-text';
+                targetP.innerHTML = '<br>';
+                targetCol.appendChild(targetP);
+                ensureEditableAttributes();
               }
+              targetP.focus();
+              const newRange = document.createRange();
+              newRange.selectNodeContents(targetP);
+              newRange.collapse(false);
+              sel.removeAllRanges();
+              sel.addRange(newRange);
+              return;
             }
           }
         }
@@ -4125,28 +4133,24 @@
       }
 
       // 2. Click on empty .script-column background -> focus the paragraph in that column
-      const col = e.target.closest('.script-column');
-      if (col && col.closest('.slide-canvas') && e.target === col) {
+      const col = e.target.closest?.('.script-column');
+      if (col && (e.target === col || !e.target.closest('.script-body-text'))) {
         ensureEditableAttributes();
-        let bodyText = col.querySelector('.script-body-text:empty') ||
-                       col.querySelector('.script-body-text:last-of-type') ||
+        let bodyText = col.querySelector('.script-body-text:last-of-type') ||
                        col.querySelector('.script-body-text');
         if (!bodyText) {
-          const u = document.createElement('div');
-          u.className = 'script-unit';
-          u.innerHTML = `
-            <div class="script-title-label" contenteditable="true" spellcheck="true"></div>
-            <p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>
-          `;
-          col.appendChild(u);
-          bodyText = u.querySelector('.script-body-text');
+          bodyText = document.createElement('p');
+          bodyText.className = 'script-body-text';
+          bodyText.innerHTML = '<br>';
+          col.appendChild(bodyText);
+          ensureEditableAttributes();
         }
-        if (bodyText) {
-          bodyText.focus();
+        bodyText.focus();
+        if (sel) {
+          sel.removeAllRanges();
           const range = document.createRange();
           range.selectNodeContents(bodyText);
           range.collapse(false);
-          sel.removeAllRanges();
           sel.addRange(range);
         }
       }
@@ -4271,48 +4275,74 @@
         }
       }
 
-      // 1. Enter inside scenario title or paragraph
-      if (e.key === 'Enter' && !e.shiftKey) {
-        let activeTitle = e.target.closest?.('.script-title-label');
-        if (!activeTitle && range.startContainer) {
-          activeTitle = range.startContainer.nodeType === 1
-            ? range.startContainer.closest?.('.script-title-label')
-            : range.startContainer.parentElement?.closest?.('.script-title-label');
-        }
-        if (activeTitle) {
-          e.preventDefault();
-          const unit = activeTitle.closest('.script-unit');
-          const body = unit?.querySelector('.script-body-text');
-          if (body) {
-            body.focus();
-            const r = document.createRange();
-            r.selectNodeContents(body);
-            r.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(r);
-          }
-          return;
-        }
-
+      // 1. Enter inside scenario paragraph
+      if (e.key === 'Enter') {
         let activeP = e.target.closest?.('.script-body-text');
         if (!activeP && range.startContainer) {
           activeP = range.startContainer.nodeType === 1
             ? range.startContainer.closest?.('.script-body-text')
             : range.startContainer.parentElement?.closest?.('.script-body-text');
         }
+
         if (activeP) {
           e.preventDefault();
-          document.execCommand('insertLineBreak');
+
+          if (e.shiftKey) {
+            // Shift+Enter: Soft line break within same paragraph
+            document.execCommand('insertLineBreak');
+            ensureEditableAttributes();
+            scheduleSave();
+            return;
+          }
+
+          // Enter: Natural paragraph split into new <p class="script-body-text">
+          const rightRange = range.cloneRange();
+          rightRange.setEndAfter(activeP.lastChild || activeP);
+          const rightFragment = rightRange.extractContents();
+
+          const newP = document.createElement('p');
+          newP.className = 'script-body-text';
+          newP.appendChild(rightFragment);
+
+          // If activeP has no remaining content, ensure it has a <br>
+          if (!activeP.childNodes.length || !activeP.textContent.trim()) {
+            activeP.innerHTML = '<br>';
+          }
+          // If newP has no content, ensure it has a <br>
+          if (!newP.childNodes.length || !newP.textContent.trim()) {
+            newP.innerHTML = '<br>';
+          }
+
+          // Insert newP immediately after activeP
+          activeP.parentNode.insertBefore(newP, activeP.nextSibling);
+
+          // Move cursor to the beginning of newP
+          newP.focus();
+          const newRange = document.createRange();
+          newRange.setStart(newP, 0);
+          newRange.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(newRange);
+
+          ensureEditableAttributes();
+          scheduleSave();
           return;
         }
       }
 
-      // 2. Backspace / Delete: Natural paragraph deletion & merging without breaking header
+      // 2. Backspace / Delete: Natural paragraph deletion & merging without breaking header or columns
       if (e.key === 'Backspace' || e.key === 'Delete') {
         const header = canvas.querySelector('.slide-header-block');
 
         // A. If user has text selected:
         if (!sel.isCollapsed) {
+          const startCol = range.startContainer.nodeType === 1
+            ? range.startContainer.closest?.('.script-column')
+            : range.startContainer.parentElement?.closest?.('.script-column');
+          const endCol = range.endContainer.nodeType === 1
+            ? range.endContainer.closest?.('.script-column')
+            : range.endContainer.parentElement?.closest?.('.script-column');
+
           // If the selection spans across the slide and touches the header (e.g. Ctrl+A)
           if (header && (range.intersectsNode(header) || (sel.containsNode && sel.containsNode(header, true)))) {
             e.preventDefault();
@@ -4337,6 +4367,17 @@
             scheduleSave();
             return;
           }
+
+          // If selection spans across both columns: delete contents while strictly preserving the column structure
+          if (startCol && endCol && startCol !== endCol) {
+            e.preventDefault();
+            range.deleteContents();
+            enforceTwoColumns();
+            ensureEditableAttributes();
+            scheduleSave();
+            return;
+          }
+
           // Otherwise, ANY selected text is deleted naturally by the browser!
           return;
         }
@@ -4665,6 +4706,11 @@
         return;
       }
 
+      // If clicked inside scenario grid or columns, let the dedicated column click handler handle it!
+      if (e.target.closest?.('.script-grid-view, .script-column')) {
+        return;
+      }
+
       const canvas = e.target.closest?.('.slide-canvas');
       if (canvas && !e.target.closest('.slide-header-block, .script-unit')) {
         const bodyTarget = ensureSlideEditableBody(canvas);
@@ -4820,6 +4866,57 @@
 
       if (targetEditable && !targetEditable.classList.contains('image-zone')) {
         e.preventDefault();
+
+        const col = targetEditable.closest('.script-column');
+        // If pasting inside scenario column and text has multiple lines:
+        if (col && plainText.includes('\n')) {
+          const rawLines = plainText.split(/\r?\n/).map(l => l.trim());
+          const cleanParagraphs = [];
+          rawLines.forEach(l => {
+            if (l.length > 0) cleanParagraphs.push(l);
+          });
+
+          if (cleanParagraphs.length > 0) {
+            let refNode = targetEditable;
+            const firstLine = cleanParagraphs[0];
+            const isFirstHeading = /^\d{2}[.-]/.test(firstLine);
+
+            if (!targetEditable.textContent.trim()) {
+              targetEditable.innerHTML = isFirstHeading ? `<b>${firstLine}</b>` : firstLine;
+            } else {
+              const p = document.createElement('p');
+              p.className = 'script-body-text';
+              p.innerHTML = isFirstHeading ? `<b>${firstLine}</b>` : firstLine;
+              refNode.parentNode.insertBefore(p, refNode.nextSibling);
+              refNode = p;
+            }
+
+            for (let i = 1; i < cleanParagraphs.length; i++) {
+              const line = cleanParagraphs[i];
+              const isHeading = /^\d{2}[.-]/.test(line);
+              const p = document.createElement('p');
+              p.className = 'script-body-text';
+              p.innerHTML = isHeading ? `<b>${line}</b>` : line;
+              refNode.parentNode.insertBefore(p, refNode.nextSibling);
+              refNode = p;
+            }
+
+            refNode.focus();
+            const sel = window.getSelection();
+            if (sel) {
+              sel.removeAllRanges();
+              const r = document.createRange();
+              r.selectNodeContents(refNode);
+              r.collapse(false);
+              sel.addRange(r);
+            }
+
+            ensureEditableAttributes();
+            scheduleSave();
+            toast('📋 시나리오 문단들이 깔끔하게 붙여넣어졌습니다.');
+            return;
+          }
+        }
 
         // Try modern native execCommand('insertText') for perfect undo history and clean DOM
         let success = false;
@@ -5231,7 +5328,19 @@
         col1.innerHTML = '';
         col2.innerHTML = '';
 
-        const half = Math.ceil(allElements.length / 2);
+        let half = Math.ceil(allElements.length / 2);
+
+        // Smart Heading Protection: Prevent leaving an orphan heading at the bottom of Column 1!
+        const isHeading = el => {
+          const txt = el.textContent.trim();
+          return (el.querySelector('b, strong') || /^\d{2}[.-]/.test(txt)) && txt.length < 45 && !el.innerHTML.includes('<br><br>');
+        };
+
+        if (half > 1 && half < allElements.length && isHeading(allElements[half - 1])) {
+          // If the element just before the cut is a heading, move it together with its body into Column 2!
+          half = half - 1;
+        }
+
         allElements.slice(0, half).forEach(el => col1.appendChild(el));
         allElements.slice(half).forEach(el => col2.appendChild(el));
 
