@@ -229,10 +229,11 @@
     }
     .sidebar-brand-title {
       margin: 0;
-      font-size: 15px;
-      font-weight: 700;
-      color: #191f28;
+      font-size: 17px;
+      font-weight: 800;
+      color: #0f172a;
       letter-spacing: -0.03em;
+      line-height: 1.2;
     }
     .sync-status-badge {
       display: inline-flex;
@@ -2267,38 +2268,44 @@
       border-color: #1d4ed8;
     }
 
-    /* Back to Studio Home Link (Pure Text + Brand Icon, No Button Box) */
+    /* Apple-style Breadcrumb Link to Studio Home */
+    .sidebar-top-nav {
+      padding: 0 4px;
+      margin-bottom: 8px;
+    }
+
     .sidebar-dashboard-btn {
       display: inline-flex !important;
       align-items: center !important;
-      gap: 7px !important;
+      gap: 4px !important;
       background: transparent !important;
       border: none !important;
-      padding: 4px 2px !important;
-      color: #0f172a !important;
-      font-size: 13px !important;
-      font-weight: 700 !important;
+      padding: 2px 0 !important;
+      color: #86868b !important;
+      font-size: 11.5px !important;
+      font-weight: 600 !important;
       cursor: pointer !important;
-      margin-bottom: 12px !important;
+      margin-bottom: 6px !important;
       box-shadow: none !important;
-      transition: color 0.15s ease !important;
+      transition: color 0.15s ease, transform 0.15s ease !important;
       text-decoration: none !important;
       width: fit-content !important;
-      line-height: 1.4 !important;
-      letter-spacing: -0.02em;
+      line-height: 1 !important;
+      letter-spacing: -0.01em;
     }
 
     .sidebar-dashboard-btn:hover {
       background: transparent !important;
       border: none !important;
       color: #2563eb !important;
+      transform: translateX(-2px) !important;
     }
 
     .sidebar-dashboard-btn svg {
       flex-shrink: 0;
       color: inherit;
       stroke: currentColor;
-      transition: stroke 0.15s ease, color 0.15s ease;
+      transition: stroke 0.15s ease;
     }
 
     .dashboard-empty-state {
@@ -2411,20 +2418,21 @@
     <!-- LEFT SIDEBAR (TDS Style) -->
     <aside class="app-sidebar" id="appSidebar">
       
-      <!-- Back to Studio Home (Pure Text Link with Main Page Icon) -->
-      <button type="button" class="sidebar-dashboard-btn" id="sidebarDashboardBtn" onclick="showDashboard()" title="스토리보드 스튜디오 홈으로 이동">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="2" width="20" height="20" rx="3"></rect>
-          <path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"></path>
-        </svg>
-        <span>스튜디오 홈</span>
-      </button>
+      <div class="sidebar-top-nav">
+        <!-- Apple-style Breadcrumb Link to Studio Home -->
+        <button type="button" class="sidebar-dashboard-btn" id="sidebarDashboardBtn" onclick="showDashboard()" title="스토리보드 스튜디오 홈으로 이동">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>스튜디오 홈</span>
+        </button>
 
-      <div class="sidebar-header">
-        <h2 class="sidebar-brand-title">C-ITS 기획</h2>
-        <div class="sync-status-badge" id="syncStatusBadge" title="클라우드 실시간 동기화 상태">
-          <span class="sync-dot"></span>
-          <span class="sync-text">동기화됨</span>
+        <div class="sidebar-header">
+          <h2 class="sidebar-brand-title">C-ITS 기획</h2>
+          <div class="sync-status-badge" id="syncStatusBadge" title="클라우드 실시간 동기화 상태">
+            <span class="sync-dot"></span>
+            <span class="sync-text">동기화됨</span>
+          </div>
         </div>
       </div>
 
