@@ -4159,6 +4159,8 @@
       testRange.selectNodeContents(paragraph);
       try {
         testRange.setEnd(range.startContainer, range.startOffset);
+        const frag = testRange.cloneContents();
+        if (frag.querySelector('br, img')) return false;
         const textBefore = testRange.toString().replace(/[\r\n\t\u200B\u00A0]/g, '');
         return textBefore.length === 0;
       } catch (err) {
@@ -4173,6 +4175,8 @@
       testRange.selectNodeContents(paragraph);
       try {
         testRange.setStart(range.endContainer, range.endOffset);
+        const frag = testRange.cloneContents();
+        if (frag.querySelector('br, img')) return false;
         const textAfter = testRange.toString().replace(/[\r\n\t\u200B\u00A0]/g, '');
         return textAfter.length === 0;
       } catch (err) {
@@ -4349,14 +4353,77 @@
         }
 
         if (activeP) {
+          const isEmpty = !activeP.textContent.trim();
+          const prevP = activeP.previousElementSibling;
+          const nextP = activeP.nextElementSibling;
+          const hasPrevP = prevP && prevP.classList.contains('script-body-text');
+          const hasNextP = nextP && nextP.classList.contains('script-body-text');
+
+          // Check if there is a preceding or following <br> inside activeP
+          let precedingBr = null;
+          let followingBr = null;
+
+          if (range.startContainer.nodeType === 3) { // text node
+            if (range.startOffset === 0) {
+              let prev = range.startContainer.previousSibling;
+              while (prev && prev.nodeType === 3 && prev.textContent.length === 0) {
+                prev = prev.previousSibling;
+              }
+              if (prev && prev.nodeName === 'BR') precedingBr = prev;
+            }
+            if (range.startOffset === range.startContainer.textContent.length) {
+              let next = range.startContainer.nextSibling;
+              while (next && next.nodeType === 3 && next.textContent.length === 0) {
+                next = next.nextSibling;
+              }
+              if (next && next.nodeName === 'BR') followingBr = next;
+            }
+          } else if (range.startContainer.nodeType === 1) { // element node
+            if (range.startOffset > 0) {
+              const node = range.startContainer.childNodes[range.startOffset - 1];
+              if (node && node.nodeName === 'BR') precedingBr = node;
+            }
+            if (range.startOffset < range.startContainer.childNodes.length) {
+              const node = range.startContainer.childNodes[range.startOffset];
+              if (node && node.nodeName === 'BR') followingBr = node;
+            }
+          }
+
           if (e.key === 'Backspace') {
+            // Case 1: Immediately after a <br> inside activeP -> delete that <br>!
+            if (precedingBr) {
+              e.preventDefault();
+              precedingBr.remove();
+              if (!activeP.childNodes.length || !activeP.textContent.trim()) {
+                activeP.innerHTML = '<br>';
+              }
+              ensureEditableAttributes();
+              scheduleSave();
+              return;
+            }
+
+            // Case 2: At start of paragraph with a leading <br> before other content
+            if (isCursorAtParagraphStart(activeP, range) && activeP.firstChild && activeP.firstChild.nodeName === 'BR' && (activeP.textContent.trim().length > 0 || activeP.childNodes.length > 1)) {
+              e.preventDefault();
+              activeP.firstChild.remove();
+              ensureEditableAttributes();
+              scheduleSave();
+              return;
+            }
+
+            // Case 3: At paragraph start
             if (isCursorAtParagraphStart(activeP, range)) {
-              const prevP = activeP.previousElementSibling;
-              // If there is a previous paragraph in the same column:
-              if (prevP && prevP.classList.contains('script-body-text')) {
+              // 3-A: If there is a previous paragraph in the same column
+              if (hasPrevP) {
                 e.preventDefault();
-                // If current activeP is empty, just remove it and move cursor to end of prevP
-                if (!activeP.textContent.trim()) {
+                // If prevP is completely empty, delete prevP and stay in activeP!
+                if (!prevP.textContent.trim()) {
+                  prevP.remove();
+                  scheduleSave();
+                  return;
+                }
+                // If activeP is empty, delete activeP and focus end of prevP
+                if (isEmpty) {
                   activeP.remove();
                   prevP.focus();
                   const r = document.createRange();
@@ -4367,7 +4434,7 @@
                   scheduleSave();
                   return;
                 }
-                // If activeP has text, merge its contents into prevP
+                // Merge activeP into prevP
                 const mergeBookmark = document.createTextNode('');
                 prevP.appendChild(mergeBookmark);
                 while (activeP.firstChild) {
@@ -4382,17 +4449,63 @@
                 mergeBookmark.remove();
                 scheduleSave();
                 return;
-              } else {
-                // It is the very first paragraph in the column - protect header
+              }
+
+              // 3-B: It is the FIRST paragraph in the column (hasPrevP is false)
+              // If activeP is completely empty and there is a next paragraph, delete this empty line!
+              if (isEmpty && hasNextP) {
                 e.preventDefault();
+                activeP.remove();
+                nextP.focus();
+                const r = document.createRange();
+                r.selectNodeContents(nextP);
+                r.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(r);
+                scheduleSave();
                 return;
               }
+
+              // Otherwise it is the only paragraph in the column or has text - protect header
+              e.preventDefault();
+              return;
             }
           } else if (e.key === 'Delete') {
-            if (isCursorAtParagraphEnd(activeP, range)) {
-              const nextP = activeP.nextElementSibling;
-              if (nextP && nextP.classList.contains('script-body-text')) {
+            // Case 1: Immediately before a <br> inside activeP -> delete that <br>!
+            if (followingBr) {
+              e.preventDefault();
+              followingBr.remove();
+              if (!activeP.childNodes.length || !activeP.textContent.trim()) {
+                activeP.innerHTML = '<br>';
+              }
+              ensureEditableAttributes();
+              scheduleSave();
+              return;
+            }
+
+            // Case 2: At paragraph end or activeP is empty
+            if (isCursorAtParagraphEnd(activeP, range) || isEmpty) {
+              if (hasNextP) {
                 e.preventDefault();
+                // If activeP is completely empty, delete activeP and focus start of nextP
+                if (isEmpty) {
+                  activeP.remove();
+                  nextP.focus();
+                  const r = document.createRange();
+                  r.selectNodeContents(nextP);
+                  r.collapse(true);
+                  sel.removeAllRanges();
+                  sel.addRange(r);
+                  scheduleSave();
+                  return;
+                }
+                // If nextP is empty, delete nextP
+                if (!nextP.textContent.trim()) {
+                  nextP.remove();
+                  scheduleSave();
+                  return;
+                }
+                // Merge nextP into activeP
                 const mergeBookmark = document.createTextNode('');
                 activeP.appendChild(mergeBookmark);
                 while (nextP.firstChild) {
