@@ -222,7 +222,7 @@
       box-shadow: none !important;
     }
     .sidebar-header {
-      padding: 0 4px 18px;
+      padding: 0 4px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -2268,44 +2268,74 @@
       border-color: #1d4ed8;
     }
 
-    /* Apple-style Breadcrumb Link to Studio Home */
-    .sidebar-top-nav {
-      padding: 0 4px;
-      margin-bottom: 8px;
+    /* Studio Workspace Header (Figma / Linear Style) */
+    .sidebar-workspace-header {
+      padding: 0 0 12px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid #f1f5f9;
     }
 
-    .sidebar-dashboard-btn {
-      display: inline-flex !important;
-      align-items: center !important;
-      gap: 4px !important;
-      background: transparent !important;
-      border: none !important;
-      padding: 2px 0 !important;
-      color: #86868b !important;
-      font-size: 11.5px !important;
-      font-weight: 600 !important;
-      cursor: pointer !important;
-      margin-bottom: 6px !important;
+    .sidebar-workspace-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      border-radius: 8px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
       box-shadow: none !important;
-      transition: color 0.15s ease, transform 0.15s ease !important;
-      text-decoration: none !important;
-      width: fit-content !important;
-      line-height: 1 !important;
-      letter-spacing: -0.01em;
+      transition: background-color 0.15s ease;
+      text-decoration: none;
     }
 
-    .sidebar-dashboard-btn:hover {
-      background: transparent !important;
-      border: none !important;
-      color: #2563eb !important;
-      transform: translateX(-2px) !important;
+    .sidebar-workspace-btn:hover {
+      background: #f1f5f9;
     }
 
-    .sidebar-dashboard-btn svg {
+    .workspace-brand-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .workspace-icon-box {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: #eff6ff;
+      color: #2563eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
-      color: inherit;
-      stroke: currentColor;
-      transition: stroke 0.15s ease;
+    }
+
+    .workspace-icon-box svg {
+      color: #2563eb;
+      stroke: #2563eb;
+    }
+
+    .workspace-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    .workspace-chevron {
+      color: #94a3b8;
+      stroke: #94a3b8;
+      flex-shrink: 0;
+      transition: transform 0.15s ease, color 0.15s ease, stroke 0.15s ease;
+    }
+
+    .sidebar-workspace-btn:hover .workspace-chevron {
+      color: #2563eb;
+      stroke: #2563eb;
+      transform: translateX(-2px);
     }
 
     .dashboard-empty-state {
@@ -2418,21 +2448,29 @@
     <!-- LEFT SIDEBAR (TDS Style) -->
     <aside class="app-sidebar" id="appSidebar">
       
-      <div class="sidebar-top-nav">
-        <!-- Apple-style Breadcrumb Link to Studio Home -->
-        <button type="button" class="sidebar-dashboard-btn" id="sidebarDashboardBtn" onclick="showDashboard()" title="스토리보드 스튜디오 홈으로 이동">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Studio Workspace Header (Figma / Linear Style) -->
+      <div class="sidebar-workspace-header">
+        <button type="button" class="sidebar-workspace-btn" id="sidebarDashboardBtn" onclick="showDashboard()" title="스토리보드 스튜디오 홈으로 이동">
+          <div class="workspace-brand-left">
+            <div class="workspace-icon-box">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="3"></rect>
+                <path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"></path>
+              </svg>
+            </div>
+            <span class="workspace-title">스토리보드 스튜디오</span>
+          </div>
+          <svg class="workspace-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
-          <span>스튜디오 홈</span>
         </button>
+      </div>
 
-        <div class="sidebar-header">
-          <h2 class="sidebar-brand-title">C-ITS 기획</h2>
-          <div class="sync-status-badge" id="syncStatusBadge" title="클라우드 실시간 동기화 상태">
-            <span class="sync-dot"></span>
-            <span class="sync-text">동기화됨</span>
-          </div>
+      <div class="sidebar-header">
+        <h2 class="sidebar-brand-title">C-ITS 기획</h2>
+        <div class="sync-status-badge" id="syncStatusBadge" title="클라우드 실시간 동기화 상태">
+          <span class="sync-dot"></span>
+          <span class="sync-text">동기화됨</span>
         </div>
       </div>
 
