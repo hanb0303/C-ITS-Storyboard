@@ -5256,7 +5256,7 @@
       copyCleanTextToClipboard(text, '📋 현재 슬라이드의 시나리오가 본문 서체(왼쪽 정렬)로 복사되었습니다.');
     }
 
-    // 1단 합치기: 2단(오른쪽)의 문단 요소를 1단(왼쪽)으로 그대로 이동 (인위적 빈줄/서식 변형 없이 원본 유지)
+    // 1단 합치기: 2단(오른쪽)의 문단 요소를 1단(왼쪽)으로 그대로 이동 (빈줄 100% 보존)
     function mergeScenarioToOneColumn() {
       const activeSlide = slideItems[currentSlide];
       if (!activeSlide) return;
@@ -5273,26 +5273,36 @@
       const col1 = cols[0];
       const col2 = cols[1];
 
-      // 2단의 내용 있는 문단 요소들을 그대로 수집
-      const col2Elements = [...col2.children].filter(el => {
-        return !el.closest('.slide-header-block, .slide-header-tools') && (el.textContent.trim().length > 0 || el.querySelector('img'));
-      });
+      const isElEmpty = el => !(el.textContent || '').trim() && !(el.querySelector && el.querySelector('img'));
 
-      if (!col2Elements.length) {
+      // 2단의 요소들 수집 (내부 빈줄 보존)
+      const col2Raw = [...col2.children].filter(el => !el.closest('.slide-header-block, .slide-header-tools'));
+      while (col2Raw.length > 0 && isElEmpty(col2Raw[0])) col2Raw.shift();
+      while (col2Raw.length > 0 && isElEmpty(col2Raw[col2Raw.length - 1])) col2Raw.pop();
+
+      if (!col2Raw.length) {
         toast('2단에 합칠 문단이 없습니다.');
         return;
       }
 
-      // 1단이 비어있다면 placeholder 정리
-      const col1HasContent = [...col1.children].some(el => {
-        return !el.closest('.slide-header-block, .slide-header-tools') && (el.textContent.trim().length > 0 || el.querySelector('img'));
-      });
-      if (!col1HasContent) {
-        col1.innerHTML = '';
+      // 1단 내용 확인
+      const col1Raw = [...col1.children].filter(el => !el.closest('.slide-header-block, .slide-header-tools'));
+      while (col1Raw.length > 0 && isElEmpty(col1Raw[col1Raw.length - 1])) {
+        col1Raw.pop().remove();
       }
 
-      // 2단의 문단 노드들을 1단 끝으로 그대로 이동 (어떤 서식이나 빈줄도 임의 삽입하지 않음)
-      col2Elements.forEach(el => col1.appendChild(el));
+      if (!col1Raw.length) {
+        col1.innerHTML = '';
+      } else {
+        // Col 1과 Col 2 사이에 자연스러운 빈줄 1개 보장
+        const spacer = document.createElement('p');
+        spacer.className = 'script-body-text';
+        spacer.innerHTML = '<br>';
+        col1.appendChild(spacer);
+      }
+
+      // 2단의 문단 노드들을 1단 끝으로 그대로 이동
+      col2Raw.forEach(el => col1.appendChild(el));
 
       // 2단은 빈 입력칸 하나로 초기화
       col2.innerHTML = '<p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>';
@@ -5300,10 +5310,10 @@
       ensureEditableAttributes();
       updateExternalTools();
       saveImmediately();
-      toast('2단 문단들이 1단으로 그대로 합쳐졌습니다.');
+      toast('2단 문단들이 빈줄을 유지한 채 1단으로 합쳐졌습니다.');
     }
 
-    // 2단 분할: 문단 요소를 그대로 좌우 2단으로 50:50 배분 (인위적 빈줄/서식 변형 없이 원본 유지)
+    // 2단 분할: 문단 요소를 그대로 좌우 2단으로 50:50 배분 (빈줄/공백 행 100% 온전히 보존)
     function splitScenarioToTwoColumns() {
       const activeSlide = slideItems[currentSlide];
       if (!activeSlide) return;
@@ -5320,34 +5330,82 @@
       const col1 = cols[0];
       const col2 = cols[1];
 
-      // 1단과 2단에서 유효한 문단 요소들 수집
-      const allElements = [...grid.querySelectorAll('.script-column > .script-body-text, .script-column > .script-unit, .script-column > p')]
-        .filter(el => !el.closest('.slide-header-block, .slide-header-tools') && (el.textContent.trim().length > 0 || el.querySelector('img')));
+      const isElEmpty = el => !(el.textContent || '').trim() && !(el.querySelector && el.querySelector('img'));
 
-      if (allElements.length >= 2) {
+      // 1단과 2단에서 모든 문단 요소 수집 (문단 사이 빈줄 태그 포함)
+      const rawElements = [...grid.querySelectorAll('.script-column > .script-body-text, .script-column > .script-unit, .script-column > p')]
+        .filter(el => !el.closest('.slide-header-block, .slide-header-tools'));
+
+      // 상단 및 하단의 불필요한 빈줄만 트리밍
+      while (rawElements.length > 0 && isElEmpty(rawElements[0])) {
+        rawElements.shift();
+      }
+      while (rawElements.length > 0 && isElEmpty(rawElements[rawElements.length - 1])) {
+        rawElements.pop();
+      }
+
+      // 연속된 다중 빈줄은 깔끔하게 1줄로 정돈
+      const allElements = [];
+      let prevEmpty = false;
+      for (const el of rawElements) {
+        const empty = isElEmpty(el);
+        if (empty) {
+          if (!prevEmpty) {
+            allElements.push(el);
+            prevEmpty = true;
+          }
+        } else {
+          allElements.push(el);
+          prevEmpty = false;
+        }
+      }
+
+      const contentCount = allElements.filter(el => !isElEmpty(el)).length;
+
+      if (contentCount >= 2) {
         col1.innerHTML = '';
         col2.innerHTML = '';
 
         let half = Math.ceil(allElements.length / 2);
 
-        // Smart Heading Protection: Prevent leaving an orphan heading at the bottom of Column 1!
-        const isHeading = el => {
-          const txt = el.textContent.trim();
-          return (el.querySelector('b, strong') || /^\d{2}[.-]/.test(txt)) && txt.length < 45 && !el.innerHTML.includes('<br><br>');
-        };
-
-        if (half > 1 && half < allElements.length && isHeading(allElements[half - 1])) {
-          // If the element just before the cut is a heading, move it together with its body into Column 2!
+        // 절단 지점이 빈줄인 경우 안전하게 이동
+        if (half < allElements.length && isElEmpty(allElements[half])) {
+          half = half + 1;
+        } else if (half > 0 && isElEmpty(allElements[half - 1])) {
           half = half - 1;
         }
 
-        allElements.slice(0, half).forEach(el => col1.appendChild(el));
-        allElements.slice(half).forEach(el => col2.appendChild(el));
+        // 스마트 소제목 보호 (소제목이 1단 맨 밑에 혼자 남지 않도록 본문과 함께 2단 상단으로 이동)
+        const isHeading = el => {
+          const txt = (el.textContent || '').trim();
+          return (el.querySelector?.('b, strong') || /^\d{2}[.-]/.test(txt)) && txt.length < 45 && !el.innerHTML?.includes('<br><br>');
+        };
+
+        if (half > 1 && half < allElements.length && isHeading(allElements[half - 1])) {
+          half = half - 1;
+          if (half > 0 && isElEmpty(allElements[half - 1])) {
+            half = half - 1;
+          }
+        }
+
+        let col1Items = allElements.slice(0, half);
+        let col2Items = allElements.slice(half);
+
+        // 1단 맨 끝과 2단 맨 처음의 빈줄만 안전하게 제거 (컬럼 내부의 문단 간 빈줄은 100% 온전히 유지)
+        while (col1Items.length > 0 && isElEmpty(col1Items[col1Items.length - 1])) {
+          col1Items.pop();
+        }
+        while (col2Items.length > 0 && isElEmpty(col2Items[0])) {
+          col2Items.shift();
+        }
+
+        col1Items.forEach(el => col1.appendChild(el));
+        col2Items.forEach(el => col2.appendChild(el));
 
         ensureEditableAttributes();
         updateExternalTools();
         saveImmediately();
-        toast('문단들이 좌우 2단으로 나뉘었습니다.');
+        toast('문단 간 빈줄을 유지한 채 좌우 2단으로 나뉘었습니다.');
         return;
       }
 
@@ -5364,27 +5422,35 @@
           col1.innerHTML = '';
           col2.innerHTML = '';
           const half = Math.ceil(parts.length / 2);
-          parts.slice(0, half).forEach(partHtml => {
+          parts.slice(0, half).forEach((partHtml, idx, arr) => {
             const p = document.createElement('p');
             p.className = 'script-body-text';
-            p.setAttribute('contenteditable', 'true');
-            p.setAttribute('spellcheck', 'true');
             p.innerHTML = partHtml;
             col1.appendChild(p);
+            if (idx < arr.length - 1) {
+              const blank = document.createElement('p');
+              blank.className = 'script-body-text';
+              blank.innerHTML = '<br>';
+              col1.appendChild(blank);
+            }
           });
-          parts.slice(half).forEach(partHtml => {
+          parts.slice(half).forEach((partHtml, idx, arr) => {
             const p = document.createElement('p');
             p.className = 'script-body-text';
-            p.setAttribute('contenteditable', 'true');
-            p.setAttribute('spellcheck', 'true');
             p.innerHTML = partHtml;
             col2.appendChild(p);
+            if (idx < arr.length - 1) {
+              const blank = document.createElement('p');
+              blank.className = 'script-body-text';
+              blank.innerHTML = '<br>';
+              col2.appendChild(blank);
+            }
           });
 
           ensureEditableAttributes();
           updateExternalTools();
           saveImmediately();
-          toast('문단들이 좌우 2단으로 나뉘었습니다.');
+          toast('문단 간 빈줄을 유지한 채 좌우 2단으로 나뉘었습니다.');
           return;
         }
       }
