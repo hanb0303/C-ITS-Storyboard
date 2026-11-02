@@ -5046,7 +5046,120 @@
       copyCleanTextToClipboard(text, '📋 현재 슬라이드의 시나리오가 본문 서체(왼쪽 정렬)로 복사되었습니다.');
     }
 
-    // 1단 합치기: 2단(오른쪽)의 글을 1단(왼쪽)으로 깔끔하게 통합하여 하나의 글처럼 이어붙입니다.
+    // Helper to extract logical scenario sections while preserving HTML formatting and blank lines
+    function extractScenarioSections(grid) {
+      if (!grid) return [];
+
+      // 1. If grid contains multiple .script-unit elements
+      const units = [...grid.querySelectorAll('.script-unit')].filter(u => u.textContent.trim().length > 0);
+      if (units.length >= 2) {
+        return units.map(u => ({ html: u.outerHTML }));
+      }
+
+      // 2. If grid contains multiple .script-body-text or <p> elements
+      const bodyElements = [...grid.querySelectorAll('.script-body-text, p')].filter(el => {
+        return !el.closest('.slide-header-block, .slide-header-tools') && el.textContent.trim().length > 0;
+      });
+
+      if (bodyElements.length >= 2) {
+        const sections = [];
+        for (let i = 0; i < bodyElements.length; i++) {
+          const el = bodyElements[i];
+          const text = el.textContent.trim();
+          const isTitle = (el.querySelector('b, strong') || /^\d{2}[.-]/.test(text)) && text.length < 45 && !el.innerHTML.includes('<br><br>');
+
+          if (isTitle && i + 1 < bodyElements.length) {
+            const nextEl = bodyElements[i + 1];
+            sections.push({
+              html: el.outerHTML + '\n' + nextEl.outerHTML
+            });
+            i++; // skip next since it's grouped with this title
+          } else {
+            sections.push({
+              html: el.outerHTML
+            });
+          }
+        }
+        if (sections.length >= 2) return sections;
+      }
+
+      // 3. Fallback: single element or raw text with double newlines
+      const rawText = grid.innerText.trim();
+      if (!rawText) return [];
+
+      let rawPieces = rawText.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+      if (rawPieces.length < 2) {
+        rawPieces = rawText.split('\n').map(s => s.trim()).filter(Boolean);
+      }
+
+      if (rawPieces.length >= 2) {
+        return rawPieces.map(piece => ({
+          html: `<p class="script-body-text" contenteditable="true" spellcheck="true">${piece.replace(/\n/g, '<br>')}</p>`
+        }));
+      }
+
+      // Single unbroken sentence fallback: split at 50% midpoint
+      const sentenceMatch = rawText.match(/[^.!?]+[.!?]+(?:\s+|$)/g);
+      if (sentenceMatch && sentenceMatch.length >= 2) {
+        return sentenceMatch.map(s => ({
+          html: `<p class="script-body-text" contenteditable="true" spellcheck="true">${s.trim()}</p>`
+        }));
+      }
+
+      const mid = Math.floor(rawText.length / 2);
+      let splitIdx = rawText.indexOf(' ', mid);
+      if (splitIdx === -1 || splitIdx > mid + 30) splitIdx = rawText.lastIndexOf(' ', mid);
+      if (splitIdx === -1) splitIdx = mid;
+
+      return [
+        { html: `<p class="script-body-text" contenteditable="true" spellcheck="true">${rawText.slice(0, splitIdx).trim()}</p>` },
+        { html: `<p class="script-body-text" contenteditable="true" spellcheck="true">${rawText.slice(splitIdx).trim()}</p>` }
+      ];
+    }
+
+    // Helper to render sections into a column while strictly preserving blank lines (<br><br>) between sections
+    function renderSectionsToColumn(col, sectionList) {
+      col.innerHTML = '';
+      if (!sectionList || !sectionList.length) {
+        col.innerHTML = '<p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>';
+        return;
+      }
+
+      sectionList.forEach((sec, idx) => {
+        const isLast = (idx === sectionList.length - 1);
+        let html = sec.html.trim();
+
+        // If not the last section in the column, ensure it ends with <br><br> to visibly preserve the blank line!
+        if (!isLast) {
+          if (html.endsWith('</p>')) {
+            const inner = html.slice(0, -4).trim();
+            if (!inner.endsWith('<br><br>')) {
+              const cleanedInner = inner.replace(/(?:<br\s*\/?>)+$/, '');
+              html = cleanedInner + '<br><br></p>';
+            }
+          } else if (!html.endsWith('<br><br>')) {
+            html = html.replace(/(?:<br\s*\/?>)+$/, '') + '<br><br>';
+          }
+        } else {
+          // If it is the last section in the column, clean excess trailing breaks at the very bottom
+          if (html.endsWith('</p>')) {
+            const inner = html.slice(0, -4).trim();
+            const cleanedInner = inner.replace(/(?:<br\s*\/?>)+$/, '');
+            html = cleanedInner + '</p>';
+          } else {
+            html = html.replace(/(?:<br\s*\/?>)+$/, '');
+          }
+        }
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        while (tempDiv.firstChild) {
+          col.appendChild(tempDiv.firstChild);
+        }
+      });
+    }
+
+    // 1단 합치기: 2단(오른쪽)의 글을 1단(왼쪽)으로 깔끔하게 통합하며 빈줄(공백 행)을 온전히 보존합니다.
     function mergeScenarioToOneColumn() {
       const activeSlide = slideItems[currentSlide];
       if (!activeSlide) return;
@@ -5063,43 +5176,30 @@
       const col1 = cols[0];
       const col2 = cols[1];
 
-      const extractColText = col => {
-        const clone = col.cloneNode(true);
-        clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
-        clone.querySelectorAll('p, div, .script-unit, .script-body-text').forEach(b => b.after('\n'));
-        return sanitizeScenarioText(clone.textContent || clone.innerText);
-      };
-
-      const text1 = extractColText(col1);
-      const text2 = extractColText(col2);
-
-      if (!text2) {
+      if (!col2.textContent.trim()) {
         toast('2단에 합칠 내용이 없습니다.');
         return;
       }
 
-      const combined = text1 ? (text1 + '\n\n' + text2) : text2;
-      const paragraphs = combined.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+      const sectionsCol1 = extractScenarioSections(col1);
+      const sectionsCol2 = extractScenarioSections(col2);
+      const allSections = [...sectionsCol1, ...sectionsCol2];
 
-      col1.innerHTML = '';
-      paragraphs.forEach(p => {
-        const pEl = document.createElement('p');
-        pEl.className = 'script-body-text';
-        pEl.setAttribute('contenteditable', 'true');
-        pEl.setAttribute('spellcheck', 'true');
-        pEl.innerHTML = p.replace(/\n/g, '<br>');
-        col1.appendChild(pEl);
-      });
+      if (!allSections.length) {
+        toast('합칠 내용이 없습니다.');
+        return;
+      }
 
+      renderSectionsToColumn(col1, allSections);
       col2.innerHTML = '<p class="script-body-text" contenteditable="true" spellcheck="true"><br></p>';
 
       ensureEditableAttributes();
       updateExternalTools();
       saveImmediately();
-      toast('2단 내용이 1단으로 깔끔하게 합쳐졌습니다.');
+      toast('2단 내용이 빈줄을 유지한 채 1단으로 합쳐졌습니다.');
     }
 
-    // 2단 분할: 제목 서식이나 인위적인 번호 생성 없이, 작성된 본문 문단을 좌우 2단으로 50:50 균등 배분합니다.
+    // 2단 분할: 문단 간 빈줄(공백 행)을 온전히 보존하며 좌우 2단으로 50:50 균등 분할합니다.
     function splitScenarioToTwoColumns() {
       const activeSlide = slideItems[currentSlide];
       if (!activeSlide) return;
@@ -5116,74 +5216,25 @@
       const col1 = cols[0];
       const col2 = cols[1];
 
-      // Extract all current text from grid
-      const clone = grid.cloneNode(true);
-      clone.querySelectorAll('.slide-header-block, .slide-header-tools').forEach(el => el.remove());
-      clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
-      clone.querySelectorAll('p, div, h1, h2, h3, h4, .script-unit, .script-body-text').forEach(b => b.after('\n'));
-      const rawText = sanitizeScenarioText(clone.textContent || clone.innerText);
+      // Extract all logical sections from the entire grid
+      const allSections = extractScenarioSections(grid);
 
-      if (!rawText) {
-        toast('분할할 시나리오 텍스트가 없습니다.');
+      if (allSections.length < 2) {
+        toast('문단을 나눌 수 있는 내용이 부족합니다.');
         return;
       }
 
-      // Split into distinct paragraphs (by double newline or single newline)
-      let paragraphs = rawText.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
-      if (paragraphs.length < 2) {
-        paragraphs = rawText.split('\n').map(p => p.trim()).filter(Boolean);
-      }
+      const half = Math.ceil(allSections.length / 2);
+      const col1Sections = allSections.slice(0, half);
+      const col2Sections = allSections.slice(half);
 
-      // If still only 1 paragraph, split by sentences or midpoint word
-      if (paragraphs.length < 2) {
-        const sentenceMatch = rawText.match(/[^.!?]+[.!?]+(?:\s+|$)/g);
-        if (sentenceMatch && sentenceMatch.length >= 2) {
-          paragraphs = sentenceMatch.map(s => s.trim()).filter(Boolean);
-        } else if (rawText.length > 20) {
-          const mid = Math.floor(rawText.length / 2);
-          let splitIdx = rawText.indexOf(' ', mid);
-          if (splitIdx === -1 || splitIdx > mid + 30) {
-            splitIdx = rawText.lastIndexOf(' ', mid);
-          }
-          if (splitIdx === -1) splitIdx = mid;
-          paragraphs = [rawText.slice(0, splitIdx).trim(), rawText.slice(splitIdx).trim()];
-        }
-      }
+      renderSectionsToColumn(col1, col1Sections);
+      renderSectionsToColumn(col2, col2Sections);
 
-      if (paragraphs.length >= 2) {
-        col1.innerHTML = '';
-        col2.innerHTML = '';
-
-        const half = Math.ceil(paragraphs.length / 2);
-        const col1Paras = paragraphs.slice(0, half);
-        const col2Paras = paragraphs.slice(half);
-
-        col1Paras.forEach(p => {
-          const pEl = document.createElement('p');
-          pEl.className = 'script-body-text';
-          pEl.setAttribute('contenteditable', 'true');
-          pEl.setAttribute('spellcheck', 'true');
-          pEl.innerHTML = p.replace(/\n/g, '<br>');
-          col1.appendChild(pEl);
-        });
-
-        col2Paras.forEach(p => {
-          const pEl = document.createElement('p');
-          pEl.className = 'script-body-text';
-          pEl.setAttribute('contenteditable', 'true');
-          pEl.setAttribute('spellcheck', 'true');
-          pEl.innerHTML = p.replace(/\n/g, '<br>');
-          col2.appendChild(pEl);
-        });
-
-        ensureEditableAttributes();
-        updateExternalTools();
-        saveImmediately();
-        toast('본문이 좌우 2단으로 균등하게 분할되었습니다.');
-        return;
-      }
-
-      toast('문단을 나눌 수 있는 내용이 부족합니다.');
+      ensureEditableAttributes();
+      updateExternalTools();
+      saveImmediately();
+      toast('문단 간 빈줄을 유지한 채 좌우 2단으로 균등 분할되었습니다.');
     }
 
     document.querySelector('#sidebarSlideList')?.addEventListener('click', e => {
