@@ -3960,24 +3960,26 @@
 
     function scheduleSave() {
       if (isApplyingRemoteUpdate) return;
-      setSyncStatus('saving', '저장 중...');
-      enforceSlideHeaders();
-      updateNarrationStats();
-      updateExternalTools();
+      setSyncStatus('saving', '저장 대기 중...');
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
-        saveToLocalStorage();
-        saveToFirestore();
+        saveImmediately();
       }, 400);
     }
 
     function saveImmediately() {
       if (isApplyingRemoteUpdate) return;
+      clearTimeout(saveTimer);
+      saveTimer = null;
       setSyncStatus('saving', '저장 중...');
       enforceSlideHeaders();
-      clearTimeout(saveTimer);
+      updateNarrationStats();
+      updateExternalTools();
       saveToLocalStorage();
       saveToFirestore();
+      if (typeof saveStyleframesImmediately === 'function') {
+        saveStyleframesImmediately();
+      }
     }
 
     function loadData(data) {
@@ -4073,11 +4075,15 @@
     title.addEventListener('input', scheduleSave);
     document.addEventListener('input', e => {
       if (e.target.closest('.slide-canvas')) {
-        updateExternalTools();
         scheduleSave();
       }
     });
-    document.addEventListener('focusout', saveImmediately);
+    // Guarded focusout: Only save immediately if there are pending unsaved changes!
+    document.addEventListener('focusout', () => {
+      if (saveTimer) {
+        saveImmediately();
+      }
+    });
     window.addEventListener('beforeunload', saveImmediately);
 
     // Scenario script unit navigation (Tab / Shift+Tab) & easy click focus
@@ -4568,8 +4574,10 @@
       currentSlide < slideItems.length - 1 ? showSlide(currentSlide + 1) : showStoryboard();
     });
     window.addEventListener('keydown', e => {
-      // 1. Do not handle navigation if any lightbox/modal is actively showing
-      if (document.querySelector('.lightbox.active, #styleframeLightbox.active, #imageLightbox.active')) return;
+      // 1. Do not handle navigation if any lightbox/modal is actively showing (optimized check)
+      if (imageLightbox?.classList.contains('active') ||
+          styleframeLightbox?.classList.contains('active') ||
+          document.querySelector('.lightbox.active')) return;
 
       // 2. Do not trigger navigation if currently typing in any input, textarea, or contenteditable
       const targetEl = e.target;
@@ -5034,10 +5042,6 @@
       }
 
       copyCleanTextToClipboard(text, '📋 현재 슬라이드의 시나리오가 본문 서체(왼쪽 정렬)로 복사되었습니다.');
-    }
-
-    function copyCurrentScenarioText() {
-      copyCurrentSlideScenario();
     }
 
     // 1단 합치기: 2단(오른쪽)의 글을 1단(왼쪽)으로 깔끔하게 통합하여 하나의 글처럼 이어붙입니다.
@@ -6197,9 +6201,7 @@
       }
     })();
 
-    window.addEventListener('beforeunload', () => {
-      saveStyleframesImmediately();
-    });
+    // Unified with primary beforeunload listener in saveImmediately()
     const initialSfMode = localStorage.getItem('cits_sf_mode') || 'slide';
     setStyleframeLayoutMode(initialSfMode);
 
