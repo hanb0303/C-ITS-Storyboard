@@ -2463,12 +2463,662 @@
       .editable { border: 0; padding: 0; }
       .image-zone { border-style: solid; }
     }
+
+    /* ========================================================
+       STUDIO DASHBOARD (스토리보드 스튜디오 홈) STYLES
+       ======================================================== */
+    body[data-view="dashboard"] .app-layout {
+      display: none !important;
+    }
+    body[data-view="dashboard"] #studioDashboard {
+      display: flex !important;
+    }
+    body:not([data-view="dashboard"]) #studioDashboard {
+      display: none !important;
+    }
+
+    .studio-dashboard {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      background: #080d1a;
+      color: #f1f5f9;
+      font-family: 'Pretendard', -apple-system, sans-serif;
+    }
+
+    .dashboard-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(8, 13, 26, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0 32px;
+      height: 68px;
+    }
+
+    .dashboard-header-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .dashboard-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .dashboard-brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    }
+
+    .dashboard-brand-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dashboard-brand-name {
+      font-size: 17px;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: -0.02em;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .dashboard-brand-sub {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+
+    .dashboard-header-center {
+      flex: 1;
+      max-width: 460px;
+    }
+
+    .dashboard-search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 8px 14px;
+      transition: all 0.2s ease;
+    }
+
+    .dashboard-search-box:focus-within {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(59, 130, 246, 0.6);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .dashboard-search-box svg {
+      color: #64748b;
+      flex-shrink: 0;
+    }
+
+    .dashboard-search-box input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #f8fafc;
+      font-size: 13.5px;
+      font-family: inherit;
+      width: 100%;
+    }
+
+    .dashboard-search-box input::placeholder {
+      color: #64748b;
+    }
+
+    .dashboard-new-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px !important;
+      font-size: 14px !important;
+      font-weight: 700 !important;
+      border-radius: 9px !important;
+      background: #2563eb !important;
+      color: #fff !important;
+      border: none !important;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
+      transition: all 0.2s ease !important;
+      cursor: pointer;
+    }
+
+    .dashboard-new-btn:hover {
+      background: #1d4ed8 !important;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5) !important;
+    }
+
+    .dashboard-main {
+      flex: 1;
+      padding: 40px 32px 80px;
+    }
+
+    .dashboard-container {
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+
+    .dashboard-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .dashboard-section-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dashboard-section-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #f8fafc;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    .dashboard-project-count {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #3b82f6;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: 20px;
+      padding: 2px 9px;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    /* Project Cards */
+    .project-card {
+      position: relative;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 150px;
+      cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .project-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(59, 130, 246, 0.4);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+    }
+
+    .project-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .project-card-icon-wrap {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #60a5fa;
+      flex-shrink: 0;
+    }
+
+    .project-card-menu-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: transparent;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .project-card-menu-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #f1f5f9;
+    }
+
+    .project-card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #f8fafc;
+      margin: 0 0 10px;
+      line-height: 1.4;
+      letter-spacing: -0.015em;
+      word-break: keep-all;
+    }
+
+    .project-card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12.5px;
+      color: #64748b;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 12px;
+      margin-top: auto;
+    }
+
+    .project-card-stats {
+      font-weight: 600;
+      color: #94a3b8;
+    }
+
+    .project-card-date {
+      font-size: 11.5px;
+      color: #64748b;
+    }
+
+    /* Dashed New Project Card */
+    .project-card.new-card {
+      border: 2px dashed rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.015);
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 10px;
+      padding: 30px 20px;
+    }
+
+    .project-card.new-card:hover {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.04);
+      transform: translateY(-3px);
+    }
+
+    .new-card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+      transition: all 0.2s ease;
+    }
+
+    .project-card.new-card:hover .new-card-icon {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.35);
+      color: #60a5fa;
+    }
+
+    .new-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+
+    .new-card-desc {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    /* Card Dropdown Menu */
+    .project-card-dropdown {
+      position: absolute;
+      top: 48px;
+      right: 18px;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 10px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+      padding: 6px;
+      min-width: 140px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      animation: menuFadeIn 0.15s ease-out;
+    }
+
+    @keyframes menuFadeIn {
+      from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .project-card-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #cbd5e1;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.12s ease;
+      width: 100%;
+    }
+
+    .project-card-dropdown-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .project-card-dropdown-item.danger:hover {
+      background: rgba(239, 68, 68, 0.18);
+      color: #fca5a5;
+    }
+
+    /* Studio Modal Dialogs */
+    .studio-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: modalFadeIn 0.2s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .studio-modal-card {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6);
+      width: 100%;
+      max-width: 480px;
+      overflow: hidden;
+      animation: modalScaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalScaleUp {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .studio-modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .studio-modal-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #f8fafc;
+      margin: 0;
+    }
+
+    .studio-modal-close-btn {
+      background: transparent;
+      border: none;
+      color: #64748b;
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .studio-modal-close-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .studio-modal-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .studio-modal-label {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+
+    .studio-modal-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #fff;
+      font-size: 14.5px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.18s ease;
+    }
+
+    .studio-modal-input:focus {
+      border-color: #3b82f6;
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .studio-modal-template-info {
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .template-badge {
+      font-size: 11px;
+      font-weight: 800;
+      color: #60a5fa;
+      letter-spacing: -0.01em;
+    }
+
+    .template-desc {
+      font-size: 12.5px;
+      color: #94a3b8;
+      line-height: 1.45;
+    }
+
+    .studio-modal-footer {
+      padding: 16px 24px;
+      background: rgba(0, 0, 0, 0.2);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Back to Dashboard Button in Editor Sidebar */
+    .sidebar-dashboard-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 9px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      color: #cbd5e1;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 12px;
+      transition: all 0.18s ease;
+    }
+
+    .sidebar-dashboard-btn:hover {
+      background: rgba(59, 130, 246, 0.12);
+      border-color: rgba(59, 130, 246, 0.3);
+      color: #93c5fd;
+      transform: translateY(-1px);
+    }
   </style>
 </head>
 <body data-view="presentation">
+
+  <!-- STUDIO DASHBOARD (스토리보드 스튜디오 홈) -->
+  <div id="studioDashboard" class="studio-dashboard">
+    <header class="dashboard-header">
+      <div class="dashboard-header-inner">
+        <div class="dashboard-brand" id="dashboardBrandLogo">
+          <div class="dashboard-brand-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="3"></rect>
+              <path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"></path>
+            </svg>
+          </div>
+          <div class="dashboard-brand-info">
+            <span class="dashboard-brand-name">스토리보드 스튜디오</span>
+            <span class="dashboard-brand-sub">Storyboard Studio · 영상 기획 & 비주얼 연출</span>
+          </div>
+        </div>
+
+        <div class="dashboard-header-center">
+          <div class="dashboard-search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="dashboardSearchInput" placeholder="프로젝트 검색 (제목, 키워드)..." spellcheck="false" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="dashboard-header-actions">
+          <button type="button" class="dashboard-new-btn" id="dashboardNewProjectBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>새 프로젝트 만들기</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard-main">
+      <div class="dashboard-container">
+        <div class="dashboard-section-header">
+          <div class="dashboard-section-title-wrap">
+            <h1 class="dashboard-section-title">내 프로젝트</h1>
+            <span class="dashboard-project-count" id="dashboardProjectCount">1</span>
+          </div>
+        </div>
+
+        <div class="dashboard-projects-grid" id="dashboardProjectsGrid">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- New Project Modal -->
+  <div class="studio-modal-overlay" id="newProjectModal" style="display: none;">
+    <div class="studio-modal-card" role="dialog" aria-modal="true" aria-labelledby="newProjModalTitle">
+      <div class="studio-modal-header">
+        <h3 class="studio-modal-title" id="newProjModalTitle">새 프로젝트 만들기</h3>
+        <button type="button" class="studio-modal-close-btn" id="newProjectModalCloseBtn" aria-label="닫기">✕</button>
+      </div>
+      <div class="studio-modal-body">
+        <label class="studio-modal-label" for="newProjectTitleInput">프로젝트 제목</label>
+        <input type="text" id="newProjectTitleInput" class="studio-modal-input" placeholder="예: 2026 모빌리티 신규 기획 영상" maxlength="60" autocomplete="off" />
+        <div class="studio-modal-template-info">
+          <span class="template-badge">기본 템플릿 자동 구성</span>
+          <span class="template-desc">영상 전개 흐름 4단계 쇼케이스, 2단 시나리오 뷰, 10개 씬 표준 스토리보드 및 스타일프레임이 기본 세팅됩니다.</span>
+        </div>
+      </div>
+      <div class="studio-modal-footer">
+        <button type="button" class="secondary-btn" id="newProjectCancelBtn">취소</button>
+        <button type="button" class="primary-btn" id="newProjectSubmitBtn" style="padding: 8px 18px; font-weight: 700;">생성하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename Project Modal -->
+  <div class="studio-modal-overlay" id="renameProjectModal" style="display: none;">
+    <div class="studio-modal-card" role="dialog" aria-modal="true" aria-labelledby="renameProjModalTitle">
+      <div class="studio-modal-header">
+        <h3 class="studio-modal-title" id="renameProjModalTitle">프로젝트 이름 변경</h3>
+        <button type="button" class="studio-modal-close-btn" id="renameProjectModalCloseBtn" aria-label="닫기">✕</button>
+      </div>
+      <div class="studio-modal-body">
+        <label class="studio-modal-label" for="renameProjectTitleInput">새 프로젝트 이름</label>
+        <input type="text" id="renameProjectTitleInput" class="studio-modal-input" placeholder="프로젝트 이름 입력" maxlength="60" autocomplete="off" />
+      </div>
+      <div class="studio-modal-footer">
+        <button type="button" class="secondary-btn" id="renameProjectCancelBtn">취소</button>
+        <button type="button" class="primary-btn" id="renameProjectSubmitBtn" style="padding: 8px 18px; font-weight: 700;">변경하기</button>
+      </div>
+    </div>
+  </div>
+
   <div class="app-layout">
     <!-- LEFT SIDEBAR (TDS Style) -->
     <aside class="app-sidebar" id="appSidebar">
+      
+      <!-- Back to Studio Home -->
+      <button type="button" class="sidebar-dashboard-btn" id="sidebarDashboardBtn" title="스토리보드 스튜디오 홈으로 이동">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>스튜디오 홈</span>
+      </button>
+
       <div class="sidebar-header">
         <h2 class="sidebar-brand-title">C-ITS 기획</h2>
         <div class="sync-status-badge" id="syncStatusBadge" title="클라우드 실시간 동기화 상태">
@@ -2813,6 +3463,8 @@
 
   <script>
     const STORAGE_KEY = 'cits-storyboard-v1';
+    const DEFAULT_PROJECT_ID = 'cits_mobility';
+    let currentProjectId = DEFAULT_PROJECT_ID;
     const SLIDE_TEMPLATE_VERSION = 46;
 
     // --- Firebase & Firestore Configuration ---
@@ -3782,49 +4434,100 @@
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        await db.collection('cits_storyboard_meta').doc('current').set(currentMeta);
-
         const sceneElements = [...board.querySelectorAll('.scene')];
-        if (!sceneElements.length) return;
 
-        const sceneCol = db.collection('cits_storyboard_scenes');
-        const batch = db.batch();
+        if (currentProjectId === DEFAULT_PROJECT_ID) {
+          await db.collection('cits_storyboard_meta').doc('current').set(currentMeta);
 
-        for (let idx = 0; idx < sceneElements.length; idx++) {
-          const sceneEl = sceneElements[idx];
-          const docId = `scene_${String(idx).padStart(2, '0')}`;
-          const docRef = sceneCol.doc(docId);
-          let imgSrc = sceneEl.querySelector('.image-zone img')?.src || '';
+          if (sceneElements.length) {
+            const sceneCol = db.collection('cits_storyboard_scenes');
+            const batch = db.batch();
 
-          // If image is still over 500KB, re-compress before batch commit to stay well under 1MB Firestore limit
-          if (imgSrc.length > 500000) {
-            try {
-              imgSrc = await compressImage(imgSrc, 1000, 0.65);
-              const domImg = sceneEl.querySelector('.image-zone img');
-              if (domImg) domImg.src = imgSrc;
-            } catch (errCompress) {
-              console.warn('Pre-save compression error:', errCompress);
+            for (let idx = 0; idx < sceneElements.length; idx++) {
+              const sceneEl = sceneElements[idx];
+              const docId = `scene_${String(idx).padStart(2, '0')}`;
+              const docRef = sceneCol.doc(docId);
+              let imgSrc = sceneEl.querySelector('.image-zone img')?.src || '';
+
+              if (imgSrc.length > 500000) {
+                try {
+                  imgSrc = await compressImage(imgSrc, 1000, 0.65);
+                  const domImg = sceneEl.querySelector('.image-zone img');
+                  if (domImg) domImg.src = imgSrc;
+                } catch (errCompress) {
+                  console.warn('Pre-save compression error:', errCompress);
+                }
+              }
+
+              batch.set(docRef, {
+                order: idx,
+                motion: getEditableText(sceneEl.querySelector('.motion')),
+                narration: getEditableText(sceneEl.querySelector('.narration')),
+                image: imgSrc,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
             }
+
+            if (lastSavedSceneCount > sceneElements.length) {
+              for (let i = sceneElements.length; i < lastSavedSceneCount; i++) {
+                const docId = `scene_${String(i).padStart(2, '0')}`;
+                batch.delete(sceneCol.doc(docId));
+              }
+            }
+            lastSavedSceneCount = sceneElements.length;
+
+            await batch.commit();
           }
 
-          batch.set(docRef, {
+          // Keep sb_projects_meta in sync
+          db.collection('sb_projects_meta').doc(DEFAULT_PROJECT_ID).set({
+            id: DEFAULT_PROJECT_ID,
+            title: currentMeta.title,
+            slideCount: currentMeta.slides.length || 6,
+            sceneCount: sceneElements.length || 10,
+            styleframeCount: styleframes ? styleframes.length : 9,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true }).catch(() => {});
+        } else if (currentProjectId) {
+          // Custom Project: save whole project payload
+          const sceneList = sceneElements.map((sceneEl, idx) => ({
             order: idx,
             motion: getEditableText(sceneEl.querySelector('.motion')),
             narration: getEditableText(sceneEl.querySelector('.narration')),
-            image: imgSrc,
+            image: sceneEl.querySelector('.image-zone img')?.src || ''
+          }));
+
+          const sfList = (styleframes || []).map((sf, idx) => ({
+            id: sf.id || `sf_${idx + 1}`,
+            title: sf.title || '',
+            desc: sf.desc || '',
+            image: (sf.image && sf.image.length < 500000) ? sf.image : '',
+            order: idx
+          }));
+
+          const payload = {
+            id: currentProjectId,
+            meta: currentMeta,
+            scenes: sceneList,
+            styleframes: sfList,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        }
+          };
 
-        if (lastSavedSceneCount > sceneElements.length) {
-          for (let i = sceneElements.length; i < lastSavedSceneCount; i++) {
-            const docId = `scene_${String(i).padStart(2, '0')}`;
-            batch.delete(sceneCol.doc(docId));
-          }
-        }
-        lastSavedSceneCount = sceneElements.length;
+          await db.collection('projects_data').doc(currentProjectId).set(payload);
 
-        await batch.commit();
+          db.collection('sb_projects_meta').doc(currentProjectId).set({
+            id: currentProjectId,
+            title: currentMeta.title,
+            slideCount: currentMeta.slides.length || 6,
+            sceneCount: sceneElements.length || 0,
+            styleframeCount: sfList.length || 0,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true }).catch(() => {});
+
+          try {
+            localStorage.setItem(`cits_proj_${currentProjectId}`, JSON.stringify(payload));
+          } catch(e) {}
+        }
         setSyncStatus('synced', '동기화됨');
       } catch (err) {
         console.error('Firestore save error:', err);
@@ -3916,6 +4619,674 @@
 
       renumber();
       updateNarrationStats();
+    }
+
+    
+    // ========================================================
+    // STORYBOARD STUDIO (스토리보드 스튜디오) MULTI-PROJECT SYSTEM
+    // ========================================================
+    let studioProjectsCache = [];
+    let activeDropdownMenu = null;
+    let targetRenameProjectId = null;
+
+    function getProjectShareUrl(projectId) {
+      const pid = projectId || currentProjectId || DEFAULT_PROJECT_ID;
+      const base = window.location.origin + window.location.pathname;
+      return `${base}?project=${encodeURIComponent(pid)}`;
+    }
+
+    function updateProjectUrl(projectId) {
+      const url = new URL(window.location.href);
+      if (projectId) {
+        url.searchParams.set('project', projectId);
+      } else {
+        url.searchParams.delete('project');
+      }
+      window.history.replaceState({}, '', url.toString());
+    }
+
+    async function showDashboard() {
+      // Save current project state before leaving
+      try {
+        if (currentProjectId) {
+          saveImmediately();
+          saveStyleframesImmediately();
+        }
+      } catch (e) {
+        console.warn('Pre-dashboard save warn:', e);
+      }
+
+      currentProjectId = null;
+      updateProjectUrl(null);
+      document.body.setAttribute('data-view', 'dashboard');
+      document.title = '스토리보드 스튜디오 · 프로젝트 허브';
+      await loadProjectsList();
+    }
+
+    async function openProject(projectId, initialViewMode = 'presentation') {
+      currentProjectId = projectId || DEFAULT_PROJECT_ID;
+      updateProjectUrl(currentProjectId);
+
+      await loadProjectData(currentProjectId);
+
+      if (initialViewMode === 'presentation') {
+        showPresentation(0);
+      } else if (initialViewMode === 'styleframes') {
+        showStyleframes();
+      } else {
+        showStoryboard();
+      }
+
+      // Update document title with project title
+      if (title && title.innerText) {
+        document.title = `${title.innerText} - 스토리보드 스튜디오`;
+      }
+    }
+
+    async function loadProjectsList() {
+      const grid = document.querySelector('#dashboardProjectsGrid');
+      const countBadge = document.querySelector('#dashboardProjectCount');
+      if (!grid) return;
+
+      grid.innerHTML = `
+        <div style="grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; padding: 60px 20px; color: #64748b; font-size: 14.5px;">
+          <span style="display: inline-block; width: 18px; height: 18px; border: 2px solid #3b82f6; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 12px;"></span>
+          프로젝트 목록을 불러오는 중입니다...
+        </div>`;
+
+      let projects = [];
+      try {
+        if (db) {
+          const snap = await db.collection('sb_projects_meta').orderBy('updatedAt', 'desc').get();
+          projects = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        }
+      } catch (err) {
+        console.warn('sb_projects_meta load warning:', err);
+      }
+
+      // Check if DEFAULT_PROJECT_ID exists in list, if not add it
+      const hasDefault = projects.some(p => p.id === DEFAULT_PROJECT_ID);
+      if (!hasDefault) {
+        const defaultDoc = {
+          id: DEFAULT_PROJECT_ID,
+          title: '[전사] 강릉 모빌리티 C-ITS 영상',
+          slideCount: 6,
+          sceneCount: 10,
+          styleframeCount: 9,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        projects.unshift(defaultDoc);
+        if (db) {
+          try {
+            await db.collection('sb_projects_meta').doc(DEFAULT_PROJECT_ID).set(defaultDoc);
+          } catch(e) {}
+        }
+      }
+
+      studioProjectsCache = projects;
+      renderProjectsGrid(studioProjectsCache);
+    }
+
+    function renderProjectsGrid(projects) {
+      const grid = document.querySelector('#dashboardProjectsGrid');
+      const countBadge = document.querySelector('#dashboardProjectCount');
+      if (!grid) return;
+
+      const searchVal = (document.querySelector('#dashboardSearchInput')?.value || '').trim().toLowerCase();
+      const filtered = searchVal
+        ? projects.filter(p => (p.title || '').toLowerCase().includes(searchVal))
+        : projects;
+
+      if (countBadge) countBadge.textContent = filtered.length;
+
+      if (!filtered.length) {
+        grid.innerHTML = `
+          <div class="dashboard-empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <p style="font-size: 15px; font-weight: 600; color: #94a3b8; margin: 12px 0 4px;">일치하는 프로젝트를 찾을 수 없습니다.</p>
+            <span style="font-size: 13px; color: #64748b;">검색어를 확인하거나 새로운 프로젝트를 만들어보세요.</span>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(proj => {
+        const isDefault = proj.id === DEFAULT_PROJECT_ID;
+        let dateStr = '최근';
+        try {
+          if (proj.updatedAt?.toDate) {
+            dateStr = proj.updatedAt.toDate().toLocaleDateString('ko-KR');
+          } else if (proj.updatedAt) {
+            dateStr = new Date(proj.updatedAt).toLocaleDateString('ko-KR');
+          }
+        } catch(e) {}
+
+        const slides = proj.slideCount || 6;
+        const scenes = proj.sceneCount || 10;
+        const sfs = proj.styleframeCount || 9;
+
+        const escapeStr = str => (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+        return `
+          <article class="project-card ${isDefault ? 'is-default' : ''}" data-id="${proj.id}">
+            <div class="project-card-header">
+              <span class="project-card-badge">${isDefault ? '기본 템플릿' : '프로젝트'}</span>
+              <div class="project-card-menu-wrap">
+                <button type="button" class="project-card-menu-btn" data-action="menu" title="프로젝트 메뉴" aria-label="메뉴">···</button>
+                <div class="project-card-dropdown" style="display: none;">
+                  <button type="button" class="project-card-dropdown-item" data-action="share">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                    <span>공유 링크 복사</span>
+                  </button>
+                  <button type="button" class="project-card-dropdown-item" data-action="duplicate">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    <span>복제하기</span>
+                  </button>
+                  <button type="button" class="project-card-dropdown-item" data-action="rename">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    <span>이름 변경</span>
+                  </button>
+                  ${!isDefault ? `
+                    <button type="button" class="project-card-dropdown-item danger" data-action="delete">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      <span>삭제하기</span>
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+            <div class="project-card-body">
+              <h3 class="project-card-title">${escapeStr(proj.title || '무제 프로젝트')}</h3>
+              <div class="project-card-stats">
+                <span class="stat-pill">슬라이드 ${slides}장</span>
+                <span class="stat-pill">씬 ${scenes}개</span>
+                <span class="stat-pill">스타일프레임 ${sfs}개</span>
+              </div>
+            </div>
+            <div class="project-card-footer">
+              <span class="project-card-date">수정: ${dateStr}</span>
+              <span class="project-card-open-hint">열기 →</span>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    async function loadProjectData(projectId) {
+      setSyncStatus('saving', '프로젝트 로드 중...');
+      try {
+        if (projectId === DEFAULT_PROJECT_ID) {
+          // 1. Default project (cits_mobility)
+          try {
+            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (saved?.scenes) loadData(saved);
+          } catch(e) {}
+          if (db) {
+            const metaDoc = await db.collection('cits_storyboard_meta').doc('current').get();
+            if (metaDoc.exists) applyRemoteMeta(metaDoc.data());
+            const scenesSnap = await db.collection('cits_storyboard_scenes').orderBy('order').get();
+            if (!scenesSnap.empty) applyRemoteScenes(scenesSnap.docs.map(d => d.data()));
+            const sfSnap = await db.collection('cits_styleframes').orderBy('order').get();
+            if (!sfSnap.empty) {
+              styleframes = sfSnap.docs.map(d => d.data());
+              renderStyleframeCurrent();
+              renderCardsView();
+            }
+          }
+        } else {
+          // 2. Custom created project
+          const localKey = `cits_proj_${projectId}`;
+          try {
+            const localData = JSON.parse(localStorage.getItem(localKey));
+            if (localData?.scenes) {
+              loadData(localData);
+              if (localData.styleframes) {
+                styleframes = localData.styleframes;
+                renderStyleframeCurrent();
+                renderCardsView();
+              }
+            }
+          } catch(e) {}
+
+          if (db) {
+            const projDoc = await db.collection('projects_data').doc(projectId).get();
+            if (projDoc.exists) {
+              const pdata = projDoc.data();
+              if (pdata.meta) applyRemoteMeta(pdata.meta);
+              if (pdata.scenes) applyRemoteScenes(pdata.scenes);
+              if (pdata.styleframes) {
+                styleframes = pdata.styleframes;
+                renderStyleframeCurrent();
+                renderCardsView();
+              }
+            }
+          }
+        }
+        enforceSlideHeaders();
+        updateNarrationStats();
+        updateExternalTools();
+        setSyncStatus('synced', '동기화됨');
+      } catch (err) {
+        console.error('Project data load error:', err);
+        setSyncStatus('error', '로드 실패');
+      }
+    }
+
+    async function createNewProject(projectTitle) {
+      const titleClean = (projectTitle || '').trim() || '새 스토리보드 프로젝트';
+      const newId = 'proj_' + Date.now();
+
+      // Read current base template data
+      const currentData = getData();
+      const currentSf = styleframes && styleframes.length ? JSON.parse(JSON.stringify(styleframes)) : [];
+
+      const newMeta = {
+        title: titleClean,
+        slideTemplateVersion: SLIDE_TEMPLATE_VERSION,
+        slides: currentData.slides || [],
+        revisionNums: currentData.revisionNums || [],
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      const newScenes = (currentData.scenes || []).map(sc => ({ ...sc }));
+      const newStyleframes = currentSf.map((sf, idx) => ({
+        id: `sf_${idx + 1}`,
+        title: sf.title || '',
+        desc: sf.desc || '',
+        image: (sf.image && sf.image.length < 500000) ? sf.image : '',
+        order: idx
+      }));
+
+      // 1. Save metadata to sb_projects_meta
+      const metaDoc = {
+        id: newId,
+        title: titleClean,
+        slideCount: newMeta.slides.length || 6,
+        sceneCount: newScenes.length || 10,
+        styleframeCount: newStyleframes.length || 9,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      // 2. Save full project payload
+      const projectPayload = {
+        id: newId,
+        meta: newMeta,
+        scenes: newScenes,
+        styleframes: newStyleframes
+      };
+
+      try {
+        localStorage.setItem(`cits_proj_${newId}`, JSON.stringify(projectPayload));
+      } catch(e) {}
+
+      if (db) {
+        await db.collection('sb_projects_meta').doc(newId).set(metaDoc);
+        await db.collection('projects_data').doc(newId).set(projectPayload);
+      }
+
+      toast(`🎉 '${titleClean}' 프로젝트가 생성되었습니다!`);
+      await openProject(newId, 'presentation');
+    }
+
+    async function duplicateProject(projectId) {
+      try {
+        toast('프로젝트를 복제하는 중입니다...');
+        let sourceData = null;
+        let sourceTitle = '프로젝트';
+
+        if (projectId === DEFAULT_PROJECT_ID) {
+          sourceData = getData();
+          sourceTitle = sourceData.title || '[전사] 강릉 모빌리티 C-ITS 영상';
+        } else {
+          const doc = await db.collection('projects_data').doc(projectId).get();
+          if (doc.exists) {
+            sourceData = doc.data();
+            sourceTitle = sourceData.meta?.title || '프로젝트';
+          }
+        }
+
+        const newId = 'proj_' + Date.now();
+        const newTitle = `${sourceTitle} (복사본)`;
+
+        const newMeta = {
+          title: newTitle,
+          slideTemplateVersion: SLIDE_TEMPLATE_VERSION,
+          slides: sourceData.meta?.slides || sourceData.slides || [],
+          revisionNums: sourceData.meta?.revisionNums || sourceData.revisionNums || [],
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        const newScenes = sourceData.scenes || [];
+        const newSf = sourceData.styleframes || [];
+
+        const metaDoc = {
+          id: newId,
+          title: newTitle,
+          slideCount: newMeta.slides.length || 6,
+          sceneCount: newScenes.length || 10,
+          styleframeCount: newSf.length || 9,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        const projectPayload = {
+          id: newId,
+          meta: newMeta,
+          scenes: newScenes,
+          styleframes: newSf
+        };
+
+        try {
+          localStorage.setItem(`cits_proj_${newId}`, JSON.stringify(projectPayload));
+        } catch(e) {}
+
+        if (db) {
+          await db.collection('sb_projects_meta').doc(newId).set(metaDoc);
+          await db.collection('projects_data').doc(newId).set(projectPayload);
+        }
+
+        toast(`📋 '${newTitle}' 생성 완료!`);
+        await loadProjectsList();
+      } catch (err) {
+        console.error('Duplicate project error:', err);
+        toast('프로젝트 복제 중 오류가 발생했습니다.');
+      }
+    }
+
+    async function renameProject(projectId, newTitle) {
+      const cleanTitle = (newTitle || '').trim();
+      if (!cleanTitle) return;
+
+      try {
+        if (db) {
+          await db.collection('sb_projects_meta').doc(projectId).set({
+            title: cleanTitle,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+
+          if (projectId === DEFAULT_PROJECT_ID) {
+            await db.collection('cits_storyboard_meta').doc('current').set({
+              title: cleanTitle,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+          } else {
+            await db.collection('projects_data').doc(projectId).set({
+              'meta.title': cleanTitle,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+          }
+        }
+
+        if (currentProjectId === projectId && title) {
+          title.innerText = cleanTitle;
+        }
+
+        toast(`✏️ '${cleanTitle}'(으)로 이름이 변경되었습니다.`);
+        await loadProjectsList();
+      } catch (err) {
+        console.error('Rename project error:', err);
+        toast('이름 변경 중 오류가 발생했습니다.');
+      }
+    }
+
+    async function deleteProject(projectId) {
+      if (projectId === DEFAULT_PROJECT_ID) {
+        alert('기본 C-ITS 프로젝트는 삭제할 수 없습니다.');
+        return;
+      }
+
+      if (!confirm('정말로 이 프로젝트를 삭제하시겠습니까?\n삭제된 프로젝트와 모든 슬라이드는 복구할 수 없습니다.')) {
+        return;
+      }
+
+      try {
+        if (db) {
+          await db.collection('sb_projects_meta').doc(projectId).delete();
+          await db.collection('projects_data').doc(projectId).delete();
+        }
+        try {
+          localStorage.removeItem(`cits_proj_${projectId}`);
+        } catch(e) {}
+
+        toast('🗑️ 프로젝트가 성공적으로 삭제되었습니다.');
+        await loadProjectsList();
+      } catch (err) {
+        console.error('Delete project error:', err);
+        toast('프로젝트 삭제 중 오류가 발생했습니다.');
+      }
+    }
+
+    // --- Studio Event Listeners & Modals ---
+    function initStudioEventListeners() {
+      // 1. Sidebar Studio Home Button
+      const sidebarDashboardBtn = document.querySelector('#sidebarDashboardBtn');
+      sidebarDashboardBtn?.addEventListener('click', () => {
+        showDashboard();
+      });
+
+      // 2. Sidebar Share Button (deep link to presentation view)
+      const sidebarShareBtn = document.querySelector('#sidebarShareBtn');
+      sidebarShareBtn?.addEventListener('click', async () => {
+        const shareUrl = getProjectShareUrl(currentProjectId);
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(shareUrl);
+          } else {
+            const ta = document.createElement('textarea');
+            ta.value = shareUrl;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+          }
+          toast('🔗 프레젠테이션 공유 링크가 복사되었습니다!');
+        } catch(e) {
+          prompt('아래 공유 링크를 복사하세요:', shareUrl);
+        }
+      });
+
+      // 3. Brand Logo click in Dashboard
+      const brandLogo = document.querySelector('#dashboardBrandLogo');
+      brandLogo?.addEventListener('click', () => {
+        loadProjectsList();
+      });
+
+      // 4. Search filter in Dashboard
+      const searchInput = document.querySelector('#dashboardSearchInput');
+      searchInput?.addEventListener('input', () => {
+        renderProjectsGrid(studioProjectsCache);
+      });
+
+      // 5. New Project Modal Triggers
+      const newProjBtn = document.querySelector('#dashboardNewProjectBtn');
+      const newProjModal = document.querySelector('#newProjectModal');
+      const newProjCloseBtn = document.querySelector('#newProjectModalCloseBtn');
+      const newProjCancelBtn = document.querySelector('#newProjectCancelBtn');
+      const newProjSubmitBtn = document.querySelector('#newProjectSubmitBtn');
+      const newProjInput = document.querySelector('#newProjectTitleInput');
+
+      function openNewProjectModal() {
+        if (!newProjModal) return;
+        newProjModal.style.display = 'flex';
+        if (newProjInput) {
+          newProjInput.value = '';
+          setTimeout(() => newProjInput.focus(), 80);
+        }
+      }
+
+      function closeNewProjectModal() {
+        if (!newProjModal) return;
+        newProjModal.style.display = 'none';
+      }
+
+      newProjBtn?.addEventListener('click', openNewProjectModal);
+      newProjCloseBtn?.addEventListener('click', closeNewProjectModal);
+      newProjCancelBtn?.addEventListener('click', closeNewProjectModal);
+      newProjModal?.addEventListener('click', e => {
+        if (e.target === newProjModal) closeNewProjectModal();
+      });
+
+      newProjSubmitBtn?.addEventListener('click', async () => {
+        const val = newProjInput?.value?.trim();
+        if (!val) {
+          alert('프로젝트 제목을 입력해 주세요.');
+          newProjInput?.focus();
+          return;
+        }
+        closeNewProjectModal();
+        await createNewProject(val);
+      });
+
+      newProjInput?.addEventListener('keydown', async e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const val = newProjInput?.value?.trim();
+          if (val) {
+            closeNewProjectModal();
+            await createNewProject(val);
+          }
+        } else if (e.key === 'Escape') {
+          closeNewProjectModal();
+        }
+      });
+
+      // 6. Rename Project Modal Triggers
+      const renameModal = document.querySelector('#renameProjectModal');
+      const renameCloseBtn = document.querySelector('#renameProjectModalCloseBtn');
+      const renameCancelBtn = document.querySelector('#renameProjectCancelBtn');
+      const renameSubmitBtn = document.querySelector('#renameProjectSubmitBtn');
+      const renameInput = document.querySelector('#renameProjectTitleInput');
+
+      function openRenameModal(projectId, currentTitle) {
+        targetRenameProjectId = projectId;
+        if (!renameModal) return;
+        renameModal.style.display = 'flex';
+        if (renameInput) {
+          renameInput.value = currentTitle || '';
+          setTimeout(() => {
+            renameInput.focus();
+            renameInput.select();
+          }, 80);
+        }
+      }
+
+      function closeRenameModal() {
+        targetRenameProjectId = null;
+        if (!renameModal) return;
+        renameModal.style.display = 'none';
+      }
+
+      renameCloseBtn?.addEventListener('click', closeRenameModal);
+      renameCancelBtn?.addEventListener('click', closeRenameModal);
+      renameModal?.addEventListener('click', e => {
+        if (e.target === renameModal) closeRenameModal();
+      });
+
+      renameSubmitBtn?.addEventListener('click', async () => {
+        const val = renameInput?.value?.trim();
+        if (!val) {
+          alert('프로젝트 이름을 입력해 주세요.');
+          renameInput?.focus();
+          return;
+        }
+        const pid = targetRenameProjectId;
+        closeRenameModal();
+        if (pid) await renameProject(pid, val);
+      });
+
+      renameInput?.addEventListener('keydown', async e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const val = renameInput?.value?.trim();
+          const pid = targetRenameProjectId;
+          if (val && pid) {
+            closeRenameModal();
+            await renameProject(pid, val);
+          }
+        } else if (e.key === 'Escape') {
+          closeRenameModal();
+        }
+      });
+
+      // 7. Projects Grid Event Delegation (Card Click & Menu Actions)
+      const grid = document.querySelector('#dashboardProjectsGrid');
+      grid?.addEventListener('click', async e => {
+        const menuBtn = e.target.closest('[data-action="menu"]');
+        if (menuBtn) {
+          e.stopPropagation();
+          const wrap = menuBtn.closest('.project-card-menu-wrap');
+          const dropdown = wrap?.querySelector('.project-card-dropdown');
+          if (dropdown) {
+            // Close other dropdowns
+            document.querySelectorAll('.project-card-dropdown').forEach(d => {
+              if (d !== dropdown) d.style.display = 'none';
+            });
+            dropdown.style.display = dropdown.style.display === 'none' ? 'flex' : 'none';
+            activeDropdownMenu = dropdown.style.display === 'flex' ? dropdown : null;
+          }
+          return;
+        }
+
+        const menuItem = e.target.closest('.project-card-dropdown-item');
+        if (menuItem) {
+          e.stopPropagation();
+          const action = menuItem.dataset.action;
+          const card = menuItem.closest('.project-card');
+          const projId = card?.dataset.id;
+          const proj = studioProjectsCache.find(p => p.id === projId);
+
+          if (activeDropdownMenu) {
+            activeDropdownMenu.style.display = 'none';
+            activeDropdownMenu = null;
+          }
+
+          if (action === 'share') {
+            const url = getProjectShareUrl(projId);
+            try {
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(url);
+              } else {
+                const ta = document.createElement('textarea');
+                ta.value = url;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+              }
+              toast('🔗 공유 링크가 복사되었습니다!');
+            } catch(e) {
+              prompt('공유 링크:', url);
+            }
+          } else if (action === 'duplicate') {
+            await duplicateProject(projId);
+          } else if (action === 'rename') {
+            openRenameModal(projId, proj?.title || '');
+          } else if (action === 'delete') {
+            await deleteProject(projId);
+          }
+          return;
+        }
+
+        // Clicking card opens project in presentation view
+        const card = e.target.closest('.project-card');
+        if (card && !e.target.closest('button, input, select, .project-card-dropdown')) {
+          const projId = card.dataset.id;
+          if (projId) {
+            await openProject(projId, 'presentation');
+          }
+        }
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', e => {
+        if (!e.target.closest('.project-card-menu-wrap')) {
+          if (activeDropdownMenu) {
+            activeDropdownMenu.style.display = 'none';
+            activeDropdownMenu = null;
+          }
+        }
+      });
     }
 
     function initFirestoreSync() {
@@ -5702,6 +7073,31 @@
         }
 
         await batch.commit();
+
+        // Update sb_projects_meta styleframeCount
+        if (currentProjectId === DEFAULT_PROJECT_ID) {
+          db.collection('sb_projects_meta').doc(DEFAULT_PROJECT_ID).set({
+            styleframeCount: styleframes.length,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true }).catch(() => {});
+        } else if (currentProjectId) {
+          const sfList = styleframes.map((sf, idx) => ({
+            id: sf.id || `sf_${idx + 1}`,
+            title: sf.title || '',
+            desc: sf.desc || '',
+            image: (sf.image && sf.image.length < 500000) ? sf.image : '',
+            order: idx
+          }));
+          db.collection('projects_data').doc(currentProjectId).set({
+            styleframes: sfList,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true }).catch(() => {});
+          db.collection('sb_projects_meta').doc(currentProjectId).set({
+            styleframeCount: styleframes.length,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true }).catch(() => {});
+        }
+
         setSyncStatus('synced', '동기화됨');
       } catch (err) {
         console.warn('Firestore styleframe save error:', err);
@@ -6484,14 +7880,22 @@
       loadData(saved?.scenes ? saved : { scenes: initialScenes });
     } catch { loadData({ scenes: initialScenes }); }
     enforceSlideHeaders();
-    const initialView = localStorage.getItem('cits_active_view') || 'storyboard';
-    if (initialView === 'presentation') {
-      showPresentation(0);
-    } else if (initialView === 'styleframes') {
-      showStyleframes();
+
+    // Initialize Studio UI listeners
+    initStudioEventListeners();
+
+    // Multi-Project Deep Link Routing
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectParam = urlParams.get('project');
+
+    if (projectParam) {
+      // Direct deep link: open directly in Presentation View as requested!
+      openProject(projectParam, 'presentation');
     } else {
-      showStoryboard();
+      // Bare URL: open Storyboard Studio Dashboard
+      showDashboard();
     }
+
     initFirestoreSync();
     initStyleframeFirestoreSync();
   </script>
