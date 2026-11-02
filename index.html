@@ -2812,7 +2812,7 @@
 
   <script>
     const STORAGE_KEY = 'cits-storyboard-v1';
-    const SLIDE_TEMPLATE_VERSION = 43;
+    const SLIDE_TEMPLATE_VERSION = 44;
 
     // --- Firebase & Firestore Configuration ---
     const firebaseConfig = {
@@ -3854,8 +3854,9 @@
         if (slide === document.activeElement || slide.contains(document.activeElement)) {
           return;
         }
-        const saved = data.slides?.[index];
+        let saved = data.slides?.[index];
         if (saved) {
+          saved = saved.replace(/\uFFFD+/g, '').replace(/시물/g, '시설물');
           slide.innerHTML = saved;
           slide.querySelectorAll('.script-unit.ending').forEach(el => el.classList.remove('ending'));
         }
@@ -4032,9 +4033,10 @@
          .replace(/03-②/g, '03-2')
          .replace(/03-③/g, '03-3')
          .replace(/03-④/g, '03-4');
-        const useSaved = data.slideTemplateVersion === SLIDE_TEMPLATE_VERSION && saved?.replace(/<[^>]*>|&nbsp;/g, '').trim();
+        let cleanedSaved = saved ? saved.replace(/\uFFFD+/g, '').replace(/시물/g, '시설물') : '';
+        const useSaved = data.slideTemplateVersion === SLIDE_TEMPLATE_VERSION && cleanedSaved.replace(/<[^>]*>|&nbsp;/g, '').trim();
         if (useSaved) {
-          slide.innerHTML = saved;
+          slide.innerHTML = cleanedSaved;
         } else if (defaultSlideContent[index]) {
           slide.innerHTML = defaultSlideContent[index];
         }
