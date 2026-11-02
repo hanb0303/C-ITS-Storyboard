@@ -5083,10 +5083,14 @@
       const titleClean = (projectTitle || '').trim() || '새 스토리보드 프로젝트';
       const newId = 'proj_' + Date.now();
 
-      // Start with completely blank slate
+      // 1. SWITCH PROJECT ID IMMEDIATELY
+      currentProjectId = newId;
+      updateProjectUrl(newId);
+
+      // 2. Start with completely blank slate
       const blank = getBlankProjectData(titleClean);
 
-      // 1. Immediately cache to localStorage
+      // 3. Cache to localStorage
       try {
         localStorage.setItem(`cits_proj_${newId}`, JSON.stringify({
           id: newId,
@@ -5096,22 +5100,20 @@
         console.warn('LocalStorage save warning:', e);
       }
 
-      // 2. Load the blank project into memory and DOM
+      // 4. Load the blank project into memory and DOM
       loadData(blank);
       styleframes = blank.styleframes;
       renderStyleframeCurrent();
       renderCardsView();
 
-      // 3. INSTANT VIEW TRANSITION: presentation mode
-      currentProjectId = newId;
-      updateProjectUrl(newId);
+      // 5. INSTANT VIEW TRANSITION: presentation mode
       if (title) title.innerText = titleClean;
       document.title = `${titleClean} - 스토리보드 스튜디오`;
       document.body.setAttribute('data-view', 'presentation');
       showPresentation(0);
       toast(`🎉 새 프로젝트 '${titleClean}'이 생성되었습니다!`);
 
-      // 4. Sync to Cloud in background (failsafe)
+      // 6. Sync to Cloud in background (failsafe)
       if (db) {
         saveCustomProjectData(newId, blank, blank.scenes, blank.styleframes).then(() => {
           setSyncStatus('synced', '동기화됨');
