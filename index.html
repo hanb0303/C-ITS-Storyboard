@@ -2270,18 +2270,23 @@
 
     /* Studio Workspace Header (Centered) */
     .sidebar-workspace-header {
+      width: 100%;
       padding: 0 0 12px;
       margin-bottom: 14px;
       border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: center;
+      box-sizing: border-box;
     }
 
     .sidebar-workspace-btn {
       width: 100%;
+      max-width: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      padding: 7px 10px;
+      gap: 7px;
+      padding: 7px 6px;
       border-radius: 8px;
       background: transparent;
       border: none;
@@ -2289,35 +2294,29 @@
       box-shadow: none !important;
       transition: background-color 0.15s ease;
       text-decoration: none;
+      box-sizing: border-box;
+      font-family: inherit;
     }
 
     .sidebar-workspace-btn:hover {
       background: #f1f5f9;
     }
 
-    .workspace-icon-box {
-      width: 24px;
-      height: 24px;
-      border-radius: 6px;
-      background: #eff6ff;
+    .sidebar-workspace-btn svg {
+      width: 15px;
+      height: 15px;
       color: #2563eb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      stroke: #2563eb;
       flex-shrink: 0;
     }
 
-    .workspace-icon-box svg {
-      color: #2563eb;
-      stroke: #2563eb;
-    }
-
     .workspace-title {
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 700;
       color: #0f172a;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.03em;
       line-height: 1;
+      white-space: nowrap;
     }
 
     .dashboard-empty-state {
@@ -2433,12 +2432,10 @@
       <!-- Studio Workspace Header (Centered) -->
       <div class="sidebar-workspace-header">
         <button type="button" class="sidebar-workspace-btn" id="sidebarDashboardBtn" onclick="showDashboard()" title="스토리보드 스튜디오 홈으로 이동">
-          <div class="workspace-icon-box">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="2" width="20" height="20" rx="3"></rect>
-              <path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"></path>
-            </svg>
-          </div>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="3"></rect>
+            <path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"></path>
+          </svg>
           <span class="workspace-title">스토리보드 스튜디오</span>
         </button>
       </div>
