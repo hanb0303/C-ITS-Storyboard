@@ -581,6 +581,210 @@
     body[data-view="presentation"] .slide-title {
       font-size: 33px;
     }
+
+    /* Slide 1 Template Switcher Controls */
+    .slide1-template-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .template-segmented-control {
+      display: inline-flex;
+      align-items: center;
+      background: #f1f5f9;
+      padding: 3px;
+      border-radius: 9px;
+      border: 1px solid #e2e8f0;
+    }
+    .template-seg-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 7px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #64748b;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s ease;
+      user-select: none;
+      box-shadow: none !important;
+      font-family: inherit;
+    }
+    .template-seg-btn svg {
+      color: #8b95a1;
+      stroke: #8b95a1;
+      transition: color .15s ease, stroke .15s ease;
+    }
+    .template-seg-btn:hover {
+      color: #0f172a;
+    }
+    .template-seg-btn.active {
+      background: #ffffff;
+      color: #2563eb;
+      font-weight: 700;
+      border-color: #dbeafe;
+    }
+    .template-seg-btn.active svg {
+      color: #2563eb;
+      stroke: #2563eb;
+    }
+
+    /* 3-Circle Keyword Strategy Showcase Layout */
+    .strategy-showcase {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      height: 100%;
+      gap: 40px;
+      box-sizing: border-box;
+      flex: 1;
+      min-height: 0;
+    }
+    .strategy-left-pane {
+      flex: 0 0 320px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: left;
+    }
+    .strategy-category-tag {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #0f172a;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      outline: none !important;
+      cursor: text;
+    }
+    .strategy-headline {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1.35;
+      color: #0f172a;
+      letter-spacing: -0.03em;
+      margin: 0 0 20px;
+      outline: none !important;
+      cursor: text;
+    }
+    .strategy-headline .blue {
+      color: #2563eb;
+    }
+    .strategy-divider {
+      width: 100%;
+      height: 1px;
+      background: #e2e8f0;
+      margin-bottom: 20px;
+    }
+    .strategy-body-lead {
+      font-size: 14.5px;
+      font-weight: 500;
+      color: #475569;
+      line-height: 1.7;
+      margin: 0;
+      outline: none !important;
+      cursor: text;
+    }
+
+    /* Right: 3 Connected / Overlapping Circles */
+    .strategy-right-pane {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+    }
+    .strategy-circles-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      width: 100%;
+    }
+    .strategy-circle-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 190px;
+      margin-left: -22px;
+      position: relative;
+    }
+    .strategy-circle-col:first-child {
+      margin-left: 0;
+      z-index: 1;
+    }
+    .strategy-circle-col:nth-child(2) {
+      z-index: 2;
+    }
+    .strategy-circle-col:nth-child(3) {
+      z-index: 3;
+    }
+
+    .strategy-circle-disc {
+      width: 184px;
+      height: 184px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #38bdf8 100%);
+      border: 6px solid #60a5fa;
+      box-sizing: border-box;
+      position: relative;
+      cursor: pointer;
+      transition: transform .2s ease;
+      box-shadow: none !important;
+    }
+    .strategy-circle-disc:hover {
+      transform: scale(1.03);
+    }
+    .strategy-circle-kw {
+      color: #ffffff;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      outline: none !important;
+      text-align: center;
+      padding: 0 10px;
+      cursor: text;
+      user-select: text;
+    }
+
+    .strategy-circle-text {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      width: 100%;
+      padding: 0 4px;
+      box-sizing: border-box;
+    }
+    .strategy-circle-h {
+      font-size: 15px;
+      font-weight: 700;
+      color: #2563eb;
+      line-height: 1.35;
+      letter-spacing: -0.02em;
+      outline: none !important;
+      cursor: text;
+    }
+    .strategy-circle-sub {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: #64748b;
+      line-height: 1.35;
+      letter-spacing: -0.01em;
+      outline: none !important;
+      cursor: text;
+    }
+
     body[data-view="presentation"] .slide-external-top-bar {
       width: min(1280px, 100%);
       margin: 0 auto 10px;
@@ -3236,6 +3440,19 @@
 
     <section class="slides-section" aria-label="기획안 슬라이드">
       <div class="slide-external-top-bar presentation-tools">
+        <!-- Slide 1 Template Switcher (Stage Flow vs 3-Circle Keyword Strategy) -->
+        <div class="slide1-template-tools" id="slide1TemplateTools" style="display: flex;">
+          <div class="template-segmented-control" role="tablist" aria-label="1번 슬라이드 템플릿 선택">
+            <button type="button" class="template-seg-btn active" id="tmplStagesBtn" onclick="switchSlide1Template('stages')" title="4단계 전개 흐름 카드 레이아웃">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+              <span>4단계 카드형</span>
+            </button>
+            <button type="button" class="template-seg-btn" id="tmplCirclesBtn" onclick="switchSlide1Template('circles')" title="3개 원형 핵심 키워드 전략 레이아웃">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="7" cy="12" r="4.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17" cy="12" r="4.5"/></svg>
+              <span>3원형 키워드형</span>
+            </button>
+          </div>
+        </div>
         <div class="slide-external-tools" id="externalSlideTools" style="display: none;">
           <div class="slide-narration-plain" id="externalNarrationStats">
             <span>나레이션</span> <strong id="externalNarrationCount">0자 · 약 0초</strong>
@@ -3629,6 +3846,11 @@
           const revNum = slideItem.id.replace('slideRevision_', '');
           expectedTitleHtml = `시나리오 수정본_v.0.${revNum}`;
         } else if (idx === 0) {
+          const isStrategy = canvas.querySelector('.strategy-showcase');
+          if (isStrategy) {
+            canvas.querySelector('.slide-header-block')?.remove();
+            return;
+          }
           expectedTitleHtml = `영상 전개 흐름과 <span class="blue">4대 기능 시연</span>`;
         } else {
           expectedTitleHtml = `시나리오 <span class="blue">초안</span>`;
@@ -3673,6 +3895,15 @@
           }
           row.remove();
         });
+
+        // Strategy Showcase (3-Circle Keyword layout)
+        const strategy = canvas.querySelector('.strategy-showcase');
+        if (strategy) {
+          strategy.querySelectorAll('.strategy-category-tag, .strategy-headline, .strategy-body-lead, .strategy-circle-kw, .strategy-circle-h, .strategy-circle-sub').forEach(el => {
+            el.setAttribute('contenteditable', 'true');
+            el.setAttribute('spellcheck', 'true');
+          });
+        }
 
         // 3. Grid View (Scenario Slides: Slide 2, 3, 4, 5, and revisions)
         const grid = canvas.querySelector('.script-grid-view');
@@ -4157,10 +4388,19 @@
       if (!extTools) return;
       refreshSlideReferences();
 
-      // 1장(Slide 1, index 0)에는 절대 표시하지 않음
+      const slide1Tools = document.querySelector('#slide1TemplateTools');
       if (currentSlide === 0) {
-        extTools.style.display = 'none';
+        if (extTools) extTools.style.display = 'none';
+        if (slide1Tools) {
+          slide1Tools.style.display = 'flex';
+          const isCircles = slideCanvases[0]?.querySelector('.strategy-showcase') !== null;
+          document.querySelector('#tmplCirclesBtn')?.classList.toggle('active', isCircles);
+          document.querySelector('#tmplStagesBtn')?.classList.toggle('active', !isCircles);
+        }
         return;
+      } else {
+        if (slide1Tools) slide1Tools.style.display = 'none';
+        if (extTools) extTools.style.display = 'flex';
       }
 
       const currentSlideEl = slideItems[currentSlide];
@@ -4673,6 +4913,143 @@
       }
       window.history.replaceState({}, '', url.toString());
     }
+
+
+    function getDefaultCirclesHtml() {
+      return `
+        <div class="strategy-showcase">
+          <!-- Left: Strategy & Concept Description -->
+          <div class="strategy-left-pane">
+            <span class="strategy-category-tag" contenteditable="true" spellcheck="true">STRATEGY &amp; CONCEPT</span>
+            <h2 class="strategy-headline" contenteditable="true" spellcheck="true">
+              직관적인 정보 전달과,<br>
+              신뢰를 주는<br>
+              <span class="blue">스토리텔링</span>
+            </h2>
+            <div class="strategy-divider"></div>
+            <p class="strategy-body-lead" contenteditable="true" spellcheck="true">
+              영상의 핵심 메시지를 명확하게 전달하고<br>
+              시청자의 몰입을 극대화할 수 있도록<br>
+              간결한 그래픽과 스토리 전개로<br>
+              기획된 홍보 영상입니다.
+            </p>
+          </div>
+
+          <!-- Right: 3 Connected / Overlapping Circles -->
+          <div class="strategy-right-pane">
+            <div class="strategy-circles-row">
+              <!-- Circle 1 -->
+              <div class="strategy-circle-col">
+                <div class="strategy-circle-disc">
+                  <span class="strategy-circle-kw" contenteditable="true" spellcheck="true">CLARITY</span>
+                </div>
+                <div class="strategy-circle-text">
+                  <strong class="strategy-circle-h" contenteditable="true" spellcheck="true">명확한 메시지 전달</strong>
+                  <span class="strategy-circle-sub" contenteditable="true" spellcheck="true">군더더기 없는 핵심 정보 중심</span>
+                </div>
+              </div>
+
+              <!-- Circle 2 -->
+              <div class="strategy-circle-col">
+                <div class="strategy-circle-disc">
+                  <span class="strategy-circle-kw" contenteditable="true" spellcheck="true">TRUST</span>
+                </div>
+                <div class="strategy-circle-text">
+                  <strong class="strategy-circle-h" contenteditable="true" spellcheck="true">신뢰도 높은 시각화</strong>
+                  <span class="strategy-circle-sub" contenteditable="true" spellcheck="true">정제된 모션과 깔끔한 그래픽</span>
+                </div>
+              </div>
+
+              <!-- Circle 3 -->
+              <div class="strategy-circle-col">
+                <div class="strategy-circle-disc">
+                  <span class="strategy-circle-kw" contenteditable="true" spellcheck="true">IMPACT</span>
+                </div>
+                <div class="strategy-circle-text">
+                  <strong class="strategy-circle-h" contenteditable="true" spellcheck="true">인상적인 피날레</strong>
+                  <span class="strategy-circle-sub" contenteditable="true" spellcheck="true">기대 효과와 비전의 강조</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `.trim();
+    }
+
+    function getDefaultStagesHtml() {
+      return `
+        <div class="slide-header-block" contenteditable="false" spellcheck="false">
+          <h3 class="slide-title" contenteditable="false" spellcheck="false">영상 전개 흐름과 <span class="blue">4대 기능 시연</span></h3>
+        </div>
+        <div class="flow-showcase">
+          <!-- Stage 01 -->
+          <div class="showcase-card">
+            <span class="showcase-num" contenteditable="true" spellcheck="true">STAGE 01</span>
+            <strong class="showcase-title" contenteditable="true" spellcheck="true">추진 배경</strong>
+            <p class="showcase-lead" contenteditable="true" spellcheck="true">교차로 모퉁이 사각지대,<br>차량 센서 시야 밖 위험</p>
+          </div>
+
+          <!-- Stage 02 -->
+          <div class="showcase-card">
+            <span class="showcase-num" contenteditable="true" spellcheck="true">STAGE 02</span>
+            <strong class="showcase-title" contenteditable="true" spellcheck="true">인프라 연계</strong>
+            <p class="showcase-lead" contenteditable="true" spellcheck="true">도로가 먼저 보고 연결하는<br>광주 실증 인프라 구축</p>
+          </div>
+
+          <!-- Stage 03 (Hero) -->
+          <div class="showcase-card hero">
+            <span class="showcase-num" contenteditable="true" spellcheck="true">STAGE 03 · CORE</span>
+            <strong class="showcase-title" contenteditable="true" spellcheck="true">4대 기능 시연</strong>
+            <p class="showcase-lead" contenteditable="true" spellcheck="true">사각지대 보행자 감지 및<br>실시간 교차로 신호 연계</p>
+            <div class="showcase-cases">
+              <div class="showcase-pill" contenteditable="true" spellcheck="true">우회전 보행자</div>
+              <div class="showcase-pill" contenteditable="true" spellcheck="true">좌회전 무단횡단</div>
+              <div class="showcase-pill" contenteditable="true" spellcheck="true">어린이 보호구역</div>
+              <div class="showcase-pill" contenteditable="true" spellcheck="true">실시간 신호정보</div>
+            </div>
+          </div>
+
+          <!-- Stage 04 -->
+          <div class="showcase-card">
+            <span class="showcase-num" contenteditable="true" spellcheck="true">STAGE 04</span>
+            <strong class="showcase-title" contenteditable="true" spellcheck="true">검증 &amp; 엔딩</strong>
+            <p class="showcase-lead" contenteditable="true" spellcheck="true">급제동 없는 사전 감속,<br>도로와 차량의 안전 협력</p>
+          </div>
+        </div>
+      `.trim();
+    }
+
+    function switchSlide1Template(mode) {
+      refreshSlideReferences();
+      const canvas = slideCanvases[0];
+      if (!canvas) return;
+
+      const isCurrentCircles = canvas.querySelector('.strategy-showcase') !== null;
+      if (mode === 'circles' && isCurrentCircles) return;
+      if (mode === 'stages' && !isCurrentCircles) return;
+
+      const tmplStagesBtn = document.querySelector('#tmplStagesBtn');
+      const tmplCirclesBtn = document.querySelector('#tmplCirclesBtn');
+
+      if (mode === 'circles') {
+        canvas.dataset.stagesHtml = canvas.innerHTML;
+        canvas.innerHTML = canvas.dataset.circlesHtml || getDefaultCirclesHtml();
+        if (tmplStagesBtn) tmplStagesBtn.classList.remove('active');
+        if (tmplCirclesBtn) tmplCirclesBtn.classList.add('active');
+        toast('✨ 3원형 키워드 전략 템플릿으로 전환되었습니다.');
+      } else {
+        canvas.dataset.circlesHtml = canvas.innerHTML;
+        canvas.innerHTML = canvas.dataset.stagesHtml || getDefaultStagesHtml();
+        if (tmplStagesBtn) tmplStagesBtn.classList.add('active');
+        if (tmplCirclesBtn) tmplCirclesBtn.classList.remove('active');
+        toast('✨ 4단계 전개 흐름 템플릿으로 전환되었습니다.');
+      }
+
+      enforceSlideHeaders();
+      ensureEditableAttributes();
+      scheduleSave();
+    }
+    window.switchSlide1Template = switchSlide1Template;
 
     window.showDashboard = showDashboard;
     async function showDashboard() {
