@@ -4478,6 +4478,7 @@
         const sceneElements = [...board.querySelectorAll('.scene')];
 
         if (currentProjectId === DEFAULT_PROJECT_ID) {
+          currentMeta.title = '[전사] 강릉 모빌리티 C-ITS 영상';
           await db.collection('cits_storyboard_meta').doc('current').set(currentMeta);
 
           if (sceneElements.length) {
@@ -4523,10 +4524,10 @@
           // Keep sb_projects_meta in sync
           db.collection('sb_projects_meta').doc(DEFAULT_PROJECT_ID).set({
             id: DEFAULT_PROJECT_ID,
-            title: currentMeta.title,
+            title: '[전사] 강릉 모빌리티 C-ITS 영상',
             slideCount: currentMeta.slides.length || 6,
-            sceneCount: sceneElements.length || 10,
-            styleframeCount: styleframes ? styleframes.length : 9,
+            sceneCount: sceneElements.length || 13,
+            styleframeCount: styleframes ? styleframes.length : 7,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           }, { merge: true }).catch(() => {});
         } else if (currentProjectId) {
@@ -4563,8 +4564,12 @@
 
     function applyRemoteMeta(data) {
       if (!data) return;
-      if (data.title && title && document.activeElement !== title) {
-        title.innerText = data.title;
+      if (title && document.activeElement !== title) {
+        if (currentProjectId === DEFAULT_PROJECT_ID) {
+          title.innerText = '[전사] 강릉 모빌리티 C-ITS 영상';
+        } else if (data.title) {
+          title.innerText = data.title;
+        }
       }
       document.querySelectorAll('.revision-slide').forEach(s => s.remove());
       document.querySelectorAll('#sidebarRevisionList .sidebar-sub-item-row').forEach(r => r.remove());
@@ -4669,9 +4674,9 @@
 
     window.showDashboard = showDashboard;
     async function showDashboard() {
-      // Save current project state before leaving
+      // Save current custom project state before leaving
       try {
-        if (currentProjectId) {
+        if (currentProjectId && currentProjectId !== DEFAULT_PROJECT_ID) {
           saveImmediately();
           saveStyleframesImmediately();
         }
@@ -4727,22 +4732,27 @@
         console.warn('sb_projects_meta load warning:', err);
       }
 
-      // Check if DEFAULT_PROJECT_ID exists in list, if not add it
-      const hasDefault = projects.some(p => p.id === DEFAULT_PROJECT_ID);
-      if (!hasDefault) {
+      // Ensure DEFAULT_PROJECT_ID always exists and has authentic C-ITS title & stats
+      const defaultProj = projects.find(p => p.id === DEFAULT_PROJECT_ID);
+      if (defaultProj) {
+        defaultProj.title = '[전사] 강릉 모빌리티 C-ITS 영상';
+        defaultProj.slideCount = 6;
+        defaultProj.sceneCount = 13;
+        defaultProj.styleframeCount = defaultProj.styleframeCount || 7;
+      } else {
         const defaultDoc = {
           id: DEFAULT_PROJECT_ID,
           title: '[전사] 강릉 모빌리티 C-ITS 영상',
           slideCount: 6,
-          sceneCount: 10,
-          styleframeCount: 9,
+          sceneCount: 13,
+          styleframeCount: 7,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
         projects.unshift(defaultDoc);
         if (db) {
           try {
-            await db.collection('sb_projects_meta').doc(DEFAULT_PROJECT_ID).set(defaultDoc);
+            await db.collection('sb_projects_meta').doc(DEFAULT_PROJECT_ID).set(defaultDoc, { merge: true });
           } catch(e) {}
         }
       }
@@ -4848,11 +4858,22 @@
           // 1. Default project (cits_mobility)
           try {
             const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-            if (saved?.scenes) loadData(saved);
-          } catch(e) {}
+            if (saved?.scenes && saved.title && saved.title.includes('C-ITS')) {
+              loadData(saved);
+            } else {
+              loadData({ scenes: initialScenes });
+            }
+          } catch(e) {
+            loadData({ scenes: initialScenes });
+          }
+          if (title) title.innerText = '[전사] 강릉 모빌리티 C-ITS 영상';
           if (db) {
             const metaDoc = await db.collection('cits_storyboard_meta').doc('current').get();
-            if (metaDoc.exists) applyRemoteMeta(metaDoc.data());
+            if (metaDoc.exists) {
+              const rData = metaDoc.data();
+              rData.title = '[전사] 강릉 모빌리티 C-ITS 영상';
+              applyRemoteMeta(rData);
+            }
             const scenesSnap = await db.collection('cits_storyboard_scenes').orderBy('order').get();
             if (!scenesSnap.empty) applyRemoteScenes(scenesSnap.docs.map(d => d.data()));
             const sfSnap = await db.collection('cits_styleframes').orderBy('order').get();
@@ -8061,7 +8082,12 @@
 
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      loadData(saved?.scenes ? saved : { scenes: initialScenes });
+      if (saved && saved.title && !saved.title.includes('C-ITS')) {
+        localStorage.removeItem(STORAGE_KEY);
+        loadData({ scenes: initialScenes });
+      } else {
+        loadData(saved?.scenes ? saved : { scenes: initialScenes });
+      }
     } catch { loadData({ scenes: initialScenes }); }
     enforceSlideHeaders();
 
